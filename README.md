@@ -17,7 +17,7 @@ This script is intended for:
 
 If you need a script for a fully compliant GPLv3-or-later project you are free to use and modify this one to suit your needs.
 
-If you need a script for OpenWrt, use the GPLv2-or-later version in the official repository (coming soon).
+If you need a script for OpenWrt, use the GPLv2-or-later version in the official repository if you intend to distribute binaries (coming soon).
 
 mooleshacat / catspeed.cc is not responsible for any potential license violations you create for yourself.
 
