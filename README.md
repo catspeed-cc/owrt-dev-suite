@@ -40,7 +40,7 @@ For neutered OpenWRT buildscript use:
 # (Optional) Copyright (C) 2024 Your Name <your@email.com>
 ```
 
-For maximal freedom custom buildscript use:
+For customized maximal freedom buildscript use:
 ```
 # SPDX-License-Identifier: GPL-3.0-or-later
 # (Optional) Copyright (C) 2024 Your Name <your@email.com>
