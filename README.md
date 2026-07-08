@@ -1,6 +1,8 @@
 # owrt-build-release
 
-Private build script GPLv3-or-later
+Private build script under GPLv3-or-later
+
+To be released publicly under GPLv3-or-later
 
 ## ⚠️ LICENSE WARNING: GPLv3 INCOMPATIBILITY
 
@@ -38,6 +40,6 @@ For neutered OpenWRT buildscript use:
 
 For maximal freedom custom buildscript use:
 ```
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: GPL-3.0-or-later
 # (Optional) Copyright (C) 2024 Your Name <your@email.com>
 ```
