@@ -16,4 +16,13 @@ How can an someone else just butt in from outside and force their interpretation
 
 -----
 
-fucking bullshit I can only release it to openwrt under GPLv2 because Linus wins again with his interpretation of GPLv2 and he forces OpenWRT to GPLv2 otherwise they cant use kernel source, thus I must use GPLv2 or people suffer loss.
+fucking bullshit I can only release it to openwrt under GPLv2 because Linus wins again with his interpretation of GPLv2 and he forces OpenWRT to GPLv2 otherwise they cant use kernel source, thus I must use GPLv2 or innocent people suffer loss of hardware and get fucked by the corporations.
+
+I cant believe this shit. Ok well the fully customized script is GPLv3-or-later (fuck GPLv2-or-earlier) while the stripped down build script will be GPLv2-or-later
+
+-----
+
+- Private Repo: Keep your highly customized, proprietary logic in a separate GPLv3-or-later repository. 
+- Public Contribution: Submit the generic, stripped-down version as GPLv2-or-later to OpenWrt. 
+
+Usage: You (and others) can use the OpenWrt version as a base and layer your private GPLv3 script on top of it locally. 
