@@ -1,0 +1,400 @@
+#!/bin/bash
+
+# ==============================================================================
+# Configuration Variables
+# ==============================================================================
+
+WORK_DIR="$HOME/work"
+DEV_DIR="$HOME/my-repositories/openwrt-dev"
+
+# DTS Paths
+DTS_SRC="$WORK_DIR/dts/qcom-ipq4019-tew-829dru.dts"
+DTS_DEST="$DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
+
+# Patches paths (temp disabled)
+PATCHES_SRC_DIR="$WORK_DIR/PATCHES"
+PATCHES_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/patches-6.12"
+PATCH_FILENAME="713-net-qualcomm-ipqess-dual-switch-support.patch"
+
+# IPQESS raw driver mod paths (temp enabled)
+IPQESS_MOD_SRC_DIR="$WORK_DIR/IPQESS_DRIVER_MOD"
+IPQESS_MOD_DEST_DIR="$DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess"
+
+# Firmware Paths
+QCA9984_FIRMWARE="$WORK_DIR/QCA9984/board-2.bin"
+QCA4019_FIRMWARE="$WORK_DIR/QCA4019/board-2.bin"
+# We will determine the destination dynamically inside build_dir
+
+# Image out paths
+IMG_OUT_DIR="${WORK_DIR}/image-out"
+IMG_DIR="${DEV_DIR}/bin/targets/ipq40xx/generic"
+
+# Flags default values
+DO_CLEAN=false
+DO_UPDATE_FEEDS=false
+DO_VERBOSE=false
+
+# CALDATA FLAG
+DO_CALDATA_CPY=false
+
+# ==============================================================================
+# AUTOCONFIG DO NOT TOUCH BELOW THIS LINE
+# ==============================================================================
+
+# script location & name
+SCRIPT_DIR=$(dirname "$0")
+SCRIPT_NAME=$(basename "$0")
+
+# modify DTS_DEST to include filename from DTS_SRC
+DTS_SRC_BASE=$(basename "$DTS_SRC")
+DTS_DEST_DIR="$DTS_DEST"
+DTS_DEST="${DTS_DEST_DIR}/${DTS_SRC_BASE}"
+DTS_SRC_DIR=$(dirname $DTS_SRC)
+
+# ==============================================================================
+# Argument Parsing
+# ==============================================================================
+
+show_help() {
+    echo ""
+    echo "Usage: ${SCRIPT_NAME} [--help|/?]"
+    echo "Usage: ${SCRIPT_NAME} [-clean|-c] [-updatefeeds|-uf] [-verbose|-v] [-extraverbose|-vv] [-slow|-s]"
+    echo ""
+    echo " -clean|-c            = make clean"
+    echo " -updatefeeds|-uf     = update feeds"
+    echo " -verbose|-v          = verbose"
+    echo " -extraverbose|-vv    = extra verbose"
+    echo " -slow|-s             = slow compile (single core, default is all cores)"
+    echo ""
+}
+
+DO_NUM_PROC=true # default
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -clean|-c)
+            DO_CLEAN=true
+	    DO_UPDATE_FEEDS=true
+            shift
+            ;;
+        -updatefeeds|-uf)
+	    DO_CLEAN=true
+            DO_UPDATE_FEEDS=true
+            shift
+            ;;
+        -verbose|-v)
+            DO_VERBOSE=true
+            shift
+            ;;
+        -extraverbose|-vv)
+            DO_XVERBOSE=true
+            shift
+            ;;
+        -slow|-s)
+            DO_NUM_PROC=false
+            shift
+            ;;
+        --help|/\?)
+            show_help
+            exit 0
+            ;;
+        *)
+	    echo ""
+            echo "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# HANDLE MAKE COMMAND BUILD HERE
+# WE NEED IT THROUGHOUT REST OF CODE
+MAKE_CMD_ADD=""
+if [ "$DO_NUM_PROC" = true ]; then
+    NUM_PROC=$(nproc)
+    MAKE_CMD_ADD="${MAKE_CMD_ADD}-j${NUM_PROC}"
+else
+    MAKE_CMD_ADD="${MAKE_CMD_ADD}-j1"
+fi
+
+if [ "$DO_VERBOSE" = true ]; then
+    MAKE_CMD_ADD="${MAKE_CMD_ADD} V=s"
+elif [ "$DO_XVERBOSE" = true ]; then
+    MAKE_CMD_ADD="${MAKE_CMD_ADD} V=99"
+fi
+
+# ==============================================================================
+# Execution Logic
+# ==============================================================================
+
+echo ">>> Starting Build Process for TEW-829DRU (IPQ4019/QCA8075/QCA8337/QCA9984)"
+echo ">>> Working Directory: $DEV_DIR"
+cd "$DEV_DIR" || exit 1
+
+SUMMARY_OUT=""
+
+# 1. Handle Clean (Optional)
+if [ "$DO_CLEAN" = true ]; then
+    echo ">>> Running 'make clean'..."
+    make clean
+fi
+
+# 2. Update Feeds (First, to ensure package definitions are fresh)
+if [ "$DO_UPDATE_FEEDS" = true ]; then
+    echo ">>> Updating and installing feeds..."
+    ./scripts/feeds update -a
+    ./scripts/feeds install -a
+fi
+
+# 3. Inject Custom DTS (BEFORE prepare)
+# This ensures the DTS is in the 'files' directory when 'make prepare' copies it to build_dir
+echo ">>> Injecting custom DTS file..."
+
+# Ensure destination exists
+mkdir -p "$DTS_DEST_DIR"
+
+# Copy the file
+cp "$DTS_SRC" "$DTS_DEST"
+
+echo ">>> ✅ DTS copied to source tree: $DTS_DEST"
+SUMMARY_OUT="${SUMMARY_OUT} >>> ✅ DTS COPIED: $DTS_DEST"
+
+# Calculate and sanitize hashes
+MD5_DTS_SRC=$(md5sum "$DTS_SRC" | awk '{print $1}' | tr -d '[:space:]')
+MD5_DTS_DEST=$(md5sum "$DTS_DEST" | awk '{print $1}' | tr -d '[:space:]')
+
+# WE WILL .gitignore IT :)
+echo "$MD5_DTS_DEST $(basename $DTS_SRC)" > "$DTS_DEST.md5"
+
+if [ "$MD5_DTS_SRC" == "$MD5_DTS_DEST" ]; then
+    echo ">>> ✅ DTS MD5 CHECK PASSED: $DTS_DEST"
+    SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ DTS MD5 CHECK PASSED: $DTS_DEST"
+else
+    echo ">>> ❌ DTS MD5 CHECK FAILED: $DTS_DEST"
+    echo "   Source:      '$MD5_DTS_SRC'"
+    echo "   Destination: '$MD5_DTS_DEST'"
+    echo ""
+    exit 1
+fi
+
+# needs to be done before patches/mods
+if [ "$DO_CLEAN" = true ]; then
+    echo ">>> Running 'make prepare' to extract sources..."
+    MAKE_CMD="make target/linux/prepare ${MAKE_CMD_ADD}"
+    echo ">>> Preparing for compilation: ${MAKE_CMD}"
+    eval $MAKE_CMD
+fi
+
+# TODO:
+# we need to move PATCH_SRC, IPQESS_MOD_*_SRC etc. outside, so we can reference both in both conditions
+# this is so when we enable one, we ensure the other is deleted and prepare will handle fetching original source
+# for now we are working on the raw mod first, and I've manually removed the patch before disabling patch and enable raw mod
+# also need to turn the manual condition into a cli flag but will later
+if true ; then
+  # ENABLED FOR NOW
+
+  if true ; then
+    # DISABLED FOR NOW
+    # ENABLE PATCH IQESS DRIVER MOD
+
+    PATCH_SRC="${PATCHES_SRC_DIR}/${PATCH_FILENAME}"
+    PATCH_DEST="${PATCHES_DEST_DIR}/${PATCH_FILENAME}"
+
+    # Copy the file
+    cp "$PATCH_SRC" "$PATCH_DEST"
+
+    echo ">>> ✅ PATCH copied to source tree: $PATCH_DEST"
+    SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ PATCH COPIED: $PATCH_DEST"
+
+    # Calculate and sanitize hashes
+    MD5_PATCH_SRC=$(md5sum "$PATCH_SRC" | awk '{print $1}' | tr -d '[:space:]')
+    MD5_PATCH_DEST=$(md5sum "$PATCH_DEST" | awk '{print $1}' | tr -d '[:space:]')
+
+    if [ "$MD5_PATCH_SRC" == "$MD5_PATCH_DEST" ]; then
+        echo ">>> ✅ PATCH MD5 CHECK PASSED: $PATCH_DEST"
+        SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ PATCH MD5 CHECK PASSED: $PATCH_DEST"
+    else
+        echo ">>> ❌ PATCH MD5 CHECK FAILED: $PATCH_DEST"
+        echo "   Source:      '$MD5_PATCH_SRC'"
+        echo "   Destination: '$MD5_PATCH_DEST'"
+        echo ""
+        exit 1
+    fi
+
+  else
+
+    # ENABLE RAW IPQESS DRIVER MOD
+
+    IPQESS_MOD_H_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.h.modified"
+    IPQESS_MOD_C_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.c.modified"
+    IPQESS_MOD_ETHTOOL_C_SRC="${IPQESS_MOD_SRC_DIR}/ipqess_ethtool.c.modified"
+
+    IPQESS_MOD_H_DEST="${IPQESS_MOD_DEST_DIR}/ipqess.h"
+    IPQESS_MOD_C_DEST="${IPQESS_MOD_DEST_DIR}/ipqess.c"
+    IPQESS_MOD_ETHTOOL_C_DEST="${IPQESS_MOD_DEST_DIR}/ipqess_ethtool.c"
+
+    # Copy the files
+    cp "$IPQESS_MOD_H_SRC" "$IPQESS_MOD_H_DEST"
+    cp "$IPQESS_MOD_C_SRC" "$IPQESS_MOD_C_DEST"
+    cp "$IPQESS_MOD_ETHTOOL_C_SRC" "$IPQESS_MOD_ETHTOOL_C_DEST"
+
+    echo ">>> ✅ IPQESS RAW DRIVER MOD copied to source tree: $IPQESS_MOD_DEST_DIR"
+    SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ IPQESS RAW DRIVER MOD APPLIED: $IPQESS_MOD_DEST_DIR"
+
+    # Calculate and sanitize hashes
+    MD5_IPQESS_MOD_H_SRC=$(md5sum "$IPQESS_MOD_H_SRC" | awk '{print $1}' | tr -d '[:space:]')
+    MD5_IPQESS_MOD_C_SRC=$(md5sum "$IPQESS_MOD_C_SRC" | awk '{print $1}' | tr -d '[:space:]')
+    MD5_IPQESS_MOD_ETHTOOL_C_SRC=$(md5sum "$IPQESS_MOD_ETHTOOL_C_SRC" | awk '{print $1}' | tr -d '[:space:]')
+
+    MD5_IPQESS_MOD_H_DEST=$(md5sum "$IPQESS_MOD_H_DEST" | awk '{print $1}' | tr -d '[:space:]')
+    MD5_IPQESS_MOD_C_DEST=$(md5sum "$IPQESS_MOD_C_DEST" | awk '{print $1}' | tr -d '[:space:]')
+    MD5_IPQESS_MOD_ETHTOOL_C_DEST=$(md5sum "$IPQESS_MOD_ETHTOOL_C_DEST" | awk '{print $1}' | tr -d '[:space:]')
+
+    if [ "$MD5_IPQESS_MOD_H_SRC" = "$MD5_IPQESS_MOD_H_DEST" ] && \
+       [ "$MD5_IPQESS_MOD_C_SRC" = "$MD5_IPQESS_MOD_C_DEST" ] && \
+       [ "$MD5_IPQESS_MOD_ETHTOOL_C_SRC" = "$MD5_IPQESS_MOD_ETHTOOL_C_DEST" ]; then
+        echo ">>> ✅ IPQESS RAW DRIVER MD5 CHECK PASSED (ipqess.h, ipqess.c, ipqess_ethtool.c)"
+        SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ IPQESS RAW DRIVER MD5 CHECK PASSED  (ipqess.h, ipqess.c, ipqess_ethtool.c)"
+    else
+        echo ">>> ❌ IPQESS RAW DRIVER MD5 CHECK FAILED"
+        echo "   ipqess.h  src:  '$MD5_IPQESS_MOD_H_SRC'"
+        echo "   ipqess.h  dest: '$MD5_IPQESS_MOD_H_DEST'"
+        echo "   ipqess.c  src:  '$MD5_IPQESS_MOD_C_SRC'"
+        echo "   ipqess.c  dest: '$MD5_IPQESS_MOD_C_DEST'"
+        echo "   ipqess_ethtool.c  src:  '$MD5_IPQESS_MOD_ETHTOOL_C_SRC'"
+        echo "   ipqess_ethtool.c  dest: '$MD5_IPQESS_MOD_ETHTOOL_C_DEST'"
+        echo ""
+        exit 1
+    fi
+
+    MAKE_CMD="make target/linux/compile ${MAKE_CMD_ADD}"
+    echo ">>> Preparing for compilation: ${MAKE_CMD}"
+    eval $MAKE_CMD
+
+  fi
+fi
+
+# 4. Run Prepare (Creates build_dir and copies DTS from source tree)
+# We run target prepare which usually triggers kernel prep.
+# We also explicitly prepare linux-firmware to ensure its build_dir exists.
+# ONLY runs if make clean runs - otherwise the build_dir is already prepared
+if [ "$DO_CLEAN" = true ]; then
+    MAKE_CMD="make package/linux-firmware/prepare ${MAKE_CMD_ADD}"
+    echo ">>> Preparing for compilation: ${MAKE_CMD}"
+    eval $MAKE_CMD
+fi
+
+# 5. Inject board-2.bin (AFTER prepare, BEFORE compile)
+# Now that build_dir exists and is populated, we overwrite the firmware file
+if [ "$DO_CALDATA_CPY" = "true" ]; then
+
+    echo ">>> Injecting board-2.bin into build_dir..."
+
+    if [ ! -f "$QCA9984_FIRMWARE" ]; then
+        echo "Error: Source board-2.bin not found at $FIRMWARE_SRC"
+        exit 1
+    elif [ ! -f "$QCA4019_FIRMWARE" ]; then
+        echo "Error: Source board-2.bin not found at $FIRMWARE_SRC"
+        exit 1
+    fi
+
+    FIRMWARE_BUILD_DIR=$(find "$DEV_DIR/build_dir" -type d -name "linux-firmware-*" | head -n 1)
+
+    if [ -n "$FIRMWARE_BUILD_DIR" ]; then
+        DEST_FW="$FIRMWARE_BUILD_DIR/ath10k/QCA9984/hw1.0"
+        mkdir -p "$DEST_FW"
+        rm "$DEST_FW/board-2.bin"
+        cp "$QCA9984_FIRMWARE" "$DEST_FW/board-2.bin"
+        MD5_SUM_SRC=$(md5sum "$QCA9984_FIRMWARE" | awk '{print $1}' | tr -d '[:space:]')
+        MD5_SUM_DEST=$(md5sum "$DEST_FW/board-2.bin" | awk '{print $1}' | tr -d '[:space:]')
+        echo "$MD5_SUM_DEST board-2.bin" > "$DEST_FW/board-2.bin.md5"
+
+        if [ "$MD5_SUM_SRC" == "$MD5_SUM_DEST" ]; then
+            echo ">>> ✅ BIN MD5 CHECK PASSED: $DEST_FW/board-2.bin"
+            SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ BIN MD5 CHECK PASSED: $DEST_FW/board-2.bin"
+        else
+            echo "$SUMMARY_OUT"
+            echo ">>> ❌ BIN MD5 CHECK FAILED: $DEST_FW/board-2.bin"
+            echo "   Source:      '$MD5_SUM_SRC'"
+            echo "   Destination: '$MD5_SUM_DEST'"
+            echo ""
+            exit 1
+        fi
+        echo ">>> QCA9984 board-2.bin copied to: $DEST_FW"
+        #ls -alh $DEST_FW
+
+        DEST_FW="$FIRMWARE_BUILD_DIR/ath10k/QCA4019/hw1.0"
+        mkdir -p "$DEST_FW"
+        rm "$DEST_FW/board-2.bin"
+        cp "$QCA4019_FIRMWARE" "$DEST_FW/board-2.bin"
+        MD5_SUM_SRC=$(md5sum "$QCA4019_FIRMWARE" | awk '{print $1}' | tr -d '[:space:]')
+        MD5_SUM_DEST=$(md5sum "$DEST_FW/board-2.bin" | awk '{print $1}' | tr -d '[:space:]')
+        echo "$MD5_SUM_DEST board-2.bin" > "$DEST_FW/board-2.bin.md5"
+        if [ "$MD5_SUM_SRC" == "$MD5_SUM_DEST" ]; then
+            echo ">>> ✅ BIN MD5 CHECK PASSED: $DEST_FW/board-2.bin"
+            SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ BIN MD5 CHECK PASSED: $DEST_FW/board-2.bin)"
+        else
+            echo "$SUMMARY_OUT"
+            echo ">>> ❌ BIN MD5 CHECK FAILED: $DEST_FW/board-2.bin"
+            echo "   Source:      '$MD5_SUM_SRC'"
+            echo "   Destination: '$MD5_SUM_DEST'"
+            echo ""
+            exit 1
+        fi
+        echo ">>> QCA4019 board-2.bin copied to: $DEST_FW"
+        #ls -alh $DEST_FW
+    else
+        echo "Error: Could not find linux-firmware build directory after prepare."
+        exit 1
+    fi
+fi
+
+sleep 10
+
+# 6. Compile
+
+MAKE_CMD="make ${MAKE_CMD_ADD}"
+
+echo ">>> Starting compilation: ${MAKE_CMD}"
+eval $MAKE_CMD
+
+if [ $? -eq 0 ]; then
+
+    # COPY THE IMAGE TO IMG_OUT_DIR
+
+    IMG_OUT_SRC="${IMG_DIR}/"
+    IMG_OUT_DEST="${IMG_OUT_DIR}/"
+
+    # clobber the image out old files
+    rm -rf "${IMG_OUT_DEST}"*
+
+    # copy the new files
+    cp -r "${IMG_OUT_SRC}"* "$IMG_OUT_DEST"
+
+    # NO MD5 CHECK: we can do it later, it would have to check all files in the directory
+
+    echo " >>> ✅ IMAGES COPIED TO WORK DIR: $IMG_OUT_DEST"
+    SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ IMAGES COPIED TO WORK DIR: $IMG_OUT_DEST"
+
+    echo " >>>"
+    echo " >>>"
+    echo " >>> SUMMARY REPORT:"
+    echo " >>>"
+    echo "$SUMMARY_OUT"
+    echo " >>>"
+    echo " >>> ✅ BUILD COMPLETED SUCCESSFULLY!"
+    echo " >>>"
+    exit 0
+else
+
+    echo " >>>"
+    echo "$SUMMARY_OUT"
+    echo " >>>"
+    echo " >>> ❌ CRITICAL: BUILD FAILED!"
+    echo " >>>"
+    exit 1
+
+fi
+
+echo "ERROR: WE SHOULD NOT BE HERE!"
+exit 1
+# EOX / EOF
