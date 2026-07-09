@@ -19,9 +19,6 @@ DTS_DEST="$DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
 PATCHES_SRC_DIR="$WORK_DIR/PATCHES"
 PATCHES_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/patches-6.12"
 
-# DEPRECATED: copy all patches from dir, not specific filenames
-#PATCH_FILENAME="713-net-qualcomm-ipqess-dual-switch-support.patch"
-
 # IPQESS raw driver mod paths (temp enabled)
 IPQESS_MOD_SRC_DIR="$WORK_DIR/IPQESS_DRIVER_MOD"
 IPQESS_MOD_DEST_DIR="$DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess"
@@ -59,7 +56,6 @@ SCRIPT_NAME=$(basename "$0")
 DTS_SRC_BASE=$(basename "$DTS_SRC")
 DTS_DEST_DIR="$DTS_DEST"
 DTS_DEST="${DTS_DEST_DIR}/${DTS_SRC_BASE}"
-DTS_SRC_DIR=$(dirname $DTS_SRC)
 
 # Flags default values
 DO_CLEAN=false
@@ -229,7 +225,7 @@ copy_file() {
     local dest_dir
 
     # Ensure source file exists or exit_with_error
-    if [ -f "$file_src" ]; then
+    if [ ! -f "$file_src" ]; then
         exit_with_error "$desc failed: ${file_src} doesn't exist"
     fi
 
@@ -277,8 +273,8 @@ copy_patches_dir() {
     fi
 
     # Check if destination directory exists
-    if [ ! -d "${dest_dir}" ]; then
-        exit_with_error "Destination directory does not exist: ${dest_dir}"
+    if [ ! -d "${dir_dest}" ]; then
+        exit_with_error "Destination directory does not exist: ${dir_dest}"
     fi
 
     # Loop over each .patch file non-recursively and copy using your function
@@ -350,9 +346,6 @@ build_kernel_sources() {
             exit_with_error "PATCHES_DEST_DIR is not set (check script config)"
         fi
 
-        PATCH_SRC="${PATCHES_SRC_DIR}/${PATCH_FILENAME}"
-        PATCH_DEST="${PATCHES_DEST_DIR}/${PATCH_FILENAME}"
-
         IPQESS_MOD_H_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.h.modified"
         IPQESS_MOD_C_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.c.modified"
         IPQESS_MOD_ETHTOOL_C_SRC="${IPQESS_MOD_SRC_DIR}/ipqess_ethtool.c.modified"
@@ -364,7 +357,7 @@ build_kernel_sources() {
         if [ "$DO_RAWMOD" != true ]; then
 
             # Applies the driver patches
-            copy_patches_dir "${PATCHES_SRC_DIR} ${$PATCHES_DEST_DIR}"
+            copy_patches_dir "${PATCHES_SRC_DIR}" "${$PATCHES_DEST_DIR}"
 
             echo " >>> ✅ DRIVER PATCHES copied to source tree: $PATCHES_SRC_DIR"
             SUMMARY_OUT+=" >>> ✅ DRIVER PATCHES copied to source tree: $PATCHES_SRC_DIR"$'\n'
@@ -433,7 +426,7 @@ do_final_build() {
 # WE NEED IT THROUGHOUT REST OF CODE
 
 # Handle Concurrency
-if [ "$DO_NUM_PROC" = true ]; then
+if [ "$DO_SLOW" = false ]; then
     NUM_PROC=$(nproc)
     MAKE_CMD_ADD="${MAKE_CMD_ADD}-j${NUM_PROC}"
 else
@@ -470,11 +463,12 @@ if [ "$DO_UPDATE_FEEDS" = true ]; then
 fi
 
 # Handle Inject DTS (BEFORE prepare)
-echo ">>> Injecting custom DTS file..."
-
-if copy_file "$DTS_SRC" "$DTS_DEST"; then
-    echo ">>> ✅ DTS copied to source tree: $DTS_DEST"
-    SUMMARY_OUT+=" >>> ✅ DTS COPIED: $DTS_DEST"$'\n'
+if [ "$DO_DTS_CPY" = true ]; then
+    echo ">>> Injecting custom DTS file..."
+    if copy_file "$DTS_SRC" "$DTS_DEST"; then
+        echo ">>> ✅ DTS copied to source tree: $DTS_DEST"
+        SUMMARY_OUT+=" >>> ✅ DTS COPIED: $DTS_DEST"$'\n'
+    fi
 fi
 
 # Handle Prepare Kernel Sources
