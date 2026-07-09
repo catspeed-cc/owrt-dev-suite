@@ -1,4 +1,7 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
+
 
 # ==============================================================================
 # Configuration Variables
@@ -14,28 +17,34 @@ DTS_DEST="$DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
 # Patches paths (temp disabled)
 PATCHES_SRC_DIR="$WORK_DIR/PATCHES"
 PATCHES_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/patches-6.12"
-PATCH_FILENAME="713-net-qualcomm-ipqess-dual-switch-support.patch"
+
+# DEPRECATED: copy all patches from dir, not specific filenames
+#PATCH_FILENAME="713-net-qualcomm-ipqess-dual-switch-support.patch"
 
 # IPQESS raw driver mod paths (temp enabled)
 IPQESS_MOD_SRC_DIR="$WORK_DIR/IPQESS_DRIVER_MOD"
 IPQESS_MOD_DEST_DIR="$DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess"
 
-# Firmware Paths
+# Calibration Data Paths (TODO: rename QCAxxxx_CALDATA)
 QCA9984_FIRMWARE="$WORK_DIR/QCA9984/board-2.bin"
 QCA4019_FIRMWARE="$WORK_DIR/QCA4019/board-2.bin"
-# We will determine the destination dynamically inside build_dir
 
 # Image out paths
 IMG_OUT_DIR="${WORK_DIR}/image-out"
 IMG_DIR="${DEV_DIR}/bin/targets/ipq40xx/generic"
 
-# Flags default values
-DO_CLEAN=false
-DO_UPDATE_FEEDS=false
-DO_VERBOSE=false
+# DTSCOPY - Enable copy of DTS file
+DO_DTS_CPY=true
+
+# PATCHMOD - Enable either driver patch OR raw mod
+DO_PATCHMOD=true
+
+# RAWMOD - Enable raw driver mod instead of patch (DO_PATCHMOD must be true)
+DO_RAWMOD=false
 
 # CALDATA FLAG
 DO_CALDATA_CPY=false
+
 
 # ==============================================================================
 # AUTOCONFIG DO NOT TOUCH BELOW THIS LINE
@@ -51,7 +60,15 @@ DTS_DEST_DIR="$DTS_DEST"
 DTS_DEST="${DTS_DEST_DIR}/${DTS_SRC_BASE}"
 DTS_SRC_DIR=$(dirname $DTS_SRC)
 
+# Flags default values
+DO_CLEAN=false
+DO_UPDATE_FEEDS=false
+DO_VERBOSE=false
+DO_SLOW=false
+
 SUMMARY_OUT=""
+
+MAKE_CMD_ADD=""
 
 # ==============================================================================
 # Argument Parsing
@@ -70,47 +87,276 @@ show_help() {
     echo ""
 }
 
-DO_NUM_PROC=true # default
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -clean|-c)
-            DO_CLEAN=true
-	    DO_UPDATE_FEEDS=true
-            shift
-            ;;
-        -updatefeeds|-uf)
-	    DO_CLEAN=true
-            DO_UPDATE_FEEDS=true
-            shift
-            ;;
-        -verbose|-v)
-            DO_VERBOSE=true
-            shift
-            ;;
-        -extraverbose|-vv)
-            DO_XVERBOSE=true
-            shift
-            ;;
-        -slow|-s)
-            DO_NUM_PROC=false
-            shift
-            ;;
-        --help|/\?)
-            show_help
-            exit 0
-            ;;
-        *)
-	    echo ""
-            echo "Unknown option: $1"
-            show_help
-            exit 1
-            ;;
-    esac
-done
+parse_arguments() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -clean|-c)
+                DO_CLEAN=true
+                DO_UPDATE_FEEDS=true
+                shift
+                ;;
+            -updatefeeds|-uf)
+                DO_CLEAN=true
+                DO_UPDATE_FEEDS=true
+                shift
+                ;;
+            -verbose|-v)
+                DO_VERBOSE=true
+                shift
+                ;;
+            -extraverbose|-vv)
+                DO_XVERBOSE=true
+                shift
+                ;;
+            -slow|-s)
+                DO_SLOW=true
+                shift
+                ;;
+            --help|/\?)
+                show_help
+                exit 0
+                ;;
+            *)
+                echo ""
+                echo "Unknown option: $1"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+}
 
-# HANDLE MAKE COMMAND BUILD HERE
+parse_arguments
+
+
+# ==============================================================================
+# Script Termination
+# ==============================================================================
+
+exit_with_success() {
+    echo " >>>"
+    echo " >>>"
+    echo " >>> SUMMARY REPORT:"
+    echo " >>>"
+    echo "$SUMMARY_OUT"
+    echo " >>>"
+    echo " >>> ✅ BUILD COMPLETED SUCCESSFULLY!"
+    echo " >>>"
+    exit 0
+}
+
+exit_with_error() {
+    local err_msg="$1"
+    echo " >>>"
+    echo " >>> SUMMARY REPORT:"
+    echo " >>>"
+    echo "$SUMMARY_OUT"
+    echo " >>>"
+    echo " >>> ❌ CRITICAL: ${err_msg}!"
+    echo " >>>"
+    exit 1
+}
+
+
+# ==============================================================================
+# File Operations
+# ==============================================================================
+
+verify_md5() {
+    # Parameters
+    local file_src="$1"
+    local file_dest="$2"
+
+    # Local vars
+    local desc="Checking MD5"
+
+    # Calculate and sanitize hashes
+    local file_src_md5=$(md5sum "$file_src" | awk '{print $1}')
+    local file_dest_md5=$(md5sum "$file_dest" | awk '{print $1}')
+
+    if [ "$file_src_md5" == "$file_dest_md5" ]; then
+        local msg=" >>> ✅ Success: $desc"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}\n"
+        return 0
+    else
+        echo " >>>"
+        echo " >>> ❌ FAILURE: $desc - MISMATCH!"
+        echo " >>>      Source:      '$file_src' -> '$file_src_md5'"
+        echo " >>>      Destination: '$file_dest' -> '$file_dest_md5'"
+        echo " >>>"
+        return 1
+    fi
+}
+
+copy_file() {
+
+    # Parameters
+    local file_src="$1"
+    local file_dest="$2"
+
+    # Local variables
+    local desc="Copying File"
+    local dest_dir
+
+    # Fetch the file's directory
+    dest_dir="$(dirname "$file_dest")"
+
+    # Create directory if it doesn't exist (including parents)
+    if [ ! -d "$dest_dir" ]; then
+        mkdir -p "$dest_dir"
+    fi
+
+    # Remove destination file if it already exists
+    if [ -f "$file_dest" ]; then
+        rm "$file_dest"
+    fi
+
+    # Copy file
+    if ! cp "$file_src" "$file_dest"; then
+        exit_with_error "$desc failed: ${file_dest}"
+    fi
+
+    # Verify md5 & output messages
+    if verify_md5 "$file_src" "$file_dest"; then
+	local msg=" >>> ✅ Success: $desc (MD5 matches)"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"$'\n'
+        return 0
+    else
+        exit_with_error "$desc failed (MD5 mismatch)"
+        return 1 # pragmatic safety: this shouldn't execute
+    fi
+
+}
+
+copy_patches_dir() {
+    # Parameters
+    local dir_src="$1"
+    local dir_dest="$2"
+
+    echo " >>> Copying Patches Directory ${dir_src}"
+
+    # Check if source directory exists
+    if [ ! -d "${dir_src}" ]; then
+        exit_with_error "Source directory does not exist: ${dir_src}"
+    fi
+
+    # Check if destination directory exists
+    if [ ! -d "${dest_dir}" ]; then
+        exit_with_error "Destination directory does not exist: ${dest_dir}"
+    fi
+
+    # Loop over each .patch file non-recursively and copy using your function
+    for src_file in "${dir_src}"/*.patch; do
+
+        # Check if glob matched any files (handles empty directory case)
+        [ -e "$src_file" ] || continue
+
+        # Extract just the filename for the destination
+        filename="$(basename "$src_file")"
+        dest_file="${dir_dest}/${filename}"
+
+        # Use your existing copy_file function
+        copy_file "$src_file" "$dest_file"
+
+    done
+
+    echo " >>> ✅ Patches Directory Copied ${dir_src}"
+    SUMMARY_OUT+=" >>> ✅ Patches Directory Copied ${dir_src}"$'\n'
+
+}
+
+
+# ==============================================================================
+# Build Operations
+# ==============================================================================
+
+build_kernel_sources() {
+
+    # Download sources (Prerequisite)
+    echo ">>> Running 'make download'..."
+    make download ${MAKE_CMD_ADD} || exit_with_error "Make Download"
+
+    # Copy custom patches into the target directory
+    # These will be picked up automatically by the 'prepare' step
+
+    if [ "$DO_PATCHMOD" = true ]; then
+
+        if [ -z "${PATCHES_DEST_DIR}" ]; then
+            exit_with_error "PATCHES_DEST_DIR is not set (check script config)"
+        fi
+
+        PATCH_SRC="${PATCHES_SRC_DIR}/${PATCH_FILENAME}"
+        PATCH_DEST="${PATCHES_DEST_DIR}/${PATCH_FILENAME}"
+
+        IPQESS_MOD_H_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.h.modified"
+        IPQESS_MOD_C_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.c.modified"
+        IPQESS_MOD_ETHTOOL_C_SRC="${IPQESS_MOD_SRC_DIR}/ipqess_ethtool.c.modified"
+
+        IPQESS_MOD_H_DEST="${IPQESS_MOD_DEST_DIR}/ipqess.h"
+        IPQESS_MOD_C_DEST="${IPQESS_MOD_DEST_DIR}/ipqess.c"
+        IPQESS_MOD_ETHTOOL_C_DEST="${IPQESS_MOD_DEST_DIR}/ipqess_ethtool.c"
+
+        if [ "$DO_RAWMOD" != true ]; then
+
+            # Applies the driver patches
+            copy_patches_dir "${PATCHES_SRC_DIR} ${$PATCHES_DEST_DIR}"
+
+            echo " >>> ✅ DRIVER PATCHES copied to source tree: $PATCHES_SRC_DIR"
+            SUMMARY_OUT+=" >>> ✅ DRIVER PATCHES copied to source tree: $PATCHES_SRC_DIR"$'\n'
+
+        else
+
+            # Applies the raw driver mod source
+            copy_file "$IPQESS_MOD_H_SRC" "$IPQESS_MOD_H_DEST" || exit_with_error "Copying Driver Mod (ipqess.h)"
+            copy_file "$IPQESS_MOD_C_SRC" "$IPQESS_MOD_C_DEST" || exit_with_error "Copying Driver Mod (ipqess.c)"
+            copy_file "$IPQESS_MOD_ETHTOOL_C_SRC" "$IPQESS_MOD_ETHTOOL_C_DEST" || exit_with_error "Copying Driver Mod (ipqess_ethtool.c)"
+
+            echo ">>> ✅ IPQESS RAW DRIVER MOD copied to source tree: $IPQESS_MOD_DEST_DIR"
+            SUMMARY_OUT+=" >>> ✅ IPQESS RAW DRIVER MOD APPLIED: $IPQESS_MOD_DEST_DIR"$'\n'
+
+        fi
+
+    fi
+
+    # Prepare (Extract + Apply Patches)
+    echo ">>> Running 'make target/linux/prepare'..."
+    make target/linux/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare"
+    echo ">>> Sources prepared with custom patches applied."
+
+    # Compile
+    echo ">>> Running 'make target/linux/compile'..."
+    make target/linux/compile ${MAKE_CMD_ADD} || exit_with_error "Make Compile"
+    echo ">>> Sources compiled with custom patches applied."
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ==============================================================================
+# Execution Preperation
+# ==============================================================================
+
+# HANDLE MAKE COMMAND BUILDING HERE
 # WE NEED IT THROUGHOUT REST OF CODE
-MAKE_CMD_ADD=""
+
+# Handle Concurrency
 if [ "$DO_NUM_PROC" = true ]; then
     NUM_PROC=$(nproc)
     MAKE_CMD_ADD="${MAKE_CMD_ADD}-j${NUM_PROC}"
@@ -118,160 +364,81 @@ else
     MAKE_CMD_ADD="${MAKE_CMD_ADD}-j1"
 fi
 
+# Handle Verbosity
 if [ "$DO_VERBOSE" = true ]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} V=s"
 elif [ "$DO_XVERBOSE" = true ]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} V=99"
 fi
 
+
 # ==============================================================================
 # Execution Logic
 # ==============================================================================
 
-echo ">>> Starting Build Process for TEW-829DRU (IPQ4019/QCA8075/QCA8337/QCA9984)"
+echo ">>> Starting Build Process for TEW-829DRU (IPQ4019)"
 echo ">>> Working Directory: $DEV_DIR"
 cd "$DEV_DIR" || exit 1
 
-# 1. Handle Clean (Optional)
+# Handle Clean
 if [ "$DO_CLEAN" = true ]; then
     echo ">>> Running 'make clean'..."
     make clean
 fi
 
-# 2. Update Feeds (First, to ensure package definitions are fresh)
+# Handle Update Feeds (First, to ensure package definitions are fresh)
 if [ "$DO_UPDATE_FEEDS" = true ]; then
     echo ">>> Updating and installing feeds..."
     ./scripts/feeds update -a
     ./scripts/feeds install -a
 fi
 
-# 3. Inject Custom DTS (BEFORE prepare)
-# This ensures the DTS is in the 'files' directory when 'make prepare' copies it to build_dir
+# Handle Inject DTS (BEFORE prepare)
 echo ">>> Injecting custom DTS file..."
 
-# Ensure destination exists
-mkdir -p "$DTS_DEST_DIR"
-
-# Copy the file
-cp "$DTS_SRC" "$DTS_DEST"
-
-echo ">>> ✅ DTS copied to source tree: $DTS_DEST"
-SUMMARY_OUT="${SUMMARY_OUT} >>> ✅ DTS COPIED: $DTS_DEST"
-
-# Calculate and sanitize hashes
-MD5_DTS_SRC=$(md5sum "$DTS_SRC" | awk '{print $1}' | tr -d '[:space:]')
-MD5_DTS_DEST=$(md5sum "$DTS_DEST" | awk '{print $1}' | tr -d '[:space:]')
-
-# WE WILL .gitignore IT :)
-echo "$MD5_DTS_DEST $(basename $DTS_SRC)" > "$DTS_DEST.md5"
-
-if [ "$MD5_DTS_SRC" == "$MD5_DTS_DEST" ]; then
-    echo ">>> ✅ DTS MD5 CHECK PASSED: $DTS_DEST"
-    SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ DTS MD5 CHECK PASSED: $DTS_DEST"
-else
-    echo ">>> ❌ DTS MD5 CHECK FAILED: $DTS_DEST"
-    echo "   Source:      '$MD5_DTS_SRC'"
-    echo "   Destination: '$MD5_DTS_DEST'"
-    echo ""
-    exit 1
+if copy_file "$DTS_SRC" "$DTS_DEST"; then
+    echo ">>> ✅ DTS copied to source tree: $DTS_DEST"
+    SUMMARY_OUT+=" >>> ✅ DTS COPIED: $DTS_DEST"$'\n'
 fi
 
-# needs to be done before patches/mods
+# Handle Prepare Kernel Sources
 if [ "$DO_CLEAN" = true ]; then
-    echo ">>> Running 'make prepare' to extract sources..."
-    MAKE_CMD="make target/linux/prepare ${MAKE_CMD_ADD}"
-    echo ">>> Preparing for compilation: ${MAKE_CMD}"
-    eval $MAKE_CMD
+    build_kernel_sources
 fi
 
-# TODO:
-# we need to move PATCH_SRC, IPQESS_MOD_*_SRC etc. outside, so we can reference both in both conditions
-# this is so when we enable one, we ensure the other is deleted and prepare will handle fetching original source
-# for now we are working on the raw mod first, and I've manually removed the patch before disabling patch and enable raw mod
-# also need to turn the manual condition into a cli flag but will later
-if true ; then
-  # ENABLED FOR NOW
 
-  if true ; then
-    # DISABLED FOR NOW
-    # ENABLE PATCH IQESS DRIVER MOD
 
-    PATCH_SRC="${PATCHES_SRC_DIR}/${PATCH_FILENAME}"
-    PATCH_DEST="${PATCHES_DEST_DIR}/${PATCH_FILENAME}"
 
-    # Copy the file
-    cp "$PATCH_SRC" "$PATCH_DEST"
 
-    echo ">>> ✅ PATCH copied to source tree: $PATCH_DEST"
-    SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ PATCH COPIED: $PATCH_DEST"
 
-    # Calculate and sanitize hashes
-    MD5_PATCH_SRC=$(md5sum "$PATCH_SRC" | awk '{print $1}' | tr -d '[:space:]')
-    MD5_PATCH_DEST=$(md5sum "$PATCH_DEST" | awk '{print $1}' | tr -d '[:space:]')
 
-    if [ "$MD5_PATCH_SRC" == "$MD5_PATCH_DEST" ]; then
-        echo ">>> ✅ PATCH MD5 CHECK PASSED: $PATCH_DEST"
-        SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ PATCH MD5 CHECK PASSED: $PATCH_DEST"
-    else
-        echo ">>> ❌ PATCH MD5 CHECK FAILED: $PATCH_DEST"
-        echo "   Source:      '$MD5_PATCH_SRC'"
-        echo "   Destination: '$MD5_PATCH_DEST'"
-        echo ""
-        exit 1
+
+
+
+
+
+# LEFT OFF HERE, OLD CODE BELOW NEW CODE ABOVE
+
+
+
+
+
+
+
+
+
+
+
+
+# SDFUJSDFUHSDFUSDFHSUFD
+
+    if [ -z "${PATCHES_DEST_DIR}" ]; then
+        exit_with_error "PATCHES_DEST_DIR is not set (check script config)"
     fi
 
-  else
 
-    # ENABLE RAW IPQESS DRIVER MOD
 
-    IPQESS_MOD_H_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.h.modified"
-    IPQESS_MOD_C_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.c.modified"
-    IPQESS_MOD_ETHTOOL_C_SRC="${IPQESS_MOD_SRC_DIR}/ipqess_ethtool.c.modified"
 
-    IPQESS_MOD_H_DEST="${IPQESS_MOD_DEST_DIR}/ipqess.h"
-    IPQESS_MOD_C_DEST="${IPQESS_MOD_DEST_DIR}/ipqess.c"
-    IPQESS_MOD_ETHTOOL_C_DEST="${IPQESS_MOD_DEST_DIR}/ipqess_ethtool.c"
-
-    # Copy the files
-    cp "$IPQESS_MOD_H_SRC" "$IPQESS_MOD_H_DEST"
-    cp "$IPQESS_MOD_C_SRC" "$IPQESS_MOD_C_DEST"
-    cp "$IPQESS_MOD_ETHTOOL_C_SRC" "$IPQESS_MOD_ETHTOOL_C_DEST"
-
-    echo ">>> ✅ IPQESS RAW DRIVER MOD copied to source tree: $IPQESS_MOD_DEST_DIR"
-    SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ IPQESS RAW DRIVER MOD APPLIED: $IPQESS_MOD_DEST_DIR"
-
-    # Calculate and sanitize hashes
-    MD5_IPQESS_MOD_H_SRC=$(md5sum "$IPQESS_MOD_H_SRC" | awk '{print $1}' | tr -d '[:space:]')
-    MD5_IPQESS_MOD_C_SRC=$(md5sum "$IPQESS_MOD_C_SRC" | awk '{print $1}' | tr -d '[:space:]')
-    MD5_IPQESS_MOD_ETHTOOL_C_SRC=$(md5sum "$IPQESS_MOD_ETHTOOL_C_SRC" | awk '{print $1}' | tr -d '[:space:]')
-
-    MD5_IPQESS_MOD_H_DEST=$(md5sum "$IPQESS_MOD_H_DEST" | awk '{print $1}' | tr -d '[:space:]')
-    MD5_IPQESS_MOD_C_DEST=$(md5sum "$IPQESS_MOD_C_DEST" | awk '{print $1}' | tr -d '[:space:]')
-    MD5_IPQESS_MOD_ETHTOOL_C_DEST=$(md5sum "$IPQESS_MOD_ETHTOOL_C_DEST" | awk '{print $1}' | tr -d '[:space:]')
-
-    if [ "$MD5_IPQESS_MOD_H_SRC" = "$MD5_IPQESS_MOD_H_DEST" ] && \
-       [ "$MD5_IPQESS_MOD_C_SRC" = "$MD5_IPQESS_MOD_C_DEST" ] && \
-       [ "$MD5_IPQESS_MOD_ETHTOOL_C_SRC" = "$MD5_IPQESS_MOD_ETHTOOL_C_DEST" ]; then
-        echo ">>> ✅ IPQESS RAW DRIVER MD5 CHECK PASSED (ipqess.h, ipqess.c, ipqess_ethtool.c)"
-        SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ IPQESS RAW DRIVER MD5 CHECK PASSED  (ipqess.h, ipqess.c, ipqess_ethtool.c)"
-    else
-        echo ">>> ❌ IPQESS RAW DRIVER MD5 CHECK FAILED"
-        echo "   ipqess.h  src:  '$MD5_IPQESS_MOD_H_SRC'"
-        echo "   ipqess.h  dest: '$MD5_IPQESS_MOD_H_DEST'"
-        echo "   ipqess.c  src:  '$MD5_IPQESS_MOD_C_SRC'"
-        echo "   ipqess.c  dest: '$MD5_IPQESS_MOD_C_DEST'"
-        echo "   ipqess_ethtool.c  src:  '$MD5_IPQESS_MOD_ETHTOOL_C_SRC'"
-        echo "   ipqess_ethtool.c  dest: '$MD5_IPQESS_MOD_ETHTOOL_C_DEST'"
-        echo ""
-        exit 1
-    fi
-
-    MAKE_CMD="make target/linux/compile ${MAKE_CMD_ADD}"
-    echo ">>> Preparing for compilation: ${MAKE_CMD}"
-    eval $MAKE_CMD
-
-  fi
-fi
 
 # 4. Run Prepare (Creates build_dir and copies DTS from source tree)
 # We run target prepare which usually triggers kernel prep.
@@ -375,26 +542,10 @@ if [ $? -eq 0 ]; then
     echo " >>> ✅ IMAGES COPIED TO WORK DIR: $IMG_OUT_DEST"
     SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ IMAGES COPIED TO WORK DIR: $IMG_OUT_DEST"
 
-    echo " >>>"
-    echo " >>>"
-    echo " >>> SUMMARY REPORT:"
-    echo " >>>"
-    echo "$SUMMARY_OUT"
-    echo " >>>"
-    echo " >>> ✅ BUILD COMPLETED SUCCESSFULLY!"
-    echo " >>>"
-    exit 0
+    exit_with_success
+
 else
 
-    echo " >>>"
-    echo "$SUMMARY_OUT"
-    echo " >>>"
-    echo " >>> ❌ CRITICAL: BUILD FAILED!"
-    echo " >>>"
-    exit 1
+    exit_with_error "BUILD FAILED"
 
 fi
-
-echo "ERROR: WE SHOULD NOT BE HERE!"
-exit 1
-# EOX / EOF
