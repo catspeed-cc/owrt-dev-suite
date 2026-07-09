@@ -2,54 +2,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
-set -euo pipefail
 
-# ==============================================================================
-# Configuration Variables
-# ==============================================================================
+# ============================================
+# NOTE: DO NOT CONFIGURE ANYTHING IN THIS FILE
+# Edit `./etc/config.sh` to configure
+# ============================================
 
-WORK_DIR="$HOME/work"
-DEV_DIR="$HOME/my-repositories/openwrt-dev"
-
-# DTS Paths
-DTS_SRC="$WORK_DIR/dts/qcom-ipq4019-tew-829dru.dts"
-DTS_DEST="$DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
-
-# Patches paths (temp disabled)
-PATCHES_SRC_DIR="$WORK_DIR/PATCHES"
-PATCHES_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/patches-6.12"
-
-# IPQESS raw driver mod paths (temp enabled)
-IPQESS_MOD_SRC_DIR="$WORK_DIR/IPQESS_DRIVER_MOD"
-IPQESS_MOD_DEST_DIR="$DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess"
-
-# Calibration Data Paths (TODO: rename QCAxxxx_CALDATA)
-QCA9984_CALDATA="$WORK_DIR/QCA9984/board-2.bin"
-QCA4019_CALDATA="$WORK_DIR/QCA4019/board-2.bin"
-
-# Image out paths
-IMG_OUT_SRC="$DEV_DIR/bin/targets/ipq40xx/generic"
-IMG_OUT_DEST="$WORK_DIR/image-out"
-
-# DTSCOPY - Enable copy of DTS file
-DO_DTS_CPY=true
-
-# PATCHMOD - Enable either driver patch OR raw mod
-DO_PATCHMOD=false
-
-# RAWMOD - Enable raw driver mod instead of patch (DO_PATCHMOD must be true)
-DO_RAWMOD=false
-
-# CALDATA FLAG
-DO_CALDATA_CPY=false
-
-
-# ==============================================================================
-# AUTOCONFIG DO NOT TOUCH BELOW THIS LINE
-# ==============================================================================
-
-STARTUP_PWD=$(pwd)
-
+# REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
 REAL_PATH=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
 # Fallback for macOS (BSD readlink doesn't support -f)
 if [ -z "$REAL_PATH" ]; then
@@ -63,15 +22,82 @@ if [ -z "$REAL_PATH" ]; then
     [ -e "$REAL_PATH" ] && REAL_PATH=$(cd -P "$(dirname "$REAL_PATH")" && pwd)/$(basename "$REAL_PATH")
 fi
 
+# REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
 SCRIPT_DIR=$(dirname "$REAL_PATH")
 SCRIPT_NAME=$(basename "$REAL_PATH")
 
-cd $STARTUP_PWD
+# Import functions
+source $SCRIPT_DIR/lib/functions.sh
 
-# modify DTS_DEST to include filename from DTS_SRC
-DTS_SRC_BASE=$(basename "$DTS_SRC")
-DTS_DEST_DIR="$DTS_DEST"
-DTS_DEST="${DTS_DEST_DIR}/${DTS_SRC_BASE}"
+# LEAVE ENABLED! It will prevent accidental `rm -rf /` and other undesired operation
+set -euo pipefail
+
+# Set up for infinite strings (NEEDED IN `lib/config.sh`)
+NL=$'\n' # leave this alone
+RAWMOD_LIST="" # leave this alone
+
+# Import configuration
+source $SCRIPT_DIR/etc/config.sh
+
+
+# ====================
+# AUTOCONFIG VARIABLES
+# ====================
+
+# Verify all user configured variables from above
+verify_configuration() {
+
+    # TODO: Fill in the rest of checks :D
+
+
+    # ================
+    # NOT EMPTY CHECKS
+    # ================
+
+    # Validate PATCHES_DEST_DIR
+    if [ -z "${PATCHES_DEST_DIR}" ]; then
+        exit_with_error "PATCHES_DEST_DIR is not set (check script config)"
+    fi
+
+    # Validate STARTUP_PWD exists
+    if [[ -z "$STARTUP_PWD" ]]; then
+        echo "Error: STARTUP_PWD is not set" >&2
+        return 1
+    fi
+
+
+
+
+    # =========================================
+    # VALUE CONSTRAINT CHECKS (ex. "$var"=true)
+    # =========================================
+
+
+
+
+    # =================
+    # DIR EXISTS CHECKS
+    # =================
+
+
+
+
+    # ==================
+    # FILE EXISTS CHECKS
+    # ==================
+
+
+
+
+}
+
+STARTUP_PWD=$(pwd)
+
+# Ensure STARTUP_PWD does not have a trailing slash for consistent matching
+STARTUP_PWD="${STARTUP_PWD%/}"
+
+
+cd $STARTUP_PWD
 
 # Flags default values
 DO_CLEAN=false
@@ -90,6 +116,20 @@ SUMMARY_OUT=""
 
 MAKE_CMD_ADD=""
 
+# ============================================================
+# verify config - vars above this point must not use eachother
+# ============================================================
+verify_configuration
+# ========================================================
+# verify config - vars below this point can use each other
+# ========================================================
+
+# modify DTS_DEST to include filename from DTS_SRC
+DTS_SRC_BASE=$(basename "$DTS_SRC")
+DTS_DEST_DIR="$DTS_DEST"
+DTS_DEST="${DTS_DEST_DIR}/${DTS_SRC_BASE}"
+
+
 # ==============================================================================
 # Argument Parsing
 # ==============================================================================
@@ -97,39 +137,18 @@ MAKE_CMD_ADD=""
 show_header() {
 
     echo ""
-    echo "========================================"
-    echo "🚀 Build Script Started"
-    echo "📦 Branch: ${GIT_BRANCH}"
-    echo "📜 Script: $REAL_PATH"
-    echo "📅 Date: $(date)"
-    echo "📁 PWD: $STARTUP_PWD"
-    echo "========================================"
+    echo " ========================================================================================================================"
+    echo "  🚀 Build Script Started"
+    echo "  📦 Branch: ${GIT_BRANCH}"
+    echo "  📜 Script: $REAL_PATH"
+    echo "  📅 Date: $(date)"
+    echo "  📁 PWD: $STARTUP_PWD"
+    echo " ========================================================================================================================"
     echo ""
 
 }
 
 show_header
-SUMMARY_OUT+=$(show_header)
-
-verify_configuration() {
-
-    # VERIFY ALL CONFIGURATION VARIABLES
-    # TODO: Fill in the rest of checks :D
-
-    # NOT EMPTY CHECKS
-    if [ -z "${PATCHES_DEST_DIR}" ]; then
-        exit_with_error "PATCHES_DEST_DIR is not set (check script config)"
-    fi
-
-    # VALUE CONSTRAINT CHECKS (ex. "$var"=true)
-
-    # DIR EXISTS CHECKS
-
-    # FILE EXISTS CHECKS
-
-}
-
-verify_configuration
 
 show_help() {
 
@@ -196,6 +215,7 @@ parse_arguments "$@"
 
 exit_with_success() {
 
+    show_header
     echo " >>>"
     echo " >>>"
     echo " >>> SUMMARY REPORT:"
@@ -227,6 +247,31 @@ exit_with_error() {
 # File Operations
 # ==============================================================================
 
+cleanup_path() {
+    local filepath="$1"
+
+    # Validate local input
+    if [[ -z "$filepath" ]]; then
+        echo "Error: No filepath provided" >&2
+        return 1
+    fi
+
+    # Check if filepath starts with base_path followed by a slash or is exactly base_path
+    if [[ "$filepath" == "$STARTUP_PWD" ]]; then
+        # If filepath is exactly the same as STARTUP_PWD, return current dir indicator or empty
+        echo "."
+        return 0
+    elif [[ "$filepath" == "$STARTUP_PWD/"* ]]; then
+        # Remove the base_path and the following slash
+        echo "${filepath#$STARTUP_PWD/}"
+        return 0
+    else
+        # If filepath does not start with STARTUP_PWD, return it unchanged
+        echo "$filepath"
+        return 0
+    fi
+}   
+
 verify_md5() {
     # Parameters
     local file_src="$1"
@@ -245,7 +290,7 @@ verify_md5() {
         echo " >>>"
         echo " >>> ❌ FAILURE: $desc - MISMATCH!"
         echo " >>>      Source:      '$file_src' -> '$file_src_md5'"
-        echo " >>>      Destination: '$file_dest' -> '$file_dest_md5'"
+        echo " >>>      Destination: '"$(cleanup_path "$file_dest")"' -> '$file_dest_md5'"
         echo " >>>"
         return 1
     fi
@@ -281,12 +326,12 @@ copy_file() {
 
     # Copy file
     if ! cp "$file_src" "$file_dest"; then
-        exit_with_error "$desc failed: ${file_dest}"
+        exit_with_error "$desc failed: "$(cleanup_path "$file_dest")
     fi
 
     # Verify md5 & output messages
     if verify_md5 "$file_src" "$file_dest"; then
-	local msg=" >>> ✅ $desc $file_dest (MATCH)"
+	local msg=" >>> ✅ $desc "$(cleanup_path "$file_dest")" (MATCH)"
         echo "$msg"
         SUMMARY_OUT+="${msg}"$'\n'
         return 0
@@ -330,7 +375,7 @@ copy_patches_dir() {
 
     done
 
-    local msg=" >>> ✅ Patches Directory Copied $dir_dest"
+    local msg=" >>> ✅ Patches Directory Copied "$(cleanup_path "$dir_dest")
     echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
 
@@ -347,7 +392,7 @@ copy_caldata() {
 
         copy_file "$QCA9984_CALDATA" "$DEST_FW/board-2.bin" || exit_with_error "Copy Caldata"
 
-        local msg=">>> ✅ QCA9984 board-2.bin copied to: $DEST_FW"
+        local msg=" >>> ✅ QCA9984 board-2.bin copied to: "$(cleanup_path "$DEST_FW")
         echo $msg
         SUMMARY_OUT+="${msg}"$'\n'
 
@@ -356,7 +401,7 @@ copy_caldata() {
 
         copy_file "$QCA4019_CALDATA" "$DEST_FW/board-2.bin" || exit_with_error "Copy Caldata"
 
-        local msg=">>> ✅ QCA4019 board-2.bin copied to: $DEST_FW"
+        local msg=" >>> ✅ QCA4019 board-2.bin copied to: "$(cleanup_path "$DEST_FW")
         echo $msg
         SUMMARY_OUT+="${msg}"$'\n'
 
@@ -376,11 +421,11 @@ copy_caldata() {
 build_kernel_sources() {
 
     # Download sources (Prerequisite)
-    echo ">>> Running 'make download'..."
+    echo " >>> Running 'make download'..."
     make download ${MAKE_CMD_ADD} || exit_with_error "Make Download"
     local msg=" >>> ✅ Sources downloaded (all)"
     echo $msg
-    SUMMARY_OUT+="${msg}"$'\n'
+    SUMMARY_OUT+="$msg"$'\n'
 
     # Copy custom patches into the target directory
     # These will be picked up automatically by the 'prepare' step
@@ -406,7 +451,7 @@ build_kernel_sources() {
 
             local msg=" >>> ✅ DRIVER PATCHES copied to source tree: $PATCHES_SRC_DIR"
             echo $msg
-            SUMMARY_OUT+="${msg}"$'\n'
+            SUMMARY_OUT+="$msg"$'\n'
 
         else
 
@@ -415,9 +460,9 @@ build_kernel_sources() {
             copy_file "$IPQESS_MOD_C_SRC" "$IPQESS_MOD_C_DEST" || exit_with_error "Copying Driver Mod (ipqess.c)"
             copy_file "$IPQESS_MOD_ETHTOOL_C_SRC" "$IPQESS_MOD_ETHTOOL_C_DEST" || exit_with_error "Copying Driver Mod (ipqess_ethtool.c)"
 
-            local msg=" >>> ✅ IPQESS RAW DRIVER MOD copied to source tree: $IPQESS_MOD_DEST_DIR"
+            local msg=" >>> ✅ IPQESS RAW DRIVER MOD copied to source tree: "$(cleanup_path "$IPQESS_MOD_DEST_DIR")
             echo $msg
-            SUMMARY_OUT+="${msg}"$'\n'
+            SUMMARY_OUT+="$msg"$'\n'
 
         fi
 
@@ -457,7 +502,7 @@ do_final_build() {
         echo $msg
         SUMMARY_OUT+="${msg}"$'\n'
 
-        exit_with_success
+        #exit_with_success
 
     else
 
@@ -468,14 +513,71 @@ do_final_build() {
 }
 
 
+# ==============================================================================
+# Cleanup Operations
+# ==============================================================================
+
+cleanup_build_environment() {
+
+    cd "$STARTUP_PWD"
+
+    echo " >>> Cleaning up temporary build modifications..."
+
+    # 1. Remove temporary patches from target directory
+    #    This ensures no test patches linger if you forget to run 'prepare' again
+    if [ -n "${PATCHES_DEST_DIR}" ] && [ -d "${PATCHES_DEST_DIR}" ]; then
+        # Only remove patches that match your source directory (optional safety)
+        # Or simply remove all .patch files if this dir is exclusively for temp patches
+        for patch_file in "${PATCHES_DEST_DIR}"/*.patch; do
+            [ -e "$patch_file" ] || continue
+            local filename
+            filename=$(basename "$patch_file")
+            
+            # Check if this patch exists in your source dir. 
+            # If NOT, it might be an orphan or upstream patch you don't want to touch.
+            # If YES, remove it to force a fresh copy next time.
+            if [ -f "${PATCHES_SRC_DIR}/${filename}" ]; then
+                rm -f "$patch_file"
+                local msg=" >>> 🗑️  Removed temp patch: I"$(cleanup_path "$patch_file")
+                echo $msg
+                SUMMARY_OUT+="${msg}"$'\n'
+            fi
+        done
+    fi
+
+    # 2. Restore modified source files (e.g., drivers) to original Git state
+    #    This is crucial if you manually edited files in build_dir or target/
+    #    We only reset files in the 'target' directory to avoid touching other repos
+    echo " >>> Restoring modified files in target/ to original state..."
+    
+    # Check if there are any modified files in target/
+    if git diff --quiet -- 'target/'; then
+        local msg=" >>> ✅ No modified files found in target/"
+        echo $msg
+        SUMMARY_OUT+="${msg}"$'\n'
+    else
+        # List modified files for logging
+        echo "    🔄 Resetting modified files:"
+        git diff --name-only -- 'target/' | while read -r file; do
+            echo "        - ${file}"
+        done
+        
+        # Hard reset only the target/ directory to HEAD
+        # This discards all local changes in target/ and restores original upstream files
+        git checkout HEAD -- 'target/' || exit_with_error "Failed to restore target files"
+    fi
+
+    local msg=" >>> ✅ Cleanup complete. Environment is pristine."
+    echo $msg
+    SUMMARY_OUT+="${msg}"$'\n'
+}   
+
+
 
 
 # ==============================================================================
 # Execution Preperation
 # ==============================================================================
-
-# HANDLE MAKE COMMAND BUILDING HERE
-# WE NEED IT THROUGHOUT REST OF CODE
 
 # Handle Concurrency
 if [ "$DO_SLOW" = false ]; then
@@ -497,15 +599,15 @@ fi
 # Execution Logic
 # ==============================================================================
 
-echo ">>> Starting Build Process for TEW-829DRU (IPQ4019)"
-echo ">>> Working Directory: $DEV_DIR"
+echo " >>> Starting Build Process for TEW-829DRU (IPQ4019)"
+echo " >>> Working Directory: $DEV_DIR"
 cd "$DEV_DIR" || exit 1
 
 # Handle Clean
 if [ "$DO_CLEAN" = true ]; then
     echo " >>> Running 'make clean'..."
     make clean
-    local msg=" >>> ✅ Make clean"
+    msg=" >>> ✅ Make clean"
     echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
 fi
@@ -515,16 +617,16 @@ if [ "$DO_UPDATE_FEEDS" = true ]; then
     echo " >>> Updating and installing feeds..."
     ./scripts/feeds update -a
     ./scripts/feeds install -a
-    local msg=" >>> ✅ Feeds updated & installed"
+    msg=" >>> ✅ Feeds updated & installed"
     echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
 fi
 
 # Handle Inject DTS (BEFORE prepare)
 if [ "$DO_DTS_CPY" = true ]; then
-    echo ">>> Injecting custom DTS file..."
+    echo " >>> Injecting custom DTS file..."
     if copy_file "$DTS_SRC" "$DTS_DEST"; then
-        local msg=" >>> ✅ DTS copied to source tree: $DTS_DEST"
+        msg=" >>> ✅ DTS copied to source tree: $DTS_DEST"
         echo $msg
         SUMMARY_OUT+="${msg}"$'\n'
     fi
@@ -533,25 +635,25 @@ fi
 # Handle Prepare Kernel Sources
 if [ "$DO_CLEAN" = true ]; then
     build_kernel_sources
-    local msg=" >>> ✅ Kernel source built"
+    msg=" >>> ✅ Kernel source built"
     echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
 fi
 
 # Handle prepare linux-firmware
 if [ "$DO_CLEAN" = true ]; then
-    echo ">>> Running 'make target/linux-firmware/prepare'..."
+    echo " >>> Running 'make target/linux-firmware/prepare'..."
     make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare `linux-firmware`"
-    local msg=" >>> ✅ Sources prepared (linux-firmware)"
+    msg=" >>> ✅ Sources prepared (linux-firmware)"
     echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
 fi
 
 # Handle Copy caldata
 if [ "$DO_CALDATA_CPY" = "true" ]; then
-    echo ">>> Injecting board-2.bin into build_dir..."
+    echo " >>> Injecting board-2.bin into build_dir..."
     copy_caldata
-    local msg=" >>> ✅ Caldata copied"
+    msg=" >>> ✅ Caldata copied"
     echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
 fi
@@ -565,6 +667,9 @@ sleep 5
 # Compile
 do_final_build
 
+# clean up our patches and modified driver
+# so we don't poison commits unintentionally
+cleanup_build_environment
 
-
-
+# Call final exit outside so cleanup output lines up visually :)
+exit_with_success
