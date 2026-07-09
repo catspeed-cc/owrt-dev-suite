@@ -1,0 +1,4 @@
+[submodule "scripts/tools/gpio-probe"]
+	path = scripts/tools/gpio-probe
+	url = https://github.com/catspeed-cc/gpio-probe.git
+	branch = master
