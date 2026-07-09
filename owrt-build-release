@@ -63,6 +63,12 @@ DO_UPDATE_FEEDS=false
 DO_VERBOSE=false
 DO_SLOW=false
 
+GIT_BRANCH=$(git branch --show-current)
+# Fallback for detached HEAD states or very old Git versions
+if [ -z "$GIT_BRANCH" ]; then
+    GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+fi
+
 SUMMARY_OUT=""
 
 MAKE_CMD_ADD=""
@@ -71,8 +77,21 @@ MAKE_CMD_ADD=""
 # Argument Parsing
 # ==============================================================================
 
+show_header() {
+
+    echo "========================================"
+    echo "🚀 Build Script Started"
+    echo "📦 Branch: ${GIT_BRANCH}"
+    echo "📅 Date: $(date)"
+    echo "========================================"
+
+}
+
+show_header
+
 show_help() {
 
+    show_header
     echo ""
     echo "Usage: ${SCRIPT_NAME} [--help|/?]"
     echo "Usage: ${SCRIPT_NAME} [-clean|-c] [-updatefeeds|-uf] [-verbose|-v] [-extraverbose|-vv] [-slow|-s]"
