@@ -61,6 +61,7 @@ DTS_DEST="${DTS_DEST_DIR}/${DTS_SRC_BASE}"
 DO_CLEAN=false
 DO_UPDATE_FEEDS=false
 DO_VERBOSE=false
+DO_XVERBOSE=false
 DO_SLOW=false
 
 GIT_BRANCH=$(git branch --show-current)
