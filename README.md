@@ -29,7 +29,7 @@ mooleshacat / catspeed.cc is not responsible for any potential license violation
 
 When cloning this repository, you may use `git clone --recursive --remote https://github.com/catspeed-cc/owrt-dev-suite.git` OR after cloning the repository run `git submodule update --init --recursive --remote`
 
-For advanced porting tools (GPIO Probe, DTS Extractor, etc.), see the dedicated **GPLv3 `owrt-dev-suite-utils`**:
+For advanced porting tools (GPIO Probe, DTS Extractor, etc.), see the dedicated **GPLv3 `owrt-dev-suite-utils`**:<br />
 👉 [github.com/catspeed-cc/owrt-dev-suite-utils](https://github.com/catspeed-cc/owrt-dev-suite-utils)
 
 -----
