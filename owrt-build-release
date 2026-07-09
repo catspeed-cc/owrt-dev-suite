@@ -11,6 +11,9 @@
 # LEAVE ENABLED! It will prevent accidental `rm -rf /` and other undesired operation
 set -euo pipefail
 
+# Allow signals into subshells
+set -E
+
 BUILD_START_DATE=$(date "+%a %d %b %Y")
 BUILD_START_TIME=$(date +%H:%M:%S)
 
@@ -146,7 +149,7 @@ DTS_DEST="${DTS_DEST_DIR}/${DTS_SRC_BASE}"
 
 show_header() {
 
-    # Check our variables are not empty and set to blank
+    # Check our variables are not empty (at least set to blank - unbound protection)
     if [[ -z "$BUILD_STOP_DATE" || -z "$BUILD_STOP_TIME" || -z "$BUILD_ELAPSED" ]]; then
         BUILD_STOP_DATE=""
         BUILD_STOP_TIME=""
@@ -166,12 +169,14 @@ show_header() {
     echo " ========================================================================================================================"
     echo "  📅 Start Date: $BUILD_START_DATE"
     echo "  📅 Start Time: $BUILD_START_TIME"
+
     if [ "$no_stop" == "false" ]; then
         echo "  📅 Stop Date: $BUILD_STOP_DATE"
         echo "  📅 Stop Time: $BUILD_STOP_TIME"
         echo " ========================================================================================================================"
         echo "  📅 Elapsed: $BUILD_ELAPSED"
     fi
+
     echo " ========================================================================================================================"
     echo ""
 
@@ -299,7 +304,7 @@ cleanup_path() {
         echo "$filepath"
         return 0
     fi
-}   
+}
 
 verify_md5() {
     # Parameters
@@ -561,7 +566,7 @@ cleanup_build_environment() {
             [ -e "$patch_file" ] || continue
             local filename
             filename=$(basename "$patch_file")
-            
+
             # Check if this patch exists in your source dir. 
             # If NOT, it might be an orphan or upstream patch you don't want to touch.
             # If YES, remove it to force a fresh copy next time.
@@ -578,7 +583,7 @@ cleanup_build_environment() {
     #    This is crucial if you manually edited files in build_dir or target/
     #    We only reset files in the 'target' directory to avoid touching other repos
     echo " >>> Restoring modified files in target/ to original state..."
-    
+
     # Check if there are any modified files in target/
     if git diff --quiet -- 'target/'; then
         local msg=" >>> ✅ No modified files found in target/"
@@ -590,7 +595,7 @@ cleanup_build_environment() {
         git diff --name-only -- 'target/' | while read -r file; do
             echo "        - ${file}"
         done
-        
+
         # Hard reset only the target/ directory to HEAD
         # This discards all local changes in target/ and restores original upstream files
         git checkout HEAD -- 'target/' || exit_with_error "Failed to restore target files"
@@ -599,7 +604,7 @@ cleanup_build_environment() {
     local msg=" >>> ✅ Cleanup complete. Environment is pristine."
     echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
-}   
+}
 
 
 
@@ -623,6 +628,8 @@ elif [ "$DO_XVERBOSE" = true ]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} V=99"
 fi
 
+# SET THE CLEANUP TRAP!
+trap cleanup_build_environment ERR INT TERM
 
 # ==============================================================================
 # Execution Logic
@@ -695,6 +702,9 @@ sleep 5
 
 # Compile
 do_final_build
+
+# UNSET THE CLEANUP TRAP - WE DO IT MANUAL (output appearance)
+trap - ERR INT TERM
 
 # clean up our patches and modified driver
 # so we don't poison commits unintentionally
