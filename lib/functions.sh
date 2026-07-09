@@ -3,6 +3,31 @@
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
 
+# Calculates the difference between two HH:MM:SS strings
+# Usage: get_time_diff "22:31:05" "23:45:10"
+get_time_diff() {
+  local start_time="$1"
+  local end_time="$2"
+
+  # Convert both times to seconds since epoch (using an arbitrary fixed date)
+  # We use 'today' to ensure it works even if the times cross midnight relative to now, 
+  # but for simple duration, a fixed date like 2000-01-01 is safer for pure time math.
+  local start_sec=$(date -d "2000-01-01 $start_time" +%s)
+  local end_sec=$(date -d "2000-01-01 $end_time" +%s)
+
+  # Calculate difference in seconds
+  local diff=$((end_sec - start_sec))
+
+  # Handle negative difference (if end time is before start time)
+  if [[ $diff -lt 0 ]]; then
+    diff=$((diff * -1))
+  fi
+
+  # Convert seconds back to HH:MM:SS
+  # Using 'date -u' ensures it treats the seconds as a duration, not a timezone timestamp
+  printf "%HH %MM %SS\n" $(date -u -d "@$diff" +%H %M %S)
+}
+
 # Helper function to resolve glob paths safely
 # Usage: resolve_glob_path "array_name" "pattern"
 # Actually, simpler: just a validator function

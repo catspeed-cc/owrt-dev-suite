@@ -11,6 +11,14 @@
 # LEAVE ENABLED! It will prevent accidental `rm -rf /` and other undesired operation
 set -euo pipefail
 
+BUILD_START_DATE=$(date "+%a %d %b %Y")
+BUILD_START_TIME=$(date +%H:%M:%S)
+
+# Populated at the end of script
+BUILD_STOP_DATE=""
+BUILD_STOP_TIME=""
+BUILD_ELAPSED=""
+
 # REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
 REAL_PATH=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
 # Fallback for macOS (BSD readlink doesn't support -f)
@@ -138,6 +146,16 @@ DTS_DEST="${DTS_DEST_DIR}/${DTS_SRC_BASE}"
 
 show_header() {
 
+    # Check our variables are not empty and set to blank
+    if [[ -z "$BUILD_STOP_DATE" || -z "$BUILD_STOP_TIME" || -z "$BUILD_ELAPSED" ]]; then
+        BUILD_STOP_DATE=""
+        BUILD_STOP_TIME=""
+        BUILD_ELAPSED=""
+        local no_stop=true
+    else
+        local no_stop=false
+    fi
+
     echo ""
     echo " ========================================================================================================================"
     echo "  🚀 Build Script Started"
@@ -145,6 +163,15 @@ show_header() {
     echo "  📜 Script: $REAL_PATH"
     echo "  📅 Date: $(date)"
     echo "  📁 PWD: $STARTUP_PWD"
+    echo " ========================================================================================================================"
+    echo "  📅 Start Date: $BUILD_START_DATE"
+    echo "  📅 Start Time: $BUILD_START_TIME"
+    if [ "$no_stop" == "false" ]; then
+        echo "  📅 Stop Date: $BUILD_STOP_DATE"
+        echo "  📅 Stop Time: $BUILD_STOP_TIME"
+        echo " ========================================================================================================================"
+        echo "  📅 Elapsed: $BUILD_ELAPSED"
+    fi
     echo " ========================================================================================================================"
     echo ""
 
@@ -672,6 +699,12 @@ do_final_build
 # clean up our patches and modified driver
 # so we don't poison commits unintentionally
 cleanup_build_environment
+
+# Calculate time elapsed
+BUILD_STOP_DATE=$(date "+%a %d %b %Y")
+BUILD_STOP_TIME=$(date +%H:%M:%S)
+
+BUILD_ELAPSED=$(get_time_diff "$BUILD_START_TIME" "$BUILD_STOP_TIME")
 
 # Call final exit outside so cleanup output lines up visually :)
 exit_with_success
