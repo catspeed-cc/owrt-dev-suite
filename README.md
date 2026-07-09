@@ -1,6 +1,6 @@
-# owrt-build-release
+# owrt-dev-suite
 
-Private build script under GPLv3-or-later
+Private build script under GPLv3-or-later to be released publicly under same license.
 
 To be released publicly under GPLv3-or-later
 
@@ -25,7 +25,7 @@ mooleshacat / catspeed.cc is not responsible for any potential license violation
 
 ## 🛠️ OpenWRT Developer Suite Utils
 
-`owrt-dev-suite-utils` is integrated within this GPLv3 project which contains useful scripts for probing GPIO's. Though please proceed at your own risk :)
+`owrt-dev-suite-utils` is integrated within this GPLv3-or-later project which contains useful scripts for probing GPIO's. Though please proceed at your own risk :)
 
 When cloning this repository, you may use `git clone --recursive --remote https://github.com/catspeed-cc/owrt-dev-suite.git` OR after cloning the repository run `git submodule update --init --recursive --remote`
 
