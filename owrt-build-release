@@ -8,6 +8,9 @@
 # Edit `./etc/config.sh` to configure
 # ============================================
 
+# LEAVE ENABLED! It will prevent accidental `rm -rf /` and other undesired operation
+set -euo pipefail
+
 # REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
 REAL_PATH=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
 # Fallback for macOS (BSD readlink doesn't support -f)
@@ -26,18 +29,19 @@ fi
 SCRIPT_DIR=$(dirname "$REAL_PATH")
 SCRIPT_NAME=$(basename "$REAL_PATH")
 
-# Import functions
-source $SCRIPT_DIR/lib/functions.sh
-
-# LEAVE ENABLED! It will prevent accidental `rm -rf /` and other undesired operation
-set -euo pipefail
-
 # Set up for infinite strings (NEEDED IN `lib/config.sh`)
 NL=$'\n' # leave this alone
 RAWMOD_LIST="" # leave this alone
 
 # Import configuration
 source $SCRIPT_DIR/etc/config.sh
+
+# Ensure STARTUP_PWD does not have a trailing slash for consistent matching
+STARTUP_PWD=$(pwd)
+STARTUP_PWD="${STARTUP_PWD%/}"
+
+# Import functions
+source $SCRIPT_DIR/lib/functions.sh
 
 
 # ====================
@@ -91,26 +95,12 @@ verify_configuration() {
 
 }
 
-STARTUP_PWD=$(pwd)
-
-# Ensure STARTUP_PWD does not have a trailing slash for consistent matching
-STARTUP_PWD="${STARTUP_PWD%/}"
-
-
-cd $STARTUP_PWD
-
 # Flags default values
 DO_CLEAN=false
 DO_UPDATE_FEEDS=false
 DO_VERBOSE=false
 DO_XVERBOSE=false
 DO_SLOW=false
-
-GIT_BRANCH=$(cd "$SCRIPT_DIR" && git branch --show-current)
-# Fallback for detached HEAD or old git versions
-if [ -z "$GIT_BRANCH" ]; then
-    GIT_BRANCH=$(cd "$SCRIPT_DIR" && git rev-parse --abbrev-ref HEAD)
-fi
 
 SUMMARY_OUT=""
 
@@ -123,6 +113,18 @@ verify_configuration
 # ========================================================
 # verify config - vars below this point can use each other
 # ========================================================
+
+# Ensure we go back to the original PWD before build
+cd $STARTUP_PWD
+
+IPQESS_MOD_DEST_DIR="${IPQESS_MOD_DEST_DIR[0]}"
+CALDATA_DEST_DIR="${CALDATA_DEST_DIR[0]}"
+
+GIT_BRANCH=$(cd "$SCRIPT_DIR" && git branch --show-current)
+# Fallback for detached HEAD or old git versions
+if [ -z "$GIT_BRANCH" ]; then
+    GIT_BRANCH=$(cd "$SCRIPT_DIR" && git rev-parse --abbrev-ref HEAD)
+fi
 
 # modify DTS_DEST to include filename from DTS_SRC
 DTS_SRC_BASE=$(basename "$DTS_SRC")
