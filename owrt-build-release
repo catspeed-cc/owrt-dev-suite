@@ -28,8 +28,8 @@ QCA9984_FIRMWARE="$WORK_DIR/QCA9984/board-2.bin"
 QCA4019_FIRMWARE="$WORK_DIR/QCA4019/board-2.bin"
 
 # Image out paths
-IMG_OUT_SRC="${DEV_DIR}/bin/targets/ipq40xx/generic"
-IMG_OUT_DEST="${WORK_DIR}/image-out"
+IMG_OUT_SRC="$DEV_DIR/bin/targets/ipq40xx/generic"
+IMG_OUT_DEST="$WORK_DIR/image-out"
 
 # DTSCOPY - Enable copy of DTS file
 DO_DTS_CPY=true
