@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
+set -euo pipefail
 
 # ==============================================================================
 # Configuration Variables
@@ -30,8 +31,8 @@ QCA9984_FIRMWARE="$WORK_DIR/QCA9984/board-2.bin"
 QCA4019_FIRMWARE="$WORK_DIR/QCA4019/board-2.bin"
 
 # Image out paths
-IMG_OUT_DIR="${WORK_DIR}/image-out"
-IMG_DIR="${DEV_DIR}/bin/targets/ipq40xx/generic"
+IMG_OUT_SRC="${DEV_DIR}/bin/targets/ipq40xx/generic"
+IMG_OUT_DEST="${WORK_DIR}/image-out"
 
 # DTSCOPY - Enable copy of DTS file
 DO_DTS_CPY=true
@@ -75,6 +76,7 @@ MAKE_CMD_ADD=""
 # ==============================================================================
 
 show_help() {
+
     echo ""
     echo "Usage: ${SCRIPT_NAME} [--help|/?]"
     echo "Usage: ${SCRIPT_NAME} [-clean|-c] [-updatefeeds|-uf] [-verbose|-v] [-extraverbose|-vv] [-slow|-s]"
@@ -85,9 +87,11 @@ show_help() {
     echo " -extraverbose|-vv    = extra verbose"
     echo " -slow|-s             = slow compile (single core, default is all cores)"
     echo ""
+
 }
 
 parse_arguments() {
+
     while [[ $# -gt 0 ]]; do
         case $1 in
             -clean|-c)
@@ -124,6 +128,7 @@ parse_arguments() {
                 ;;
         esac
     done
+
 }
 
 parse_arguments
@@ -134,6 +139,7 @@ parse_arguments
 # ==============================================================================
 
 exit_with_success() {
+
     echo " >>>"
     echo " >>>"
     echo " >>> SUMMARY REPORT:"
@@ -143,9 +149,11 @@ exit_with_success() {
     echo " >>> ✅ BUILD COMPLETED SUCCESSFULLY!"
     echo " >>>"
     exit 0
+
 }
 
 exit_with_error() {
+
     local err_msg="$1"
     echo " >>>"
     echo " >>> SUMMARY REPORT:"
@@ -155,7 +163,28 @@ exit_with_error() {
     echo " >>> ❌ CRITICAL: ${err_msg}!"
     echo " >>>"
     exit 1
+
 }
+
+verify_configuration() {
+
+    # VERIFY ALL CONFIGURATION VARIABLES
+    # TODO: Fill in the rest of checks :D
+
+    # NOT EMPTY CHECKS
+    if [ -z "${PATCHES_DEST_DIR}" ]; then
+        exit_with_error "PATCHES_DEST_DIR is not set (check script config)"
+    fi
+
+    # VALUE CONSTRAINT CHECKS
+
+    # DIR EXISTS CHECKS
+
+    # FILE EXISTS CHECKS
+
+}
+
+verify_configuration
 
 
 # ==============================================================================
@@ -198,6 +227,11 @@ copy_file() {
     # Local variables
     local desc="Copying File"
     local dest_dir
+
+    # Ensure source file exists or exit_with_error
+    if [ -f "$file_src" ]; then
+        exit_with_error "$desc failed: ${file_src} doesn't exist"
+    fi
 
     # Fetch the file's directory
     dest_dir="$(dirname "$file_dest")"
@@ -267,6 +301,35 @@ copy_patches_dir() {
 
 }
 
+copy_caldata() {
+
+    FIRMWARE_BUILD_DIR=$(find "$DEV_DIR/build_dir" -type d -name "linux-firmware-*" | head -n 1)
+
+    if [ -n "$FIRMWARE_BUILD_DIR" ]; then
+
+        # QCA9984
+        DEST_FW="$FIRMWARE_BUILD_DIR/ath10k/QCA9984/hw1.0"
+
+        copy_file "$QCA9984_FIRMWARE" "$DEST_FW/board-2.bin" || exit_with_error "Copy Caldata"
+
+        echo ">>> QCA9984 board-2.bin copied to: $DEST_FW"
+
+
+        # QCA4019
+        DEST_FW="$FIRMWARE_BUILD_DIR/ath10k/QCA4019/hw1.0"
+
+        copy_file "$QCA4019_FIRMWARE" "$DEST_FW/board-2.bin" || exit_with_error "Copy Caldata"
+
+        echo ">>> QCA4019 board-2.bin copied to: $DEST_FW"
+
+    else
+
+        exit_with_error "Could not find linux-firmware build directory after prepare."
+
+    fi
+
+}
+
 
 # ==============================================================================
 # Build Operations
@@ -322,29 +385,42 @@ build_kernel_sources() {
 
     # Prepare (Extract + Apply Patches)
     echo ">>> Running 'make target/linux/prepare'..."
-    make target/linux/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare"
+    make target/linux/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare `linux`"
     echo ">>> Sources prepared with custom patches applied."
 
     # Compile
     echo ">>> Running 'make target/linux/compile'..."
-    make target/linux/compile ${MAKE_CMD_ADD} || exit_with_error "Make Compile"
+    make target/linux/compile ${MAKE_CMD_ADD} || exit_with_error "Make Compile `linux`"
     echo ">>> Sources compiled with custom patches applied."
 
 }
 
+do_final_build() {
 
+    MAKE_CMD="make ${MAKE_CMD_ADD}"
+    echo ">>> Starting compilation: ${MAKE_CMD}"
+    eval ${MAKE_CMD}
 
+    if [ $? -eq 0 ]; then
 
+        # clobber the image out old files
+        rm -rf "${IMG_OUT_DEST}"*
 
+        # copy the new files
+        cp -r "${IMG_OUT_SRC}"* "$IMG_OUT_DEST"
 
+        echo " >>> ✅ IMAGES COPIED TO WORK DIR: $IMG_OUT_DEST"
+        SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ IMAGES COPIED TO WORK DIR: $IMG_OUT_DEST"
 
+        exit_with_success
 
+    else
 
+        exit_with_error "BUILD FAILED"
 
+    fi
 
-
-
-
+}
 
 
 
@@ -406,146 +482,28 @@ if [ "$DO_CLEAN" = true ]; then
     build_kernel_sources
 fi
 
-
-
-
-
-
-
-
-
-
-
-
-# LEFT OFF HERE, OLD CODE BELOW NEW CODE ABOVE
-
-
-
-
-
-
-
-
-
-
-
-
-# SDFUJSDFUHSDFUSDFHSUFD
-
-    if [ -z "${PATCHES_DEST_DIR}" ]; then
-        exit_with_error "PATCHES_DEST_DIR is not set (check script config)"
-    fi
-
-
-
-
-
-# 4. Run Prepare (Creates build_dir and copies DTS from source tree)
-# We run target prepare which usually triggers kernel prep.
-# We also explicitly prepare linux-firmware to ensure its build_dir exists.
-# ONLY runs if make clean runs - otherwise the build_dir is already prepared
+# Handle prepare linux-firmware
 if [ "$DO_CLEAN" = true ]; then
-    MAKE_CMD="make package/linux-firmware/prepare ${MAKE_CMD_ADD}"
-    echo ">>> Preparing for compilation: ${MAKE_CMD}"
-    eval $MAKE_CMD
+    echo ">>> Running 'make target/linux-firmware/prepare'..."
+    make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare `linux-firmware`"
+    echo ">>> Sources prepared."
 fi
 
-# 5. Inject board-2.bin (AFTER prepare, BEFORE compile)
-# Now that build_dir exists and is populated, we overwrite the firmware file
+# Handle Copy caldata
 if [ "$DO_CALDATA_CPY" = "true" ]; then
-
     echo ">>> Injecting board-2.bin into build_dir..."
-
-    if [ ! -f "$QCA9984_FIRMWARE" ]; then
-        echo "Error: Source board-2.bin not found at $FIRMWARE_SRC"
-        exit 1
-    elif [ ! -f "$QCA4019_FIRMWARE" ]; then
-        echo "Error: Source board-2.bin not found at $FIRMWARE_SRC"
-        exit 1
-    fi
-
-    FIRMWARE_BUILD_DIR=$(find "$DEV_DIR/build_dir" -type d -name "linux-firmware-*" | head -n 1)
-
-    if [ -n "$FIRMWARE_BUILD_DIR" ]; then
-        DEST_FW="$FIRMWARE_BUILD_DIR/ath10k/QCA9984/hw1.0"
-        mkdir -p "$DEST_FW"
-        rm "$DEST_FW/board-2.bin"
-        cp "$QCA9984_FIRMWARE" "$DEST_FW/board-2.bin"
-        MD5_SUM_SRC=$(md5sum "$QCA9984_FIRMWARE" | awk '{print $1}' | tr -d '[:space:]')
-        MD5_SUM_DEST=$(md5sum "$DEST_FW/board-2.bin" | awk '{print $1}' | tr -d '[:space:]')
-        echo "$MD5_SUM_DEST board-2.bin" > "$DEST_FW/board-2.bin.md5"
-
-        if [ "$MD5_SUM_SRC" == "$MD5_SUM_DEST" ]; then
-            echo ">>> ✅ BIN MD5 CHECK PASSED: $DEST_FW/board-2.bin"
-            SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ BIN MD5 CHECK PASSED: $DEST_FW/board-2.bin"
-        else
-            echo "$SUMMARY_OUT"
-            echo ">>> ❌ BIN MD5 CHECK FAILED: $DEST_FW/board-2.bin"
-            echo "   Source:      '$MD5_SUM_SRC'"
-            echo "   Destination: '$MD5_SUM_DEST'"
-            echo ""
-            exit 1
-        fi
-        echo ">>> QCA9984 board-2.bin copied to: $DEST_FW"
-        #ls -alh $DEST_FW
-
-        DEST_FW="$FIRMWARE_BUILD_DIR/ath10k/QCA4019/hw1.0"
-        mkdir -p "$DEST_FW"
-        rm "$DEST_FW/board-2.bin"
-        cp "$QCA4019_FIRMWARE" "$DEST_FW/board-2.bin"
-        MD5_SUM_SRC=$(md5sum "$QCA4019_FIRMWARE" | awk '{print $1}' | tr -d '[:space:]')
-        MD5_SUM_DEST=$(md5sum "$DEST_FW/board-2.bin" | awk '{print $1}' | tr -d '[:space:]')
-        echo "$MD5_SUM_DEST board-2.bin" > "$DEST_FW/board-2.bin.md5"
-        if [ "$MD5_SUM_SRC" == "$MD5_SUM_DEST" ]; then
-            echo ">>> ✅ BIN MD5 CHECK PASSED: $DEST_FW/board-2.bin"
-            SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ BIN MD5 CHECK PASSED: $DEST_FW/board-2.bin)"
-        else
-            echo "$SUMMARY_OUT"
-            echo ">>> ❌ BIN MD5 CHECK FAILED: $DEST_FW/board-2.bin"
-            echo "   Source:      '$MD5_SUM_SRC'"
-            echo "   Destination: '$MD5_SUM_DEST'"
-            echo ""
-            exit 1
-        fi
-        echo ">>> QCA4019 board-2.bin copied to: $DEST_FW"
-        #ls -alh $DEST_FW
-    else
-        echo "Error: Could not find linux-firmware build directory after prepare."
-        exit 1
-    fi
+    copy_caldata
 fi
 
-sleep 10
+# PAUSE SO USER CAN SEE PROGRESS BEFORE COMPILE
+sleep 5
 
-# 6. Compile
 
-MAKE_CMD="make ${MAKE_CMD_ADD}"
 
-echo ">>> Starting compilation: ${MAKE_CMD}"
-eval $MAKE_CMD
 
-if [ $? -eq 0 ]; then
+# Compile
+do_final_build
 
-    # COPY THE IMAGE TO IMG_OUT_DIR
 
-    IMG_OUT_SRC="${IMG_DIR}/"
-    IMG_OUT_DEST="${IMG_OUT_DIR}/"
 
-    # clobber the image out old files
-    rm -rf "${IMG_OUT_DEST}"*
 
-    # copy the new files
-    cp -r "${IMG_OUT_SRC}"* "$IMG_OUT_DEST"
-
-    # NO MD5 CHECK: we can do it later, it would have to check all files in the directory
-
-    echo " >>> ✅ IMAGES COPIED TO WORK DIR: $IMG_OUT_DEST"
-    SUMMARY_OUT="${SUMMARY_OUT}"$'\n'" >>> ✅ IMAGES COPIED TO WORK DIR: $IMG_OUT_DEST"
-
-    exit_with_success
-
-else
-
-    exit_with_error "BUILD FAILED"
-
-fi
