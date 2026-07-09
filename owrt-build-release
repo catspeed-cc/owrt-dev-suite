@@ -51,6 +51,8 @@ DTS_DEST_DIR="$DTS_DEST"
 DTS_DEST="${DTS_DEST_DIR}/${DTS_SRC_BASE}"
 DTS_SRC_DIR=$(dirname $DTS_SRC)
 
+SUMMARY_OUT=""
+
 # ==============================================================================
 # Argument Parsing
 # ==============================================================================
@@ -129,8 +131,6 @@ fi
 echo ">>> Starting Build Process for TEW-829DRU (IPQ4019/QCA8075/QCA8337/QCA9984)"
 echo ">>> Working Directory: $DEV_DIR"
 cd "$DEV_DIR" || exit 1
-
-SUMMARY_OUT=""
 
 # 1. Handle Clean (Optional)
 if [ "$DO_CLEAN" = true ]; then
