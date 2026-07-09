@@ -24,8 +24,8 @@ IPQESS_MOD_SRC_DIR="$WORK_DIR/IPQESS_DRIVER_MOD"
 IPQESS_MOD_DEST_DIR="$DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess"
 
 # Calibration Data Paths (TODO: rename QCAxxxx_CALDATA)
-QCA9984_FIRMWARE="$WORK_DIR/QCA9984/board-2.bin"
-QCA4019_FIRMWARE="$WORK_DIR/QCA4019/board-2.bin"
+QCA9984_CALDATA="$WORK_DIR/QCA9984/board-2.bin"
+QCA4019_CALDATA="$WORK_DIR/QCA4019/board-2.bin"
 
 # Image out paths
 IMG_OUT_SRC="$DEV_DIR/bin/targets/ipq40xx/generic"
@@ -325,7 +325,7 @@ copy_caldata() {
         # QCA9984
         DEST_FW="$FIRMWARE_BUILD_DIR/ath10k/QCA9984/hw1.0"
 
-        copy_file "$QCA9984_FIRMWARE" "$DEST_FW/board-2.bin" || exit_with_error "Copy Caldata"
+        copy_file "$QCA9984_CALDATA" "$DEST_FW/board-2.bin" || exit_with_error "Copy Caldata"
 
         echo ">>> QCA9984 board-2.bin copied to: $DEST_FW"
 
@@ -333,7 +333,7 @@ copy_caldata() {
         # QCA4019
         DEST_FW="$FIRMWARE_BUILD_DIR/ath10k/QCA4019/hw1.0"
 
-        copy_file "$QCA4019_FIRMWARE" "$DEST_FW/board-2.bin" || exit_with_error "Copy Caldata"
+        copy_file "$QCA4019_CALDATA" "$DEST_FW/board-2.bin" || exit_with_error "Copy Caldata"
 
         echo ">>> QCA4019 board-2.bin copied to: $DEST_FW"
 
