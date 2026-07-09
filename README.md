@@ -6,7 +6,7 @@ To be released publicly under GPLv3-or-later
 
 Unlike the corporations I will abide by even GPLv2 obligations all while acknowledging those who select old outdated licenses are stuck in the past.
 
-## ⚠️ LICENSE WARNING: GPLv3 INCOMPATIBILITY⚠️
+## ⚠️ LICENSE WARNING: GPLv2 / GPLv3 INCOMPATIBILITY⚠️
 
 This build script is licensed under GPLv3-or-later. It is NOT compatible with GPLv2-only projects (such as the Linux Kernel or OpenWrt).
 
