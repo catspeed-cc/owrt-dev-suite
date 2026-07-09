@@ -23,6 +23,14 @@ If you need a script for OpenWrt, use the GPLv2-or-later version in the official
 
 mooleshacat / catspeed.cc is not responsible for any potential license violations you create for yourself.
 
+## 🛠️ Developer Tool Suite
+
+`owrt-bdev-suite` is integrated with another GPLv3 project which contains useful scripts for probing GPIO's. Though please proceed at your own risk :)
+
+When cloning you may use `git clone --recursive --remote https://github.com/catspeed-cc/owrt-dev-suite.git` OR after cloning the repository run `git submodule update --init --recursive --remote`
+
+For advanced porting tools (GPIO Probe, DTS Extractor, etc.), see the dedicated **GPLv3 owrt-dev-utils**:
+👉 [github.com/catspeed-cc/gpio-probe](https://github.com/catspeed-cc/gpio-probe)
 
 -----
 
