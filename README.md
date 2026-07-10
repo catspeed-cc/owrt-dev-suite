@@ -19,9 +19,11 @@ This script is intended for:
 - Private use only (no distribution of binaries).
 - Projects that are fully GPLv3 or GPLv2-or-later (where the user chooses GPLv3).
 
-If you need a script for a fully compliant GPLv3-or-later project you are free to use and modify this one to suit your needs.
+If you need a script for a fully compliant GPLv3 project you are free to use and modify this one to suit your needs.
 
-If you need a script for OpenWrt and you intend to distribute binaries, use the GPLv2-or-later version in the official repository to build those binaries (potentially coming soon).
+If you need a script for OpenWrt and you intend to distribute binaries, use the GPLv2 version in the official repository to build those binaries (potentially coming soon).
+
+If you need a script for private usage with OpenWRT and intend to keep the binaries to yourself, you may use this GPLv3 version.
 
 mooleshacat / catspeed.cc is not responsible for any potential license violations you create for yourself.
 
