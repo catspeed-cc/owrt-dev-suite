@@ -35,25 +35,3 @@ When cloning `owrt-dev-suite` repository, you may use `git clone --recursive --r
 
 For advanced porting tools (GPIO Probe, DTS Extractor, etc.) to use in your GPLv3 project, see the dedicated **GPLv3 `owrt-dev-suite-utils`** repository:<br />
 👉 [github.com/catspeed-cc/owrt-dev-suite-utils](https://github.com/catspeed-cc/owrt-dev-suite-utils)
-
------
-
-## Current plan:
-- Public Repo: Keep your highly customized, maximal freedom logic in a separate public GPLv3-or-later repository. 
-- Public Contribution: Submit the generic, stripped-down version as GPLv2-or-later to OpenWrt to remain compliant with licenses.
-
-Usage: You (and others) can use the OpenWrt version as a base and layer your private GPLv3 script on top of it locally.
-
------
-
-For OpenWRT slimmed down GPLv2 buildscript use:
-```
-# SPDX-License-Identifier: GPL-2.0-or-later
-# (Optional) Copyright (C) 2024 Your Name <your@email.com>
-```
-
-For advanced configurable & customized maximal freedom buildscript use:
-```
-# SPDX-License-Identifier: GPL-3.0-or-later
-# (Optional) Copyright (C) 2024 Your Name <your@email.com>
-```
