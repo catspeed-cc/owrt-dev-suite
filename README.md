@@ -2,9 +2,11 @@
 
 Private build script under GPLv3-or-later to be released publicly under same license.
 
-To be released publicly under GPLv3-or-later
+`owrt-dev-suite` is a full development suite for OpenWRT developers intending to port devices to OpenWRT. These are the tools built (using AI) to help me port the TRENDnet TEW-829DRU router after they sent me an EOL notice in arly 2026. The centerpiece of the suite is of course, the advanced build script itself, which is highly configurable and customizable for your workflow.
 
-Unlike the corporations I will abide by even GPLv2 obligations all while acknowledging those who select old outdated licenses are stuck in the past.
+Included tools: GPIO probing utility scripts.
+
+To be released publicly under GPLv3-or-later
 
 ## ⚠️ LICENSE WARNING: GPLv2 / GPLv3 INCOMPATIBILITY⚠️
 
@@ -35,20 +37,20 @@ For advanced porting tools (GPIO Probe, DTS Extractor, etc.), see the dedicated 
 -----
 
 ## Current plan:
-- Public Repo: Keep your highly customized, maximal freedom logic in a separate GPLv3-or-later repository. 
-- Public Contribution: Submit the generic, stripped-down version as GPLv2-or-later to OpenWrt. 
+- Public Repo: Keep your highly customized, maximal freedom logic in a separate public GPLv3-or-later repository. 
+- Public Contribution: Submit the generic, stripped-down version as GPLv2-or-later to OpenWrt to remain compliant with licenses.
 
 Usage: You (and others) can use the OpenWrt version as a base and layer your private GPLv3 script on top of it locally.
 
 -----
 
-For neutered OpenWRT buildscript use:
+For OpenWRT slimmed down GPLv2 buildscript use:
 ```
 # SPDX-License-Identifier: GPL-2.0-or-later
 # (Optional) Copyright (C) 2024 Your Name <your@email.com>
 ```
 
-For customized maximal freedom buildscript use:
+For advanced configurable & customized maximal freedom buildscript use:
 ```
 # SPDX-License-Identifier: GPL-3.0-or-later
 # (Optional) Copyright (C) 2024 Your Name <your@email.com>
