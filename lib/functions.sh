@@ -556,7 +556,7 @@ cleanup_build_environment() {
 
     # Check if there are any modified files in target/
     if git diff --quiet -- 'target/'; then
-        local msg=" >>> ✅ No modified files found in target/"
+        local msg=" >>> ✅ No patches, caldata, or modified files found in target/"
         echo $msg
         SUMMARY_OUT+="${msg}"$'\n'
     else
