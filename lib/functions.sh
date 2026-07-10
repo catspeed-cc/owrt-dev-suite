@@ -440,7 +440,7 @@ build_kernel_sources() {
 
         if [ "$DO_RAWMOD" != true ]; then
 
-			# Copy custom patches into the target directory
+    	    # Copy custom patches into the target directory
             # These will be picked up automatically by the 'prepare' step
             copy_patches_dir "${PATCHMOD_SRC_DIR}" "${PATCHMOD_DEST_DIR}"
 
