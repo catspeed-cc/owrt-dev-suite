@@ -17,10 +17,6 @@ DO_DTS_CPY=true
 DTS_SRC="$WORK_DIR/dts/qcom-ipq4019-tew-829dru.dts"
 DTS_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
 
-
-# PATCHMOD: Enable either driver patch OR raw mod
-DO_PATCHMOD=true
-
 # Patches paths
 PATCHMOD_SRC_DIR="$WORK_DIR/PATCHES"
 PATCHMOD_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/patches-6.12"
@@ -31,9 +27,6 @@ DO_IMGDIR_CPY=true
 # Image out paths
 IMGDIR_SRC="$DEV_DIR/bin/targets/ipq40xx/generic"
 IMGDIR_DEST="$WORK_DIR/image-out"
-
-# PATCHMOD: Enable either driver patch OR raw mod (see DO_RAWMOD below)
-DO_PATCHMOD=true
 
 # TODO: move caldata dirs here
 
