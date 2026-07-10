@@ -69,9 +69,9 @@ verify_configuration() {
     # NOT EMPTY CHECKS
     # ================
 
-    # Validate PATCHES_DEST_DIR
-    if [ -z "${PATCHES_DEST_DIR}" ]; then
-        exit_with_error "PATCHES_DEST_DIR is not set (check script config)"
+    # Validate PATCHMOD_DEST_DIR
+    if [ -z "${PATCHMOD_DEST_DIR}" ]; then
+        exit_with_error "PATCHMOD_DEST_DIR is not set (check script config)"
     fi
 
     # Validate STARTUP_PWD exists
@@ -137,10 +137,10 @@ if [ -z "$GIT_BRANCH" ]; then
     GIT_BRANCH=$(cd "$SCRIPT_DIR" && git rev-parse --abbrev-ref HEAD)
 fi
 
-# modify DTS_DEST to include filename from DTS_SRC
+# modify DTS_DEST_DIR to include filename from DTS_SRC
 DTS_SRC_BASE=$(basename "$DTS_SRC")
-DTS_DEST_DIR="$DTS_DEST"
-DTS_DEST="${DTS_DEST_DIR}/${DTS_SRC_BASE}"
+DTS_DEST_DIR_DIR="$DTS_DEST_DIR"
+DTS_DEST_DIR="${DTS_DEST_DIR_DIR}/${DTS_SRC_BASE}"
 
 
 # ==============================================================================
@@ -466,8 +466,8 @@ build_kernel_sources() {
 
     if [ "$DO_PATCHMOD" = true ]; then
 
-        if [ -z "${PATCHES_DEST_DIR}" ]; then
-            exit_with_error "PATCHES_DEST_DIR is not set (check script config)"
+        if [ -z "${PATCHMOD_DEST_DIR}" ]; then
+            exit_with_error "PATCHMOD_DEST_DIR is not set (check script config)"
         fi
 
         IPQESS_MOD_H_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.h.modified"
@@ -481,7 +481,7 @@ build_kernel_sources() {
         if [ "$DO_RAWMOD" != true ]; then
 
             # Applies the driver patches
-            copy_patches_dir "${PATCHES_SRC_DIR}" "${PATCHES_DEST_DIR}"
+            copy_patches_dir "${PATCHES_SRC_DIR}" "${PATCHMOD_DEST_DIR}"
 
             local msg=" >>> ✅ DRIVER PATCHES copied to source tree: $PATCHES_SRC_DIR"
             echo $msg
@@ -559,10 +559,10 @@ cleanup_build_environment() {
 
     # 1. Remove temporary patches from target directory
     #    This ensures no test patches linger if you forget to run 'prepare' again
-    if [ -n "${PATCHES_DEST_DIR}" ] && [ -d "${PATCHES_DEST_DIR}" ]; then
+    if [ -n "${PATCHMOD_DEST_DIR}" ] && [ -d "${PATCHMOD_DEST_DIR}" ]; then
         # Only remove patches that match your source directory (optional safety)
         # Or simply remove all .patch files if this dir is exclusively for temp patches
-        for patch_file in "${PATCHES_DEST_DIR}"/*.patch; do
+        for patch_file in "${PATCHMOD_DEST_DIR}"/*.patch; do
             [ -e "$patch_file" ] || continue
             local filename
             filename=$(basename "$patch_file")
@@ -661,8 +661,8 @@ fi
 # Handle Inject DTS (BEFORE prepare)
 if [ "$DO_DTS_CPY" = true ]; then
     echo " >>> Injecting custom DTS file..."
-    if copy_file "$DTS_SRC" "$DTS_DEST"; then
-        msg=" >>> ✅ DTS copied to source tree: $DTS_DEST"
+    if copy_file "$DTS_SRC" "$DTS_DEST_DIR"; then
+        msg=" >>> ✅ DTS copied to source tree: $DTS_DEST_DIR"
         echo $msg
         SUMMARY_OUT+="${msg}"$'\n'
     fi
