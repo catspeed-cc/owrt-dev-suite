@@ -225,13 +225,13 @@ exit_with_success() {
 
     show_header
     echo " >>>"
-    echo " >>>"
     echo " >>> SUMMARY REPORT:"
     echo " >>>"
     echo -n "$SUMMARY_OUT"
     echo " >>>"
     echo " >>> ✅ BUILD COMPLETED SUCCESSFULLY!"
     echo " >>>"
+    echo ""
     exit 0
 
 }
