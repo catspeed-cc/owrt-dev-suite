@@ -31,7 +31,7 @@ If you need a script for private usage with OpenWRT and intend to keep the binar
 
 `owrt-dev-suite-utils` is integrated within this GPLv3-or-later project which contains useful scripts for probing GPIO's. Though please proceed at your own risk :)
 
-When cloning `owrt-dev-suite` repository, you may use `git clone --recursive --remote https://github.com/catspeed-cc/owrt-dev-suite.git` OR after cloning the repository run `git submodule update --init --recursive --remote` to obtain these useful utility scripts.
+When cloning `owrt-dev-suite` repository, you may use `git clone --recursive --remote https://github.com/catspeed-cc/owrt-dev-suite.git` OR after cloning the repository run `git submodule update --init --recursive --remote` to obtain & update these useful utility scripts.
 
 For advanced porting tools (GPIO Probe, DTS Extractor, etc.), see the dedicated **GPLv3 `owrt-dev-suite-utils`**:<br />
 👉 [github.com/catspeed-cc/owrt-dev-suite-utils](https://github.com/catspeed-cc/owrt-dev-suite-utils)
