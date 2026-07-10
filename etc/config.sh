@@ -9,39 +9,55 @@
 WORK_DIR="$HOME/work"
 DEV_DIR="$HOME/my-repositories/openwrt-dev"
 
-# DTS Paths
-DTS_SRC="$WORK_DIR/dts/qcom-ipq4019-tew-829dru.dts"
-DTS_DEST="$DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
 
-# Patches paths
-PATCHES_SRC_DIR="$WORK_DIR/PATCHES"
-PATCHES_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/patches-6.12"
-
-# Image out paths
-IMG_OUT_SRC="$DEV_DIR/bin/targets/ipq40xx/generic"
-IMG_OUT_DEST="$WORK_DIR/image-out"
-
-
-# DTSCOPY - Enable copy of DTS file
+# DTS_CPY: Enable copy of DTS file
 DO_DTS_CPY=true
 
-# PATCHMOD - Enable either driver patch OR raw mod
+# DTS Paths
+DTS_SRC="$WORK_DIR/dts/qcom-ipq4019-tew-829dru.dts"
+DTS_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
+
+
+# PATCHMOD: Enable either driver patch OR raw mod
 DO_PATCHMOD=true
 
-# RAWMOD - Enable raw driver mod instead of patch (DO_PATCHMOD must be true)
-DO_RAWMOD=true
+# Patches paths
+PATCHMOD_SRC_DIR="$WORK_DIR/PATCHES"
+PATCHMOD_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/patches-6.12"
 
-# CALDATA FLAG
-DO_CALDATA_CPY=false
+# IMGDIR_CPY: Enable image copy on build
+DO_IMGDIR_CPY=true
+
+# Image out paths
+IMGDIR_SRC="$DEV_DIR/bin/targets/ipq40xx/generic"
+IMGDIR_DEST="$WORK_DIR/image-out"
+
+# PATCHMOD: Enable either driver patch OR raw mod (see DO_RAWMOD below)
+DO_PATCHMOD=true
+
+# TODO: move caldata dirs here
+
+# WEBSERVER_CPY: Copy images to webserver
+# USAGE: when enabled it will copy the images also to your webserver directory
+DO_WEBSERVER_CPY=true
+
+# Webserver configuration
+WEBSERVER_USER="www-data"
+WEBDIR_SRC=""
+WEBDIR_DEST=""
 
 
-
+# PATCHMOD: Enable BOTH driver patch AND raw mod (see DO_RAWMOD below to pick)
+# IMPORTANT: set `DO_PATCHMOD=true` if you want to use either the patch or the raw driver mod
+# USAGE: toggle between the two with `DO_RAWMOD=true` & `DO_RAWMOD=false`
+DO_PATCHMOD=true
 
 # ==========================================================
 # RAWMOD_LIST INFINITE STRING PATCH LIST(S) BELOW (SEE DOCS)
 # ==========================================================
 
-# separator comment
+# RAWMOD - Enable raw driver mod instead of patch (DO_PATCHMOD must be true)
+DO_RAWMOD=true
 
 # ========================
 # IPQESS DUAL NETDEV PATCH
@@ -63,6 +79,10 @@ RAWMOD_LIST+="ipqess_ethtool.c|$IPQESS_MOD_SRC_DIR/ipqess_ethtool.c.modified|$IP
 # ===========================================================
 # CALDATA_LIST INFINITE STRING PATCH LIST(S) BELOW (SEE DOCS)
 # ===========================================================
+
+# CALDATA FLAG
+DO_CALDATA_CPY=false
+
 # Calibration Data Paths
 CALDATA_QCA4019_SRC_DIR="$WORK_DIR/BUILDSYS/QCA4019"
 CALDATA_QCA9984_SRC_DIR="$WORK_DIR/BUILD_SYS/QCA9984"
