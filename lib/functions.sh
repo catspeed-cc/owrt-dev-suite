@@ -468,10 +468,6 @@ build_kernel_sources() {
                 SUMMARY_OUT+="$msg"$'\n'
             done <<< "$RAWMOD_LIST"
 
-                local msg=" >>> ✅ IPQESS RAW DRIVER MOD ($RAWMOD_ENTRYNAME) copied to source tree: $(cleanup_path "$(dirname "$RAWMOD_SRC")")"
-            echo $msg
-            SUMMARY_OUT+="$msg"$'\n'
-
         fi
 
     fi
