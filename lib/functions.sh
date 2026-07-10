@@ -137,7 +137,7 @@ show_header() {
 
     echo ""
 	echo " ========================================================================================================================"
-	echo " |                                   `owrt-dev-suite` - Advanced OpenWRT build script                                   |"
+	echo " |                                   'owrt-dev-suite' - Advanced OpenWRT build script                                   |"
 	echo " ========================================================================================================================"
     echo "  🚀 Build Script Started"
     echo "  📦 Branch: ${GIT_BRANCH}"
