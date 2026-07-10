@@ -25,7 +25,7 @@ If you need a script for OpenWrt and you intend to distribute binaries, use the 
 
 If you need a script for private usage with OpenWRT and intend to keep the binaries to yourself, you may use this GPLv3 version.
 
-mooleshacat / catspeed.cc is not responsible for any potential license violations you create for yourself.
+**mooleshacat / catspeed.cc is not responsible for any potential license violations you create for yourself.**
 
 ## 🛠️ OpenWRT Developer Suite Utils
 
