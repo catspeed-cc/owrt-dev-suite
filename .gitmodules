@@ -1,4 +1,4 @@
 [submodule "tools/owrt-dev-suite-utils"]
-	path = scripts/tools/gpio-probe
+	path = tools/owrt-dev-suite-utils
 	url = https://github.com/catspeed-cc/owrt-dev-suite-utils.git
 	branch = master
