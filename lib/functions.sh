@@ -390,35 +390,32 @@ copy_patches_dir() {
 }
 
 copy_caldata() {
-
+    # Find the firmware build directory once
     FIRMWARE_BUILD_DIR=$(find "$DEV_DIR/build_dir" -type d -name "linux-firmware-*" | head -n 1)
 
-    if [ -n "$FIRMWARE_BUILD_DIR" ]; then
-
-        # QCA9984
-        DEST_FW="$FIRMWARE_BUILD_DIR/ath10k/QCA9984/hw1.0"
-
-        copy_file "$QCA9984_CALDATA" "$DEST_FW/board-2.bin" || exit_with_error "Copy Caldata"
-
-        local msg=" >>> ✅ QCA9984 board-2.bin copied to: "$(cleanup_path "$DEST_FW")
-        echo $msg
-        SUMMARY_OUT+="${msg}"$'\n'
-
-        # QCA4019
-        DEST_FW="$FIRMWARE_BUILD_DIR/ath10k/QCA4019/hw1.0"
-
-        copy_file "$QCA4019_CALDATA" "$DEST_FW/board-2.bin" || exit_with_error "Copy Caldata"
-
-        local msg=" >>> ✅ QCA4019 board-2.bin copied to: "$(cleanup_path "$DEST_FW")
-        echo $msg
-        SUMMARY_OUT+="${msg}"$'\n'
-
-    else
-
+    if [ -z "$FIRMWARE_BUILD_DIR" ]; then
         exit_with_error "Could not find linux-firmware build directory after prepare."
-
     fi
 
+    # Loop over each line in CALDATA_LIST
+    # We use a here-string <<< to feed the variable into the loop
+    while IFS= read -r line; do
+        # 1. Discard empty lines (handles the trailing newline in the list)
+        [ -z "$line" ] && continue
+
+        # 2. Split the line by pipe '|' into local variables
+        # CALDATA_BOARDNAME (Group 1), CALDATA_SRC (Group 2), CALDATA_DEST (Group 3)
+        IFS='|' read -r CALDATA_BOARDNAME CALDATA_SRC CALDATA_DEST <<< "$line"
+
+        # Perform the copy using the new dynamic variables
+        copy_file "$CALDATA_SRC" "$CALDATA_DEST" || exit_with_error "Copy Caldata"
+
+        # Generate success message and update summary
+        local msg=" >>> ✅ ${CALDATA_BOARDNAME} copied to: $(cleanup_path "$CALDATA_DEST")"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"$'\n'
+
+    done <<< "$CALDATA_LIST"
 }
 
 
@@ -435,26 +432,16 @@ build_kernel_sources() {
     echo $msg
     SUMMARY_OUT+="$msg"$'\n'
 
-    # Copy custom patches into the target directory
-    # These will be picked up automatically by the 'prepare' step
-
     if [ "$DO_PATCHMOD" = true ]; then
 
         if [ -z "${PATCHMOD_DEST_DIR}" ]; then
             exit_with_error "PATCHMOD_DEST_DIR is not set (check script config)"
         fi
 
-        IPQESS_MOD_H_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.h.modified"
-        IPQESS_MOD_C_SRC="${IPQESS_MOD_SRC_DIR}/ipqess.c.modified"
-        IPQESS_MOD_ETHTOOL_C_SRC="${IPQESS_MOD_SRC_DIR}/ipqess_ethtool.c.modified"
-
-        IPQESS_MOD_H_DEST="${IPQESS_MOD_DEST_DIR}/ipqess.h"
-        IPQESS_MOD_C_DEST="${IPQESS_MOD_DEST_DIR}/ipqess.c"
-        IPQESS_MOD_ETHTOOL_C_DEST="${IPQESS_MOD_DEST_DIR}/ipqess_ethtool.c"
-
         if [ "$DO_RAWMOD" != true ]; then
 
-            # Applies the driver patches
+			# Copy custom patches into the target directory
+            # These will be picked up automatically by the 'prepare' step
             copy_patches_dir "${PATCHMOD_SRC_DIR}" "${PATCHMOD_DEST_DIR}"
 
             local msg=" >>> ✅ DRIVER PATCHES copied to source tree: $PATCHMOD_SRC_DIR"
@@ -463,12 +450,25 @@ build_kernel_sources() {
 
         else
 
-            # Applies the raw driver mod source
-            copy_file "$IPQESS_MOD_H_SRC" "$IPQESS_MOD_H_DEST" || exit_with_error "Copying Driver Mod (ipqess.h)"
-            copy_file "$IPQESS_MOD_C_SRC" "$IPQESS_MOD_C_DEST" || exit_with_error "Copying Driver Mod (ipqess.c)"
-            copy_file "$IPQESS_MOD_ETHTOOL_C_SRC" "$IPQESS_MOD_ETHTOOL_C_DEST" || exit_with_error "Copying Driver Mod (ipqess_ethtool.c)"
+            # Loop over each line in RAWMOD_LIST
+            while IFS= read -r line; do
+                # Discard empty lines
+                [ -z "$line" ] && continue
 
-            local msg=" >>> ✅ IPQESS RAW DRIVER MOD copied to source tree: "$(cleanup_path "$IPQESS_MOD_DEST_DIR")
+                # Split the line by pipe '|' into local variables
+                # RAWMOD_FILENAME (Group 1), RAWMOD_SRC (Group 2), RAWMOD_DEST (Group 3)
+                IFS='|' read -r RAWMOD_ENTRYNAME RAWMOD_SRC RAWMOD_DEST <<< "$line"
+
+                # Perform the copy
+                copy_file "$RAWMOD_SRC" "$RAWMOD_DEST" || exit_with_error "Copying Driver Mod ($RAWMOD_ENTRYNAME)"
+
+                # Single summary message for the whole RAWMOD operation
+                local msg=" >>> ✅ IPQESS RAW DRIVER MOD ($RAWMOD_ENTRYNAME) copied to source tree: $(cleanup_path "$RAWMOD_SRC")"
+                echo "$msg"
+                SUMMARY_OUT+="$msg"$'\n'
+            done <<< "$RAWMOD_LIST"
+
+                local msg=" >>> ✅ IPQESS RAW DRIVER MOD ($RAWMOD_ENTRYNAME) copied to source tree: $(cleanup_path "$(dirname "$RAWMOD_SRC")")"
             echo $msg
             SUMMARY_OUT+="$msg"$'\n'
 
