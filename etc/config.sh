@@ -36,8 +36,7 @@ DO_WEBSERVER_CPY=true
 
 # Webserver configuration
 WEBSERVER_USER="www-data"
-WEBDIR_SRC=""
-WEBDIR_DEST=""
+WEBDIR_DEST="/var/www/catspeed.cc/downloads/openwrt/25.12"
 
 
 # PATCHMOD: Enable BOTH driver patch AND raw mod (see DO_RAWMOD below to pick)
