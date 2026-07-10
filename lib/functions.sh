@@ -23,9 +23,13 @@ get_time_diff() {
     diff=$((diff * -1))
   fi
 
-  # Convert seconds back to HH:MM:SS
-  # Using 'date -u' ensures it treats the seconds as a duration, not a timezone timestamp
-  printf "%HH %MM %SS\n" $(date -u -d "@$diff" +%H %M %S)
+  # Convert seconds ($diff) to elapsed time format: Xh Ym Zs
+  # Using pure arithmetic ensures no leading zeros (e.g., 1h 4m 5s instead of 01h 04m 05s)
+  hours=$((diff / 3600))
+  minutes=$(( (diff % 3600) / 60 ))
+  seconds=$((diff % 60))
+
+  printf "%dh %dm %ds\n" "$hours" "$minutes" "$seconds"
 }
 
 # Helper function to resolve glob paths safely
