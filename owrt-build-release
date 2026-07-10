@@ -147,11 +147,7 @@ fi
 # Handle Inject DTS (BEFORE prepare)
 if [ "$DO_DTS_CPY" = true ]; then
     echo " >>> Injecting custom DTS file..."
-    if copy_file "$DTS_SRC" "$DTS_DEST_DIR"; then
-        msg=" >>> ✅ DTS copied to source tree: $DTS_DEST_DIR"
-        echo $msg
-        SUMMARY_OUT+="${msg}"$'\n'
-    fi
+    copy_file "$DTS_SRC" "$DTS_DEST_DIR"
 fi
 
 # Handle Prepare Kernel Sources
@@ -175,9 +171,6 @@ fi
 if [ "$DO_CALDATA_CPY" = "true" ]; then
     echo " >>> Injecting board-2.bin into build_dir..."
     copy_caldata
-    msg=" >>> ✅ Caldata copied"
-    echo $msg
-    SUMMARY_OUT+="${msg}"$'\n'
 fi
 
 # PAUSE SO USER CAN SEE PROGRESS BEFORE COMPILE
