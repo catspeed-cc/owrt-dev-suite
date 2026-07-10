@@ -463,7 +463,7 @@ build_kernel_sources() {
                 copy_file "$RAWMOD_SRC" "$RAWMOD_DEST" || exit_with_error "Copying Driver Mod ($RAWMOD_ENTRYNAME)"
 
                 # Single summary message for the whole RAWMOD operation
-                local msg=" >>> ✅ IPQESS RAW DRIVER MOD ($RAWMOD_ENTRYNAME) copied to source tree: $(cleanup_path "$RAWMOD_SRC")"
+                local msg=" >>> ✅ IPQESS RAW DRIVER MOD ($RAWMOD_ENTRYNAME) copied to source tree: $(cleanup_path "$(dirname "$RAWMOD_SRC")")"
                 echo "$msg"
                 SUMMARY_OUT+="$msg"$'\n'
             done <<< "$RAWMOD_LIST"
