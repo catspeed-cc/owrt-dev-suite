@@ -481,9 +481,9 @@ build_kernel_sources() {
         if [ "$DO_RAWMOD" != true ]; then
 
             # Applies the driver patches
-            copy_patches_dir "${PATCHES_SRC_DIR}" "${PATCHMOD_DEST_DIR}"
+            copy_patches_dir "${PATCHMOD_SRC_DIR}" "${PATCHMOD_DEST_DIR}"
 
-            local msg=" >>> ✅ DRIVER PATCHES copied to source tree: $PATCHES_SRC_DIR"
+            local msg=" >>> ✅ DRIVER PATCHES copied to source tree: $PATCHMOD_SRC_DIR"
             echo $msg
             SUMMARY_OUT+="$msg"$'\n'
 
@@ -527,12 +527,12 @@ do_final_build() {
     if [ $? -eq 0 ]; then
 
         # clobber the image out old files
-        rm -rf "${IMG_OUT_DEST}/"* || exit_with_error "Clobber image-out dir"
+        rm -rf "${IMGDIR_DEST}/"* || exit_with_error "Clobber image-out dir"
 
         # copy the new files
-        cp -r "$IMG_OUT_SRC/"* "$IMG_OUT_DEST/" || exit_with_error "Copy images to image-out"
+        cp -r "$IMGDIR_SRC/"* "$IMGDIR_DEST/" || exit_with_error "Copy images to image-out"
 
-        local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $IMG_OUT_DEST"
+        local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $IMGDIR_DEST"
         echo $msg
         SUMMARY_OUT+="${msg}"$'\n'
 
@@ -570,7 +570,7 @@ cleanup_build_environment() {
             # Check if this patch exists in your source dir. 
             # If NOT, it might be an orphan or upstream patch you don't want to touch.
             # If YES, remove it to force a fresh copy next time.
-            if [ -f "${PATCHES_SRC_DIR}/${filename}" ]; then
+            if [ -f "${PATCHMOD_SRC_DIR}/${filename}" ]; then
                 rm -f "$patch_file"
                 local msg=" >>> 🗑️  Removed temp patch: I"$(cleanup_path "$patch_file")
                 echo $msg
