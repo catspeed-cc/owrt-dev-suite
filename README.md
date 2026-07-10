@@ -2,7 +2,7 @@
 
 Private build script under GPLv3-or-later to be released publicly under same license.
 
-`owrt-dev-suite` is a full development suite for OpenWRT developers intending to port devices to OpenWRT. These are the tools built (using AI) to help me port the TRENDnet TEW-829DRU router (also using AI) after they sent me an EOL notice in arly 2026. The centerpiece of the suite is of course, the advanced build script itself, which is highly configurable and customizable for your workflow.
+`owrt-dev-suite` is a full development suite for OpenWRT developers intending to port devices to OpenWRT. These are the tools built (using AI) to help me port the TRENDnet TEW-829DRU router (also using AI) after they sent me an EOL notice in arly 2026. The centrepiece of the suite is of course, the advanced build script itself, which is highly configurable and customizable for your workflow.
 
 Included tools: GPIO probing utility scripts.
 
