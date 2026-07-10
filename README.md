@@ -10,7 +10,7 @@ To be released publicly under GPLv3-or-later
 
 ## ⚠️ LICENSE WARNING: GPLv2 / GPLv3 INCOMPATIBILITY⚠️
 
-This build script is licensed under GPLv3-or-later. It is NOT compatible with GPLv2-only projects (such as the Linux Kernel or OpenWrt).
+This build script is licensed under GPLv3-or-later. It is NOT compatible with GPLv2-only projects (such as the Linux Kernel or OpenWrt). It should be used only in development and testing, privately.
 
 DO NOT use this script to build binaries for distribution if the underlying source code is licensed GPLv2-only.  Doing so creates a license conflict that makes the resulting binary undistributable and constitutes a copyright violation.
 
