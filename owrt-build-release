@@ -153,9 +153,6 @@ fi
 # Handle Prepare Kernel Sources
 if [ "$DO_CLEAN" = true ]; then
     build_kernel_sources
-    msg=" >>> ✅ Kernel source built"
-    echo $msg
-    SUMMARY_OUT+="${msg}"$'\n'
 fi
 
 # Handle prepare linux-firmware
