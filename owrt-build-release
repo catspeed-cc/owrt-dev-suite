@@ -14,6 +14,9 @@ set -euo pipefail
 # Allow signals into subshells
 set -E
 
+# Version Information
+OWRTDS_VERSION="v0.1.0"
+
 # Guard variable to prevent double cleanup
 CLEANED=false
 

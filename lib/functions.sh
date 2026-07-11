@@ -81,18 +81,41 @@ verify_configuration() {
     # NOT EMPTY CHECKS
     # ================
 
-    # Validate PATCHMOD_DEST_DIR
-    if [ -z "${PATCHMOD_DEST_DIR}" ]; then
-        exit_with_error "PATCHMOD_DEST_DIR is not set (check script config)"
-    fi
-
     # Validate STARTUP_PWD exists
     if [[ -z "$STARTUP_PWD" ]]; then
         echo "Error: STARTUP_PWD is not set" >&2
         return 1
     fi
 
+    # Validate PATCHMOD_DEST_DIR
+    if [ -z "${PATCHMOD_DEST_DIR}" ]; then
+        exit_with_error "❌ CRITICAL: PATCHMOD_DEST_DIR is not set in 'etc/config.sh' - Aborting."
+    fi
 
+    # Validate RAWMOD_DEST_DIR
+    if [ -z "${RAWMOD_DEST_DIR}" ]; then
+        exit_with_error "❌ CRITICAL: RAWMOD_DEST_DIR is not set in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate RAWMOD_DEST_DIR
+    if [ -z "${CALDATA_DEST_DIR}" ]; then
+        exit_with_error "❌ CRITICAL: CALDATA_DEST_DIR is not set in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate OWRT_SOC is not empty
+    if [[ -z "${OWRT_SOC}" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_SOC is not set in 'etc/config.sh' - Aborting." >&2
+    fi
+
+    # Validate OWRT_MFR is not empty
+    if [[ -z "${OWRT_MFR}" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_MFR is not set in 'etc/config.sh' - Aborting." >&2
+    fi
+
+    # Validate OWRT_MODEL is not empty
+    if [[ -z "${OWRT_MODEL}" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_MODEL is not set in 'etc/config.sh' - Aborting." >&2
+    fi
 
 
     # =========================================
@@ -112,6 +135,18 @@ verify_configuration() {
     # ==================
     # FILE EXISTS CHECKS
     # ==================
+
+
+
+
+    # =====================================
+    # INITIALIZE VARIABLES ON CONFIG VERIFY
+    # =====================================
+
+    # OPENWRT PORT INFORMATION (Use these for building paths, automatically lowercased)
+    OWRT_SOC_PATH="${OWRT_SOC,,}"
+    OWRT_MFR_PATH="${OWRT_MFR,,}"
+    OWRT_MODEL_PATH="${OWRT_MODEL,,}"
 
 
 
@@ -216,9 +251,7 @@ install_dependencies() {
 # ==============================================================================
 # Argument Parsing
 # ==============================================================================
-OWRT_SOC="ipq40xx"
-OWRT_MFR="TRENDnet"
-OWRT_MODEL="TEW-829DRU"
+
 show_header() {
 
     # Check our variables are not empty (at least set to blank - unbound protection)
@@ -232,13 +265,14 @@ show_header() {
     fi
 
     echo ""
-	echo " ========================================================================================================================"
-	echo " |                                   'owrt-dev-suite' - Advanced OpenWRT build script                                   |"
-	echo " ========================================================================================================================"
+    echo " ========================================================================================================================"
+    echo " |                                   'owrt-dev-suite' - Advanced OpenWRT build script                                   |"
+    echo " ========================================================================================================================"
     echo "  🚀 Build Script Started"
-    echo "  📦 Branch: ${GIT_BRANCH}"
+    echo "  📦 Version: ${OWRTDS_VERSION}"
+    echo "  🌿 Branch: ${GIT_BRANCH}"
+    echo " ========================================================================================================================"
     echo "  📜 Script: $REAL_PATH"
-    echo "  📅 Date: $(date)"
     echo "  📁 PWD: $STARTUP_PWD"
     echo " ========================================================================================================================"
     echo "  💻 SOC: $OWRT_SOC"
