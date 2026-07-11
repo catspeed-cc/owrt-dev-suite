@@ -184,15 +184,26 @@ fi
 sleep 5
 
 # Compile
-do_final_build
+MAKE_CMD="make ${MAKE_CMD_ADD}"
+echo " >>> Starting compilation: ${MAKE_CMD}"
+$MAKE_CMD
+
+# Immediately copy images on success or exit_with_error on failure
+if [ $? -eq 0 ]; then
+    # Handle Copy images to IMGDIR_DEST
+    if [ "$DO_IMGDIR_CPY" = "true" ]; then
+        copy_to_imgdir
+    fi
+    # Handle Copy images to webserver
+    if [ "$DO_WEBSERVER_CPY" = "true" ]; then
+        copy_to_webserver
+    fi
+else
+    exit_with_error "BUILD FAILED"
+fi
 
 # TODO: refactor: remove image copy from do_final_build into it's own function copy_to_imgdir
 # TODO: add call to copy_to_imgdir from this location in similar fashion
-
-# Handle Copy images to webserver
-if [ "$DO_WEBSERVER_CPY" = "true" ]; then
-    copy_to_webserver
-fi
 
 # UNSET THE CLEANUP TRAP - WE DO IT MANUAL (output appearance)
 trap - ERR INT TERM

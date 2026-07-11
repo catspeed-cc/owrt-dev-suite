@@ -424,6 +424,20 @@ copy_caldata() {
     done <<< "$CALDATA_LIST"
 }
 
+copy_to_imgdir() {
+
+    # clobber the image out old files
+    rm -rf "${IMGDIR_DEST}/"* || exit_with_error "Clobber image-out dir"
+
+    # copy the new files
+    cp -r "$IMGDIR_SRC/"* "$IMGDIR_DEST/" || exit_with_error "Copy images to image-out"
+
+    local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $IMGDIR_DEST"
+    echo $msg
+    SUMMARY_OUT+="${msg}"$'\n'
+
+}
+
 copy_to_webserver() {
 
     if [ "$DO_WEBSERVER_CPY" == "true" ]; then
@@ -510,34 +524,6 @@ build_kernel_sources() {
     local msg=" >>> ✅ Sources compiled (linux) with custom patches applied"
     echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
-
-}
-
-do_final_build() {
-
-    MAKE_CMD="make ${MAKE_CMD_ADD}"
-    echo " >>> Starting compilation: ${MAKE_CMD}"
-    $MAKE_CMD
-
-    if [ $? -eq 0 ]; then
-
-        # clobber the image out old files
-        rm -rf "${IMGDIR_DEST}/"* || exit_with_error "Clobber image-out dir"
-
-        # copy the new files
-        cp -r "$IMGDIR_SRC/"* "$IMGDIR_DEST/" || exit_with_error "Copy images to image-out"
-
-        local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $IMGDIR_DEST"
-        echo $msg
-        SUMMARY_OUT+="${msg}"$'\n'
-
-        #exit_with_success
-
-    else
-
-        exit_with_error "BUILD FAILED"
-
-    fi
 
 }
 
