@@ -422,7 +422,7 @@ copy_to_webserver() {
     if [ "$DO_WEBSERVER_CPY" == "true" ]; then
         # Do NOT quote the * so it expands properly
         echo " >>> Copying images to webserver..."
-        if cp -r "$IMGDIR_SRC"/* "$WEBDIR_DEST"/; then
+        if cp -r "$IMGDIR_SRC"/* "$WEBDIR_DEST"/*; then
             local msg=" >>> ✅ Images copied to webserver: $(cleanup_path "$WEBDIR_DEST")"
             echo "$msg"
             SUMMARY_OUT+="${msg}"$NL
