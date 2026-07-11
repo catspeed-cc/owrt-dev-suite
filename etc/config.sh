@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
+        # TODO: check if OWRT_PORT_BRANCH exists if not create it from OPENWRT_FORK_REPO_BRANCH and checkout OWRT_PORT_BRANCH
+        # TODO: cd back to STARTUP_PWD
+        # TODO: display
+
 # ==============================================================================
 # Developer Configuration Variables             (START CONFIGURING HERE)
 # ==============================================================================
@@ -11,9 +15,12 @@ WORK_DIR="$HOME/work"
 PROJECT_DIR="$HOME/projects"
 OWRT_OWRT_DEV_DIR="$PROJECT_DIR/openwrt-dev"
 
-# Enable sudo commands (will ask for password)
-# Ensure user account either is root or has sudo with password
-SUDO_ENABLE=true
+# YOUR OPENWRT FORK REPOSITORY INFO
+OPENWRT_FORK_REPO="https://github.com/catspeed-cc/openwrt.git"
+
+# TARGET OPENWRT BASE BRANCH
+# we create fork model branches based off this
+OPENWRT_FORK_REPO_BRANCH="25.12"
 
 # CURRENT PORT INFORMATION (for display only)
 # TODO: multi-port and git support (using infinite string)
@@ -21,6 +28,11 @@ OWRT_SOC="ipq40xx"
 OWRT_MFR="TRENDnet"
 OWRT_MODEL="TEW-829DRU"
 OWRT_TARGET="linux"
+
+# Enable sudo commands (will ask for password)
+# Ensure user account either is root (discouraged) or has sudo with password (encouraged)
+# Required for auto-dependency install, auto webserver_cpy setup, and other auto configurations
+SUDO_ENABLE=true
 
 # DTS_CPY: Enable copy of DTS file
 DO_DTS_CPY=true

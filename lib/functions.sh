@@ -160,6 +160,21 @@ verify_configuration() {
 
 
 
+    # =====================================
+    # INITIALIZE VARIABLES ON CONFIG VERIFY
+    # =====================================
+
+    # OPENWRT PORT INFORMATION (Use these for building paths, automatically lowercased)
+    OWRT_SOC_PATH="${OWRT_SOC,,}"
+    OWRT_MFR_PATH="${OWRT_MFR,,}"
+    OWRT_MODEL_PATH="${OWRT_MODEL,,}"
+
+    # Autoconfigure fork model branch name (Ex. trendnet_tew-829dru)
+    OWRT_FORK_MODEL_BRANCH="${OWRT_MFR_PATH}_${OWRT_MODEL_PATH}-${OPENWRT_FORK_REPO_BRANCH}"
+
+
+
+
 }
 
 # Create work dir
@@ -206,7 +221,53 @@ create_projectsdir() {
 # Create the required structure if not already exists
 create_projectsdir
 
-# TODO: create clone_openwrt function
+clone_openwrt() {
+    # TODO: if OWRT_OWRT_DEV_DIR does not exist
+    if [ ! -d "$OWRT_OWRT_DEV_DIR" ]; then
+
+        # 1) Test if the git repository exists
+        if ! git ls-remote "$OPENWRT_FORK_REPO" >/dev/null 2>&1; then
+            exit_with_error "Git repository $OPENWRT_FORK_REPO does not exist please check OPENWRT_FORK_REPO variable in \`etc/config.sh\` - Aborting."
+        fi
+
+        # 2) Prompt the user
+        echo -n "Cloning openwrt fork repository... Continue? [Y/n] "
+        read -r reply
+        reply=${reply:-Y} # Default to Y if empty
+
+        if [[ ! "$reply" =~ ^[Yy]$ ]]; then
+            exit_with_error "Please either configure the openwrt fork repository path in 'etc/config.sh' or continue with the clone."
+        fi
+
+        # cd to PROJECT_DIR directory
+        cd "$PROJECT_DIR" || exit 1
+
+        # stderr message only (cloning openwrt into OWRT_OWRT_DEV_DIR)
+        echo "Cloning openwrt into $OWRT_OWRT_DEV_DIR" >&2
+
+        # clone OPENWRT_FORK_REPO into OWRT_OWRT_DEV_DIR ; cd OWRT_OWRT_DEV_DIR ; checkout OPENWRT_FORK_REPO_BRANCH ;
+        git clone "$OPENWRT_FORK_REPO" "$OWRT_OWRT_DEV_DIR" >&2
+        cd "$OWRT_OWRT_DEV_DIR" || exit 1
+        git checkout "$OPENWRT_FORK_REPO_BRANCH" >&2
+
+        # check if OWRT_FORK_MODEL_BRANCH exists if not create it from OPENWRT_FORK_REPO_BRANCH and checkout OWRT_FORK_MODEL_BRANCH
+        if ! git rev-parse --verify "$OWRT_FORK_MODEL_BRANCH" >/dev/null 2>&1; then
+            git checkout -b "$OWRT_FORK_MODEL_BRANCH" "$OPENWRT_FORK_REPO_BRANCH" >&2
+        else
+            git checkout "$OWRT_FORK_MODEL_BRANCH" >&2
+        fi
+
+        # cd back to STARTUP_PWD
+        cd "$STARTUP_PWD" || exit 1
+
+        # display final SUMMARY_OUT & stderr (successful openwrt fork clone into OWRT_OWRT_DEV_DIR)
+        echo "$SUMMARY_OUT"
+        echo "Successful openwrt fork clone into $OWRT_OWRT_DEV_DIR" >&2
+    fi
+}
+
+# Clone openwrt fork
+clone_openwrt
 
 # ==============================================================================
 # Dependency Installation
