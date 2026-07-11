@@ -212,7 +212,11 @@ sleep 5
 # Compile
 MAKE_CMD="make ${MAKE_CMD_ADD}"
 echo " >>> Starting compilation: ${MAKE_CMD}"
-$MAKE_CMD
+$MAKE_CMD || exit_with_error "BUILD FAILED"
+
+# UNSET THE CLEANUP TRAP - WE DO IT MANUAL (output appearance)
+trap - ERR INT TERM
+set +e
 
 # Immediately copy images on success or exit_with_error on failure
 if [ $? -eq 0 ]; then
@@ -227,12 +231,6 @@ if [ $? -eq 0 ]; then
 else
     exit_with_error "BUILD FAILED"
 fi
-
-# TODO: refactor: remove image copy from do_final_build into it's own function copy_to_imgdir
-# TODO: add call to copy_to_imgdir from this location in similar fashion
-
-# UNSET THE CLEANUP TRAP - WE DO IT MANUAL (output appearance)
-trap - ERR INT TERM
 
 # Gated final manual cleanup on success
 if [ "$CLEANED" == false ]; then

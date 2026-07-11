@@ -627,16 +627,21 @@ build_kernel_sources() {
 # ==============================================================================
 
 cleanup_build_environment() {
+    # NOTICE: DO NOT 'echo "$msg"' inside the cleanup function!
+    #         ONLY output SUMMARY_OUT
 
     # Capture exit status BEFORE any cleanup commands overwrite $?
-    local status="${?}"
+    local status=$?
 
     # Guard: exit immediately if already cleaned
-    [[ "${CLEANED}" == "true" ]] && return
-    CLEANED=true
+    [[ "${CLEANED}" == "true" ]] && return 0
+
+    # Distinguish real errors from false positives caused by set -e interacting with conditionals/subshells
+    if [[ $status -eq 0 ]]; then
+        return 0
+    fi
 
     local msg=" >>> ❌ Trap detected script exit with error. Performing final cleanup."
-    echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
 
     # Disable errexit inside cleanup to prevent silent exits
@@ -645,59 +650,43 @@ cleanup_build_environment() {
     cd "$STARTUP_PWD"
 
     local msg=" >>> 🧹 Cleaning up temporary build modifications..."
-    echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
 
     # 1. Remove temporary patches from target directory
-    #    This ensures no test patches linger if you forget to run 'prepare' again
     if [ -n "${PATCHMOD_DEST_DIR}" ] && [ -d "${PATCHMOD_DEST_DIR}" ]; then
-        # Only remove patches that match your source directory (optional safety)
-        # Or simply remove all .patch files if this dir is exclusively for temp patches
         for patch_file in "${PATCHMOD_DEST_DIR}"/*.patch; do
             [ -e "$patch_file" ] || continue
             local filename
             filename=$(basename "$patch_file")
 
-            # Check if this patch exists in your source dir. 
-            # If NOT, it might be an orphan or upstream patch you don't want to touch.
-            # If YES, remove it to force a fresh copy next time.
             if [ -f "${PATCHMOD_SRC_DIR}/${filename}" ]; then
                 rm -f "$patch_file"
                 local msg=" >>> 🗑️  Removed temp patch: I"$(cleanup_path "$patch_file")
-                echo $msg
+                echo "$msg"
                 SUMMARY_OUT+="${msg}"$'\n'
             fi
         done
     fi
 
     # 2. Restore modified source files (e.g., drivers) to original Git state
-    #    This is crucial if you manually edited files in build_dir or target/
-    #    We only reset files in the 'target' directory to avoid touching other repos
-    echo " >>> ♻ Restoring modified files in target/ to original state..."
-    echo $msg
+    local msg=" >>> ♻ Restoring modified files in target/ to original state..."
     SUMMARY_OUT+="${msg}"$'\n'
 
-    # Check if there are any modified files in target/
     if git diff --quiet -- 'target/'; then
         local msg=" >>> ✅ No patches, caldata, or modified files found in target/"
-        echo $msg
         SUMMARY_OUT+="${msg}"$'\n'
     else
-        # List modified files for logging
         echo "    🔄 Resetting modified files:"
         git diff --name-only -- 'target/' | while read -r file; do
             echo "        - ${file}"
         done
 
-        # Hard reset only the target/ directory to HEAD
-        # This discards all local changes in target/ and restores original upstream files
         git checkout HEAD -- 'target/' || exit_with_error "Failed to restore target files"
     fi
 
     local msg=" >>> ✅ Cleanup complete. Environment is pristine."
-    echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
 
-    exit_with_error "BUILD FAILED"
-
+    # Only exit with error if this was triggered by an actual failure
+    [[ $status -ne 0 ]] && exit_with_error "BUILD FAILED"
 }
