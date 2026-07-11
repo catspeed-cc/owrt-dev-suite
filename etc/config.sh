@@ -6,6 +6,12 @@
 # Developer Configuration Variables             (START CONFIGURING HERE)
 # ==============================================================================
 
+# PORT INFORMATION
+# TODO: multi-port and git support (using infinite string)
+OWRT_SOC="ipq40xx"
+OWRT_MFR="TRENDnet"
+OWRT_MODEL="TEW-829DRU"
+
 WORK_DIR="$HOME/work"
 DEV_DIR="$HOME/my-repositories/openwrt-dev"
 

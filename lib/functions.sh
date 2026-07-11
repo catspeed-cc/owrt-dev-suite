@@ -122,7 +122,9 @@ verify_configuration() {
 # ==============================================================================
 # Argument Parsing
 # ==============================================================================
-
+OWRT_SOC="ipq40xx"
+OWRT_MFR="TRENDnet"
+OWRT_MODEL="TEW-829DRU"
 show_header() {
 
     # Check our variables are not empty (at least set to blank - unbound protection)
@@ -144,6 +146,10 @@ show_header() {
     echo "  📜 Script: $REAL_PATH"
     echo "  📅 Date: $(date)"
     echo "  📁 PWD: $STARTUP_PWD"
+    echo " ========================================================================================================================"
+    echo "  💻 SOC: $OWRT_SOC"
+    echo "  🗜 MFR: $OWRT_MFR"
+    echo "  💃 MODEL: $OWRT_MODEL"
     echo " ========================================================================================================================"
     echo "  📅 Start Date: $BUILD_START_DATE"
     echo "  📅 Start Time: $BUILD_START_TIME"
@@ -242,7 +248,7 @@ exit_with_error() {
     echo " >>>"
     echo " >>> SUMMARY REPORT:"
     echo " >>>"
-    echo "$SUMMARY_OUT"
+    echo -n "$SUMMARY_OUT"
     echo " >>>"
     echo " >>> ❌ CRITICAL: ${err_msg}!"
     echo " >>>"
@@ -542,9 +548,25 @@ do_final_build() {
 
 cleanup_build_environment() {
 
+    # Capture exit status BEFORE any cleanup commands overwrite $?
+    local status="${?}"
+
+    # Guard: exit immediately if already cleaned
+    [[ "${CLEANED}" == "true" ]] && return
+    CLEANED=true
+
+    local msg=" >>> ❌ Trap detected script exit with error. Performing final cleanup."
+    echo $msg
+    SUMMARY_OUT+="${msg}"$'\n'
+
+    # Disable errexit inside cleanup to prevent silent exits
+    set +e
+
     cd "$STARTUP_PWD"
 
-    echo " >>> Cleaning up temporary build modifications..."
+    local msg=" >>> 🧹 Cleaning up temporary build modifications..."
+    echo $msg
+    SUMMARY_OUT+="${msg}"$'\n'
 
     # 1. Remove temporary patches from target directory
     #    This ensures no test patches linger if you forget to run 'prepare' again
@@ -571,7 +593,9 @@ cleanup_build_environment() {
     # 2. Restore modified source files (e.g., drivers) to original Git state
     #    This is crucial if you manually edited files in build_dir or target/
     #    We only reset files in the 'target' directory to avoid touching other repos
-    echo " >>> Restoring modified files in target/ to original state..."
+    echo " >>> ♻ Restoring modified files in target/ to original state..."
+    echo $msg
+    SUMMARY_OUT+="${msg}"$'\n'
 
     # Check if there are any modified files in target/
     if git diff --quiet -- 'target/'; then
@@ -593,4 +617,7 @@ cleanup_build_environment() {
     local msg=" >>> ✅ Cleanup complete. Environment is pristine."
     echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
+
+    exit_with_error "BUILD FAILED"
+
 }
