@@ -154,8 +154,8 @@ trap cleanup_build_environment ERR INT TERM
 # ==============================================================================
 
 echo " >>> Starting Build Process for TEW-829DRU (IPQ4019)"
-echo " >>> Working Directory: $DEV_DIR"
-cd "$DEV_DIR" || exit 1
+echo " >>> Working Directory: $OWRT_DEV_DIR"
+cd "$OWRT_DEV_DIR" || exit 1
 
 # Handle Clean
 if [ "$DO_CLEAN" = true ]; then

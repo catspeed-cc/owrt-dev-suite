@@ -8,8 +8,12 @@
 
 
 WORK_DIR="$HOME/work"
-DEV_DIR="$HOME/my-repositories/openwrt-dev"
+PROJECT_DIR="$HOME/projects"
+OWRT_OWRT_DEV_DIR="$PROJECT_DIR/openwrt-dev"
 
+# Enable sudo commands (will ask for password)
+# Ensure user account either is root or has sudo with password
+SUDO_ENABLE=true
 
 # CURRENT PORT INFORMATION (for display only)
 # TODO: multi-port and git support (using infinite string)
@@ -22,17 +26,17 @@ DO_DTS_CPY=true
 
 # DTS Paths
 DTS_SRC="$WORK_DIR/dts/qcom-ipq4019-tew-829dru.dts"
-DTS_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
+DTS_DEST_DIR="$OWRT_DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
 
 # Patches paths
 PATCHMOD_SRC_DIR="$WORK_DIR/PATCHES"
-PATCHMOD_DEST_DIR="$DEV_DIR/target/linux/ipq40xx/patches-6.12"
+PATCHMOD_DEST_DIR="$OWRT_DEV_DIR/target/linux/ipq40xx/patches-6.12"
 
 # IMGDIR_CPY: Enable image copy on build
 DO_IMGDIR_CPY=true
 
 # Image out paths
-IMGDIR_SRC="$DEV_DIR/bin/targets/ipq40xx/generic"
+IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ipq40xx/generic"
 IMGDIR_DEST="$WORK_DIR/image-out"
 
 # TODO: move caldata dirs here
@@ -65,7 +69,7 @@ DO_RAWMOD=true
 IPQESS_MOD_SRC_DIR="$WORK_DIR/IPQESS_DRIVER_MOD"
 
 # Set the caldata destination directory below
-IPQESS_MOD_DEST_DIR=($DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess)
+IPQESS_MOD_DEST_DIR=($OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess)
 
 # IPQESS Mod Files
 RAWMOD_LIST+="ipqess.h|$IPQESS_MOD_SRC_DIR/ipqess.h.modified|$IPQESS_MOD_DEST_DIR/ipqess.h"$NL

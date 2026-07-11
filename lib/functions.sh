@@ -78,7 +78,7 @@ verify_configuration() {
 
 
     # ================
-    # NOT EMPTY CHECKS
+    # IS EMPTY CHECKS
     # ================
 
     # Validate STARTUP_PWD exists
@@ -153,6 +153,51 @@ verify_configuration() {
 
 }
 
+# Create work dir
+create_workdir() {
+    if [ ! -d "${WORK_DIR}" ]; then
+        echo "Warning: Work directory '${WORK_DIR}' does not exist."
+        read -r -p "Do you want to create it? [Y/n] " response
+        case "$response" in
+            [nN][oO]|[nN])
+                exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults"
+                ;;
+            *)
+                echo "Creating ${WORK_DIR} structure..."
+                mkdir -p "${WORK_DIR}/ports/$OWRTDS_SOC_PATH/$OWRTDS_MFR_PATH/$OWRTDS_MODEL_PATH/dts/oem"
+                mkdir -p "${WORK_DIR}/ports/$OWRTDS_SOC_PATH/$OWRTDS_MFR_PATH/$OWRTDS_MODEL_PATH/patches"
+                mkdir -p "${WORK_DIR}/ports/$OWRTDS_SOC_PATH/$OWRTDS_MFR_PATH/$OWRTDS_MODEL_PATH/driver-mod"
+                mkdir -p "${WORK_DIR}/ports/$OWRTDS_SOC_PATH/$OWRTDS_MFR_PATH/$OWRTDS_MODEL_PATH/image-out"
+                mkdir -p "${WORK_DIR}/ports/$OWRTDS_SOC_PATH/$OWRTDS_MFR_PATH/$OWRTDS_MODEL_PATH/caldata"
+                ;;
+        esac
+    fi
+}
+
+# Create the required structure if not already exists
+create_workdir
+
+# Create projects dir
+create_projectsdir() {
+    if [ ! -d "${PROJECT_DIR}" ]; then
+        echo "Warning: Project directory '${PROJECT_DIR}' does not exist."
+        read -r -p "Do you want to create it? [Y/n] " response
+        case "$response" in
+            [nN][oO]|[nN])
+                exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults"
+                ;;
+            *)
+                echo "Creating ${PROJECT_DIR}..."
+                mkdir -p "${PROJECT_DIR}"
+                ;;
+        esac
+    fi
+}
+
+# Create the required structure if not already exists
+create_projectsdir
+
+# TODO: create clone_openwrt function
 
 # ==============================================================================
 # Dependency Installation
@@ -525,7 +570,7 @@ copy_patches_dir() {
 
 copy_caldata() {
     # Find the firmware build directory once
-    FIRMWARE_BUILD_DIR=$(find "$DEV_DIR/build_dir" -type d -name "linux-firmware-*" | head -n 1)
+    FIRMWARE_BUILD_DIR=$(find "$OWRT_DEV_DIR/build_dir" -type d -name "linux-firmware-*" | head -n 1)
 
     if [ -z "$FIRMWARE_BUILD_DIR" ]; then
         exit_with_error "Could not find linux-firmware build directory after prepare."
