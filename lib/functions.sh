@@ -576,3 +576,18 @@ cleanup_build_environment() {
     SUMMARY_OUT+="${msg}"$'\n'
 }
 
+copy_to_webserver() {
+    if [ "$DO_WEBSERVER_CPY" == "true" ]; then
+        local SRC="$IMGDIR_SRC/*"
+        local DEST="$WEBDIR_DEST/*"
+        
+        echo " >>> Copying images to webserver..."
+        if cp -r "$SRC" "$DEST"; then
+            local msg=" >>> ✅ Images copied to webserver: $(cleanup_path "$WEBDIR_DEST")"
+            echo "$msg"
+            SUMMARY_OUT+="${msg}"$'\n'
+        else
+            exit_with_error "Failed to copy images to webserver"
+        fi
+    fi
+}
