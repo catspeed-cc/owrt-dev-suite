@@ -125,6 +125,27 @@ verify_configuration() {
 
 
 
+    # =====================================
+    # INITIALIZE VARIABLES ON CONFIG VERIFY
+    # =====================================
+
+    # OPENWRT PORT INFORMATION (Use these for building paths, automatically lowercased)
+    OWRT_SOC_PATH="${OWRT_SOC,,}"
+    OWRT_MFR_PATH="${OWRT_MFR,,}"
+    OWRT_MODEL_PATH="${OWRT_MODEL,,}"
+
+    # Configure based on path vars above
+    WEBDIR_DEST="$WEBDIR_DEST/$OWRT_SOC_PATH/$OWRT_MFR_PATH/$OWRT_MODEL_PATH/$OWRT_VERSION"
+
+    # DTS Paths
+    DTS_SRC="$WORK_DIR/dts/$DTS_DEST_FNAME"
+    DTS_DEST_DIR="$OWRT_DEV_DIR/target/$OWRT_TARGET/$OWRT_SOC_PATH/$DTS_DEST_DIR"
+
+    # PATCHMOD Paths
+    PATCHMOD_DEST_DIR="$OWRT_DEV_DIR/target/linux/ipq40xx/$PATCHMOD_DEST_DIR"
+
+
+
     # =================
     # DIR EXISTS CHECKS
     # =================
@@ -135,18 +156,6 @@ verify_configuration() {
     # ==================
     # FILE EXISTS CHECKS
     # ==================
-
-
-
-
-    # =====================================
-    # INITIALIZE VARIABLES ON CONFIG VERIFY
-    # =====================================
-
-    # OPENWRT PORT INFORMATION (Use these for building paths, automatically lowercased)
-    OWRT_SOC_PATH="${OWRT_SOC,,}"
-    OWRT_MFR_PATH="${OWRT_MFR,,}"
-    OWRT_MODEL_PATH="${OWRT_MODEL,,}"
 
 
 
@@ -616,6 +625,8 @@ copy_to_webserver() {
     if [ "$DO_WEBSERVER_CPY" == "true" ]; then
         # Do NOT quote the * so it expands properly
         echo " >>> Copying images to webserver..."
+
+        mkdir -p $WEBDIR_DEST
 
         # clobber the image out old files
         rm -rf "$WEBDIR_DEST/"* || exit_with_error "Clobber webserver image-out dir: $(cleanup_path "$WEBDIR_DEST")"
