@@ -36,7 +36,7 @@ DO_WEBSERVER_CPY=true
 
 # Webserver configuration
 WEBSERVER_USER="www-data"
-WEBDIR_DEST="/srv/openwrt-builds/ipq40xx/tew-829dru/25.12"
+WEBDIR_DEST="/srv/openwrt-builds/ipq40xx/trendnet/tew-829dru/25.12"
 
 
 # PATCHMOD: Enable BOTH driver patch AND raw mod (see DO_RAWMOD below to pick)
