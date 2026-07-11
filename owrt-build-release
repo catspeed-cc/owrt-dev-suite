@@ -45,36 +45,62 @@ SCRIPT_NAME=$(basename "$REAL_PATH")
 
 # Set up for infinite strings (NEEDED IN `lib/config.sh`)
 NL=$'\n' # leave this alone (used in multiple areas)
-RAWMOD_LIST="" # leave this alone
 
-# Import configuration
-source $SCRIPT_DIR/etc/config.sh
+# Flags default values (safe defaults)
+DO_CLEAN=false
+DO_UPDATE_FEEDS=false
+DO_VERBOSE=false
+DO_XVERBOSE=false
+DO_SLOW=false
+DO_IMGDIR_CPY=false
+DO_WEBSERVER_CPY=false
+
+# Infinite string initialization
+RAWMOD_LIST=""
+CALDATA_LIST""
+
+# Required to start blank/empty
+SUMMARY_OUT=""
+MAKE_CMD_ADD=""
+
+# Import config
+if ! source "$SCRIPT_DIR/etc/config.sh"; then
+    echo "❌ CRITICAL: Unable to source etc/config.sh - Aborting." >&2
+    exit 1
+fi
+
+# Import dependencies
+if ! source "$SCRIPT_DIR/lib/dependencies.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/dependencies.sh - Aborting." >&2
+    exit 1
+fi
+
+# Install dependencies
+install_dependencies
+
+# Import dependencies
+source $SCRIPT_DIR/lib/dependencies.sh
+
+# Install dependencies
+install_dependencies
 
 # Ensure STARTUP_PWD does not have a trailing slash for consistent matching
 STARTUP_PWD=$(pwd)
 STARTUP_PWD="${STARTUP_PWD%/}"
 
 # Import functions
-source $SCRIPT_DIR/lib/functions.sh
+if ! source "$SCRIPT_DIR/lib/functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/functions.sh - Aborting." >&2
+    exit 1
+fi
 
-# Flags default values
-DO_CLEAN=false
-DO_UPDATE_FEEDS=false
-DO_VERBOSE=false
-DO_XVERBOSE=false
-DO_SLOW=false
-
-SUMMARY_OUT=""
-
-MAKE_CMD_ADD=""
-
-# ============================================================
-# verify config - vars above this point must not use eachother
-# ============================================================
+# ===========================================================================================
+# verify config - vars above this point must not use eachother (EXCEPT CRITICAL startup vars)
+# ===========================================================================================
 verify_configuration
-# ========================================================
-# verify config - vars below this point can use each other
-# ========================================================
+# ===========================================================================================
+# verify config - vars below this point can use each other to autoconfigure
+# ===========================================================================================
 
 # Ensure we go back to the original PWD before build
 cd $STARTUP_PWD

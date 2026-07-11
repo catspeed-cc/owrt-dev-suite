@@ -120,6 +120,100 @@ verify_configuration() {
 
 
 # ==============================================================================
+# Dependency Installation
+# ==============================================================================
+
+install_dependencies() {
+    local distro_pkg_manager=""
+    local packages_to_install=()
+    local manual_install_cmd=""
+
+    # Detect package manager and map requested names to distribution-specific equivalents
+    if command -v apt-get &>/dev/null; then
+        distro_pkg_manager="apt"
+        # Debian/Ubuntu names
+        # Debian/Ubuntu (Bookworm/Jammy+)
+        packages_to_install=($DEBIAN_PACKAGES)
+        manual_install_cmd="sudo apt-get update && sudo apt-get install -y ${packages_to_install[*]}"
+
+    elif command -v dnf &>/dev/null; then
+        distro_pkg_manager="dnf"
+        # Fedora/RHEL names (glibc-devel, zlib-devel)
+        packages_to_install=($FEDORA_PACKAGES)
+        manual_install_cmd="sudo dnf install -y ${packages_to_install[*]}"
+
+    elif command -v yum &>/dev/null; then
+        distro_pkg_manager="yum"
+        # Older RHEL/CentOS names
+        packages_to_install=($FEDORA_PACKAGES)
+        manual_install_cmd="sudo yum install -y ${packages_to_install[*]}"
+
+    elif command -v pacman &>/dev/null; then
+        distro_pkg_manager="pacman"
+        # Arch names (python, not python3; glibc/zlib are base but safe to list)
+        packages_to_install=($ARCH_PACKAGES)
+        manual_install_cmd="sudo pacman -S --needed ${packages_to_install[*]}"
+    else
+        echo "ERROR: Unsupported package manager. Please install dependencies manually." >&2
+        echo "Required packages: binutils bzip2 diff find flex gawk gcc getopt grep libc-dev libz-dev make perl python3 rsync subversion unzip which"
+        return 1
+    fi
+
+    # Retrieve currently installed packages for the detected manager
+    local installed_pkgs=()
+    case "$distro_pkg_manager" in
+        apt) installed_pkgs=($(dpkg -l 2>/dev/null | awk '/^ii/ {print $2}' | sed 's/:.*//')) ;;
+        dnf|yum) installed_pkgs=($(rpm -qa --qf '%{NAME}\n' 2>/dev/null)) ;;
+        pacman) installed_pkgs=($(pacman -Qq 2>/dev/null)) ;;
+    esac
+
+    # Filter out already installed packages
+    local filtered_pkgs=()
+    for pkg in "${packages_to_install[@]}"; do
+        local is_installed=false
+        for inst in "${installed_pkgs[@]}"; do
+            # Simple prefix match to catch arch-specific suffixes if needed
+            if [[ "$inst" == "$pkg" ]] || [[ "$inst" == "${pkg}"-dev ]] || [[ "$inst" == "${pkg}"-devel ]]; then
+                is_installed=true
+                break
+            fi
+        done
+        $is_installed || filtered_pkgs+=("$pkg")
+    done
+
+    # If nothing to install, exit successfully
+    if [ ${#filtered_pkgs[@]} -eq 0 ]; then
+        echo "All required dependencies are already installed."
+        return 0
+    fi
+
+    # Prompt user
+    echo "The following packages will be installed: ${filtered_pkgs[*]}"
+    read -r -p "Continue? (Y/n) " choice
+    choice=${choice:-Y}
+
+    if [[ "$choice" =~ ^[Nn]$ ]]; then
+        echo ""
+        echo "Automatic installation skipped."
+        echo "Please run the following command manually to install dependencies:"
+        echo "---------------------------------------------------------"
+        echo "$manual_install_cmd"
+        echo "---------------------------------------------------------"
+        exit 0
+    fi
+
+    # Install dependencies using sudo
+    echo "Installing dependencies..."
+    case "$distro_pkg_manager" in
+        apt) sudo apt-get update && sudo apt-get install -y "${filtered_pkgs[@]}" ;;
+        dnf) sudo dnf install -y "${filtered_pkgs[@]}" ;;
+        yum) sudo yum install -y "${filtered_pkgs[@]}" ;;
+        pacman) sudo pacman -S --needed "${filtered_pkgs[@]}" ;;
+    esac
+}
+
+
+# ==============================================================================
 # Argument Parsing
 # ==============================================================================
 OWRT_SOC="ipq40xx"
