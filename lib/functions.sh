@@ -418,6 +418,20 @@ copy_caldata() {
     done <<< "$CALDATA_LIST"
 }
 
+copy_to_webserver() {
+    if [ "$DO_WEBSERVER_CPY" == "true" ]; then
+        # Do NOT quote the * so it expands properly
+        echo " >>> Copying images to webserver..."
+        if cp -r "$IMGDIR_SRC"/* "$WEBDIR_DEST"/; then
+            local msg=" >>> ✅ Images copied to webserver: $(cleanup_path "$WEBDIR_DEST")"
+            echo "$msg"
+            SUMMARY_OUT+="${msg}"$NL
+        else
+            exit_with_error "Failed to copy images to webserver"
+        fi
+    fi
+}
+
 
 # ==============================================================================
 # Build Operations
@@ -574,20 +588,4 @@ cleanup_build_environment() {
     local msg=" >>> ✅ Cleanup complete. Environment is pristine."
     echo $msg
     SUMMARY_OUT+="${msg}"$'\n'
-}
-
-copy_to_webserver() {
-    if [ "$DO_WEBSERVER_CPY" == "true" ]; then
-        local SRC="$IMGDIR_SRC/*"
-        local DEST="$WEBDIR_DEST/*"
-        
-        echo " >>> Copying images to webserver..."
-        if cp -r "$SRC" "$DEST"; then
-            local msg=" >>> ✅ Images copied to webserver: $(cleanup_path "$WEBDIR_DEST")"
-            echo "$msg"
-            SUMMARY_OUT+="${msg}"$'\n'
-        else
-            exit_with_error "Failed to copy images to webserver"
-        fi
-    fi
 }
