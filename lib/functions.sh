@@ -403,6 +403,10 @@ verify_configuration() {
         clone_openwrt
     fi
 
+    # Set up webserver shared directory
+    if [[ ! -d "$WEBDIR_DEST" ]]; then
+        create_webserver_shareddir
+    fi
 
 
 
@@ -519,6 +523,173 @@ clone_openwrt() {
         echo "$msg"
         SUMMARY_OUT+="${msg}"${NL}
     fi
+}
+
+create_webserver_shareddir() {
+    local shared_group="openwrt-deployers"
+    local current_user="$USER"
+    local webserver_user="$WEBSERVER_USER"
+    local webdir_dest="$WEBDIR_DEST"
+    local web_root="${WEBDIR_ROOT:-/var/www/catspeed.cc/downloads}"
+    local symlink_name="openwrt-builds"
+    local sudo_enable="$SUDO_ENABLE"
+
+    # Early exit if DO_WEBSERVER_CPY is not enabled
+    if [[ "$DO_WEBSERVER_CPY" != "true" ]]; then
+        log_summary "⏭️  Webserver copy disabled (DO_WEBSERVER_CPY=false), skipping setup"
+        return 0
+    fi
+
+    echo "🚀 Setting up webserver shared directory..."
+    echo "   Shared group: $shared_group"
+    echo "   Build directory: $webdir_dest"
+    echo "   Web root: $web_root"
+
+    # GLOBALS ARE VALIDATED ALREADY
+
+    # ========== Step 0: Check sudo ==========
+    # Check if running as root
+    if [[ $EUID -ne 0 ]]; then
+        needs_sudo=true
+    fi
+
+    # Handle sudo requirement logic
+    if [[ "$needs_sudo" == true ]]; then
+        if [[ "$sudo_enable" != "true" ]]; then
+            log_summary "⚠️  Sudo required to setup shared web directory"
+            log_summary ""
+            read -p "Continue with automated setup? (Y/n): " -r response
+            response=${response:-Y}
+
+            if [[ ! "$response" =~ ^[Yy]$ ]]; then
+                exit_with_error "Please either allow automated setup (requires: SUDO_ENABLE=true) or manually set up the shared web directory"
+            fi
+        fi
+
+        # Verify sudo access is available
+        if ! sudo -n true 2>/dev/null; then
+            log_summary "⚠️  Passwordless sudo not available, you may be prompted for your password"
+        fi
+    else
+        log_summary "✅ Running as root, sudo not required"
+    fi
+
+    # ========== Step 1: Group Management ==========
+    echo "📋 Step 1: Group Management"
+
+    if ! getent group "$shared_group" > /dev/null 2>&1; then
+        echo "  📦 Creating shared group: $shared_group"
+        sudo groupadd "$shared_group" || exit_with_error "Failed to create group $shared_group"
+    else
+        log_summary "  ✅ Group $shared_group already exists"
+    fi
+
+    # Add current user to group
+    if ! groups "$current_user" | grep -q "$shared_group"; then
+        echo "  👤 Adding $current_user to $shared_group"
+        sudo usermod -aG "$shared_group" "$current_user" || exit_with_error "Failed to add $current_user to $shared_group"
+        log_summary "  ⚠️  You must run 'newgrp $shared_group' to apply group membership in current session"
+    else
+        log_summary "  ✅ $current_user already in $shared_group"
+    fi
+
+    if ! groups "$webserver_user" 2>/dev/null | grep -q "$shared_group"; then
+        log_summary "  🌐 Adding $webserver_user to $shared_group"
+        sudo usermod -aG "$shared_group" "$webserver_user" || exit_with_error "Failed to add $webserver_user to $shared_group"
+    else
+        log_summary "  ✅ $webserver_user already in $shared_group"
+    fi
+
+    # apply group membership for user in current session
+    newgrp "$shared_group"
+
+    # ========== Step 2: Directory Creation & Permissions ==========
+    log_summary ""
+    log_summary "📁 Step 2: Directory Creation & Permissions"
+
+    if [[ ! -d "$webdir_dest" ]]; then
+        log_summary "  📦 Creating directory at $webdir_dest"
+        sudo mkdir -p "$webdir_dest" || exit_with_error "Failed to create directory $webdir_dest"
+    else
+        log_summary "  ✅ Directory already exists"
+    fi
+
+    log_summary "  🔐 Setting ownership to root:$shared_group"
+    sudo chown -R root:"$shared_group" "$webdir_dest" || exit_with_error "Failed to set ownership"
+
+    log_summary "  🔐 Setting permissions to 2775 (SetGID + rwxrwxr-x)"
+    sudo chmod -R 2775 "$webdir_dest" || exit_with_error "Failed to set permissions"
+
+    # ========== Step 3: Permission Verification ==========
+    log_summary ""
+    log_summary "✨ Step 3: Permission Verification"
+
+    local perms_output
+    perms_output=$(ls -ld "$webdir_dest" 2>/dev/null)
+
+    if [[ -z "$perms_output" ]]; then
+        exit_with_error "Failed to verify directory"
+    fi
+
+    log_summary "  Directory: $perms_output"
+
+    if echo "$perms_output" | grep -q "drwxrwsr-x"; then
+        log_summary "  ✅ SetGID bit correctly applied"
+    else
+        log_summary "  ⚠️  SetGID bit may not be set correctly"
+    fi
+
+    # ========== Step 4: Symlink Creation ==========
+
+    # TODO: CODE BELOW CREATES SYMLINK INSIDE WEB_DIR TO WEB_DIR ???
+    # TODO: Consider symlink is not needed here... We copy the images here.
+    # TODO: It is up to the user to MANUAL create the symlink in their webserver downloads/ directory to this shared directory.
+
+    # COMMENTED CODE FOR NOW (TODO ABOVE)
+
+#    log_summary ""
+#    log_summary "🔗 Step 4: Symlink Creation"
+#
+#    if [[ -n "$WEBDIR_ROOT" ]] && [[ -d "$web_root" ]]; then
+#        if change_directory "$web_root"; then
+#            local symlink_path="$web_root/$symlink_name"
+#
+#            if [[ -L "$symlink_path" ]]; then
+#                log_summary "  ✅ Symlink already exists"
+#            elif [[ -e "$symlink_path" ]]; then
+#                exit_with_error "Path exists but is not a symlink: $symlink_path"
+#            else
+#                log_summary "  🔗 Creating symlink: $symlink_name → $webdir_dest"
+#                sudo ln -s "$webdir_dest" "$symlink_path" || exit_with_error "Failed to create symlink"
+#                log_summary "  ✅ Symlink created"
+#            fi
+#        fi
+#    else
+#        log_summary "  ⏭️  Skipping symlink (WEBDIR_ROOT not set or missing)"
+#    fi
+
+    # ========== Step 5: Webserver Restart ==========
+    log_summary ""
+    log_summary "🔄 Step 5: Webserver Restart"
+
+    if command -v systemctl &> /dev/null; then
+        log_summary "  🔄 Restarting nginx..."
+        if sudo systemctl restart nginx 2>/dev/null; then
+            log_summary "  ✅ Nginx restarted"
+        else
+            log_summary "  ⚠️  Failed to restart nginx"
+        fi
+    fi
+
+    # ========== Summary ==========
+    log_summary ""
+    log_summary "🎉 Webserver shared directory setup complete!"
+    log_summary ""
+    log_summary "📝 Next Steps:"
+    log_summary "   1. Run: newgrp $shared_group"
+    log_summary "   2. Verify: ls -ld $webdir_dest"
+    log_summary "   3. Test: touch $webdir_dest/test.txt && rm $webdir_dest/test.txt"
+    log_summary ""
 }
 
 
