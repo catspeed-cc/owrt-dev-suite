@@ -113,11 +113,11 @@ SUDO_ENABLE=true
 # ==================================================================
 
 # Example override: $WORK_DIR/ipq40xx/trendnet/tew-829dru/<directory>
-WORK_DTS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/dts"
-WORK_CALDATA_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/caldata"
-WORK_PATCHMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/patchmods"
-WORK_RAWMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/rawmods"
-WORK_IMAGEOUT_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/image-out"
+# WORK_DTS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/dts"
+# WORK_CALDATA_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/caldata"
+# WORK_PATCHMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/patchmods"
+# WORK_RAWMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/rawmods"
+# WORK_IMAGEOUT_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/image-out"
 
 
 
@@ -166,7 +166,7 @@ DO_WEBSERVER_CPY=true
 
 # Webserver configuration
 WEBSERVER_USER="www-data"
-WEBDIR_DEST="/srv/openwrt-builds/"
+WEBDIR_DEST="/srv-test-1/openwrt-builds/"
 
 
 # =================================================================
