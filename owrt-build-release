@@ -8,11 +8,14 @@
 # Edit `./etc/config.sh` to configure
 # ============================================
 
-# LEAVE ENABLED! It will prevent accidental `rm -rf /` and other undesired operation
-set -euo pipefail
 
-# Allow signals into subshells
-set -E
+# NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
+#
+# REASONS:
+# - Script is heavy in file operations
+# - One unbound variable within a derived path can mangle an undesired location
+# - I need to see and know when something is unbound and fix it
+set -Eeuo pipefail
 
 # Version Information
 OWRTDS_VERSION="v0.1.0"
@@ -55,16 +58,77 @@ DO_UPDATE_FEEDS=false
 DO_VERBOSE=false
 DO_XVERBOSE=false
 DO_SLOW=false
-DO_IMGDIR_CPY=false
-DO_WEBSERVER_CPY=false
 
-# Infinite string initialization
+# ====================================================================================
+# TO AVOID FAILURE IN `set -euo pipefail` MODE DEFINE USER VARIABLES WHICH ARE EITHER:
+#  - only user defined in lib/config.sh
+#  - derived from user defined but user overrideable in lib/config.sh
+# Internal/Derived only variables will remain defined inline where used
+# ====================================================================================
+#
+# DO NOT MANUAL EDIT THESE - THEY ARE DEFAULTS. USER EDITS IN `etc/config.sh`.
+#
+# USER CONFIG VARIABLES (DEFAULTS)
+#
+OWRT_REMOTE_ALIAS="catspeed-cc"
+OWRT_FORK_REPO="https://github.com/catspeed-cc/openwrt.git"
+OWRT_BASE_BRANCH="25.12"
+OWRT_TARGET_BRANCH="tew-829dru-25.12"
+DEVICE_SUPPORTED="true"
+ENABLE_SYMLINK_SHORTCUTS="true"
+
+OWRT_MFR="TRENDnet"
+OWRT_MODEL="TEW-829DRU"
+OWRT_SOC="ipq4019"
+OWRT_SOC_CLASS="ipq40xx"
+OWRT_OS_TARGET="linux"
+
+OWRT_MFR_LOWER=""
+OWRT_MODEL_LOWER=""
+OWRT_SOC_LOWER=""
+OWRT_SOC_CLASS_LOWER=""
+OWRT_OS_TARGET_LOWER=""
+
+WORK_DIR="$HOME/work"
+PROJECT_DIR="$HOME/projects"
+OWRT_DEV_DIR="$PROJECT_DIR/openwrt-dev"
+IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ipq40xx/generic"
+
+SUDO_ENABLE="false"
+
+WORK_DTS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/dts"
+WORK_CALDATA_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/caldata"
+WORK_PATCHMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/patchmods"
+WORK_RAWMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/rawmods"
+WORK_IMAGEOUT_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/image-out"
+
+DO_DTS_CPY="false"
+DTS_FNAME=""
+DTS_DEST_DIR="$OWRT_DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
+
+DO_IMGDIR_CPY="true"
+
+DO_WEBSERVER_CPY="false"
+WEBSERVER_USER="www-data"
+WEBDIR_DEST="/srv/openwrt-builds/"
+
+DO_DRIVERMOD_CPY="false"
+DRIVERMOD_MODE="patchmod"
+PATCHMOD_DEST_DIR="target/linux/ipq40xx/patches-6.12/"
 RAWMOD_LIST=""
-CALDATA_LIST""
+
+DO_CALDATA_CPY="false"
+CALDATA_LIST=""
+
+# ====================================================================================
 
 # Required to start blank/empty
 SUMMARY_OUT=""
 MAKE_CMD_ADD=""
+
+# Ensure STARTUP_PWD does not have a trailing slash for consistent matching
+STARTUP_PWD=$(pwd)
+STARTUP_PWD="${STARTUP_PWD%/}"
 
 # Import config
 if ! source "$SCRIPT_DIR/etc/config.sh"; then
@@ -78,24 +142,12 @@ if ! source "$SCRIPT_DIR/lib/dependencies.sh"; then
     exit 1
 fi
 
-# Install dependencies
-install_dependencies
-
-# Import dependencies
-source $SCRIPT_DIR/lib/dependencies.sh
-
-# Install dependencies
-install_dependencies
-
-# Ensure STARTUP_PWD does not have a trailing slash for consistent matching
-STARTUP_PWD=$(pwd)
-STARTUP_PWD="${STARTUP_PWD%/}"
-
 # Import functions
 if ! source "$SCRIPT_DIR/lib/functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/functions.sh - Aborting." >&2
     exit 1
 fi
+
 
 # ===========================================================================================
 # verify config - vars above this point must not use eachother (EXCEPT CRITICAL startup vars)
@@ -105,31 +157,37 @@ verify_configuration
 # verify config - vars below this point can use each other to autoconfigure
 # ===========================================================================================
 
-# Ensure we go back to the original PWD before build
-cd $STARTUP_PWD
+# Ensure we go to our script location (owrt-dev-suite repo)
+cd "$REAL_PATH"
 
-IPQESS_MOD_DEST_DIR="${IPQESS_MOD_DEST_DIR[0]}"
-CALDATA_DEST_DIR="${CALDATA_DEST_DIR[0]}"
-
+# Get the git branch for display
 GIT_BRANCH=$(cd "$SCRIPT_DIR" && git branch --show-current)
 # Fallback for detached HEAD or old git versions
 if [ -z "$GIT_BRANCH" ]; then
     GIT_BRANCH=$(cd "$SCRIPT_DIR" && git rev-parse --abbrev-ref HEAD)
 fi
 
-# modify DTS_DEST_DIR to include filename from DTS_SRC
-DTS_SRC_BASE=$(basename "$DTS_SRC")
-DTS_DEST_DIR_DIR="$DTS_DEST_DIR"
-DTS_DEST_DIR="${DTS_DEST_DIR_DIR}/${DTS_SRC_BASE}"
+# Ensure we go back to the original PWD before build
+cd "$STARTUP_PWD"
 
+# Show the pretty header
 show_header
 
+# Parse the arguments (overrides config)
 parse_arguments "$@"
+
+# Install dependencies
+install_dependencies
+
+
 
 
 # ==============================================================================
 # Execution Preperation
 # ==============================================================================
+
+# Ensure we go back to the original PWD before build
+cd "$STARTUP_PWD"
 
 # Handle Concurrency
 if [ "$DO_SLOW" = false ]; then
@@ -146,8 +204,13 @@ elif [ "$DO_XVERBOSE" = true ]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} V=99"
 fi
 
-# SET THE CLEANUP TRAP ON ERRORS ONLY (success calls final cleanup manually)
-trap cleanup_build_environment ERR INT TERM
+# Register the trap ONLY for interruption signals (INT, TERM, HUP)
+# Do NOT trap EXIT here; let your wrappers handle normal exits.
+# Define specific handlers for each signal to pass the name correctly
+trap 'exit_with_error "Caught by trap - user pressed CTRL+C (SIGINT). Aborting."' INT
+trap 'exit_with_error "Caught by trap - script terminated (SIGTERM). Aborting."' TERM
+trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."' HUP
+# we skipped my idea of using a trap exit handler - neat!
 
 # ==============================================================================
 # Execution Logic
@@ -162,8 +225,8 @@ if [ "$DO_CLEAN" = true ]; then
     echo " >>> Running 'make clean'..."
     make clean
     msg=" >>> ✅ Make clean"
-    echo $msg
-    SUMMARY_OUT+="${msg}"$'\n'
+    echo "$msg"
+    SUMMARY_OUT+="${msg}"${NL}
 fi
 
 # Handle Update Feeds (First, to ensure package definitions are fresh)
@@ -172,14 +235,14 @@ if [ "$DO_UPDATE_FEEDS" = true ]; then
     ./scripts/feeds update -a
     ./scripts/feeds install -a
     msg=" >>> ✅ Feeds updated & installed"
-    echo $msg
-    SUMMARY_OUT+="${msg}"$'\n'
+    echo "$msg"
+    SUMMARY_OUT+="${msg}"${NL}
 fi
 
 # Handle Inject DTS (BEFORE prepare)
 if [ "$DO_DTS_CPY" = true ]; then
     echo " >>> Injecting custom DTS file..."
-    copy_file "$DTS_SRC" "$DTS_DEST_DIR"
+    copy_file "$WORK_DTS_DIR/$DTS_FNAME" "$DTS_DEST_DIR/$DTS_FNAME"
 fi
 
 # Handle Prepare Kernel Sources
@@ -192,8 +255,8 @@ if [ "$DO_CLEAN" = true ]; then
     echo " >>> Running 'make target/linux-firmware/prepare'..."
     make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare `linux-firmware`"
     msg=" >>> ✅ Sources prepared (linux-firmware)"
-    echo $msg
-    SUMMARY_OUT+="${msg}"$'\n'
+    echo "$msg"
+    SUMMARY_OUT+="${msg}"${NL}
 fi
 
 # Handle Copy caldata
@@ -215,14 +278,15 @@ sleep 5
 # Compile
 MAKE_CMD="make ${MAKE_CMD_ADD}"
 echo " >>> Starting compilation: ${MAKE_CMD}"
-$MAKE_CMD || exit_with_error "BUILD FAILED"
+$MAKE_CMD
+BUILD_STATUS=$?
 
 # UNSET THE CLEANUP TRAP - WE DO IT MANUAL (output appearance)
-trap - ERR INT TERM
+trap - INT TERM HUP
 set +e
 
 # Immediately copy images on success or exit_with_error on failure
-if [ $? -eq 0 ]; then
+if [ $BUILD_STATUS -eq 0 ]; then
     # Handle Copy images to IMGDIR_DEST
     if [ "$DO_IMGDIR_CPY" = "true" ]; then
         copy_to_imgdir

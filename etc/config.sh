@@ -2,57 +2,163 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
-        # TODO: check if OWRT_PORT_BRANCH exists if not create it from OPENWRT_FORK_REPO_BRANCH and checkout OWRT_PORT_BRANCH
-        # TODO: cd back to STARTUP_PWD
-        # TODO: display
 
-# ==============================================================================
-# Developer Configuration Variables             (START CONFIGURING HERE)
-# ==============================================================================
+# ==================================================================
+# User Configuration Variables                       (INSTRUCTIONS)
+# ==================================================================
+#
+# Define your configuration in this file. Ensure the required
+# sections are filled out correctly:
+#
+#  - OPWNWRT SOURCE & REPO
+#  - DEVICE IDENTIFICATION
+#  - BASE DIRECTORIES
+#
+# Variables not required will be commented
+# You may uncomment to override the auto-derived defaults
+# It's highly recommended to use the symlinks & auto-derived paths
+#
+# owrt-dev-suite keeps your work and projects directories organized
+#
 
 
-WORK_DIR="$HOME/work"
-PROJECT_DIR="$HOME/projects"
-OWRT_OWRT_DEV_DIR="$PROJECT_DIR/openwrt-dev"
+# ==================================================================
+# OPENWRT SOURCE & REPO                                  (REQUIRED)
+# ==================================================================
+
+# Remote Alias
+# Use a unique remote ailias for each remote to keep them separate
+# Non-functional, but set anyways for when multi-port arrives
+OWRT_REMOTE_ALIAS="catspeed-cc"
 
 # YOUR OPENWRT FORK REPOSITORY INFO
-OPENWRT_FORK_REPO="https://github.com/catspeed-cc/openwrt.git"
+# Your fork of the openwrt repository where your ports will live
+OWRT_FORK_REPO="https://github.com/catspeed-cc/openwrt.git"
 
-# TARGET OPENWRT BASE BRANCH
-# we create fork model branches based off this
-OPENWRT_FORK_REPO_BRANCH="25.12"
+# Base openwrt branch (which openwrt version?)
+# Base branch to auto create custom port/model branches from
+# If you want to target earlier openwrt versions, change this
+OWRT_BASE_BRANCH="25.12"
+
+# Target custom port/model branch (your port branch)
+# We added the BASE_BRANCH so we can build multiple openwrt versions
+# provided we add a new branch, backport it, and create configs
+OWRT_TARGET_BRANCH="tew-829dru-25.12"
+
+# DEVICE_SUPPORTED
+# Mark as supported under two conditions, either:
+#  - device is already supported in openwrt mainline
+#  - your port is complete (caldata from art, driver patches complete)
+DEVICE_SUPPORTED="false"
+
+# ENABLE_SYMLINK_SHORTCUTS
+# Each model will have a symlink in root to your port model's directory
+# containing the DTS, image-out, rawmod, patchmod, caldata, directories
+ENABLE_SYMLINK_SHORTCUTS="true"
+
+
+# ==================================================================
+# DEVICE IDENTIFICATION                                  (REQUIRED)
+#
+# Device information is used for display and path derivation
+# These are required for operation. Please configure sane values
+# ==================================================================
 
 # CURRENT PORT INFORMATION (for display only)
 # TODO: multi-port and git support (using infinite string)
-OWRT_SOC="ipq40xx"
 OWRT_MFR="TRENDnet"
 OWRT_MODEL="TEW-829DRU"
-OWRT_TARGET="linux"
+OWRT_SOC="ipq4019"
+OWRT_SOC_CLASS="ipq40xx"
+OWRT_OS_TARGET="linux"
 
-# Enable sudo commands (will ask for password)
-# Ensure user account either is root (discouraged) or has sudo with password (encouraged)
-# Required for auto-dependency install, auto webserver_cpy setup, and other auto configurations
+
+# ==================================================================
+# BASE DIRECTORIES                                       (REQUIRED)
+#
+# These base paths are used below to derive other paths.
+# These are required for operation. Please configure sane values
+# ==================================================================
+
+WORK_DIR="$HOME/work"
+PROJECT_DIR="$HOME/projects"
+
+# Example override: $PROJECT_DIR/openwrt-dev
+OWRT_DEV_DIR="$PROJECT_DIR/openwrt-dev"
+
+# Needed for both IMGDIR_CPY and WEBSERVER_CPY features
+IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ipq40xx/generic"
+
+# ==================================================================
+# SHORTCUT SYMLINKS                                      (OPTIONAL)
+#
+# Enable sudo commands (will ask for password). You can disable this
+# if you use root account, but it is not reccommended.
+#
+# It is *HIGHLY* reccommended to use a regular user account that has
+# access to sudo with password (encouraged)
+#
+# Default: false
+# Required for auto-dependency install and auto webserver_cpy setup
+# ==================================================================
+
 SUDO_ENABLE=true
+
+
+# ==================================================================
+# WORK SUB-DIRECTORIES - Override Points                 (OPTIONAL)
+#
+# These paths are used by the auto-creator and build steps
+# Users can override any of these by uncommenting and changing them
+# ==================================================================
+
+# Example override: $WORK_DIR/ipq40xx/trendnet/tew-829dru/<directory>
+WORK_DTS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/dts"
+WORK_CALDATA_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/caldata"
+WORK_PATCHMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/patchmods"
+WORK_RAWMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/rawmods"
+WORK_IMAGEOUT_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/image-out"
+
+
+
+
+# =================================================================
+# COPY DTS TO target/                                   (OPTIONAL)
+#
+# These paths are used by the auto-creator and build steps
+# Users can override any of these by uncommenting and changing them
+# ==================================================================
 
 # DTS_CPY: Enable copy of DTS file
 DO_DTS_CPY=true
 
 # DTS Paths
-DTS_DEST_DIR="files-6.12/arch/arm/boot/dts/qcom"
-DTS_DEST_FNAME="qcom-ipq4019-tew-829dru.dts"
+# SHARED BETWEEN SRC (WORK_DTS_DIR AND DTS_DEST_DIR)
+DTS_FNAME="qcom-ipq4019-tew-829dru.dts"
+DTS_DEST_DIR="$OWRT_DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
 
-# Patches paths
-PATCHMOD_SRC_DIR="$WORK_DIR/PATCHES"
-PATCHMOD_DEST_DIR="patches-6.12"
 
-# IMGDIR_CPY: Enable image copy on build
+# =================================================================
+# COPY IMAGES TO WORK_IMAGEOUT_DIR                      (OPTIONAL)
+#
+# These paths are used to copy build images into WORK_IMAGEOUT_DIR
+# Users can override any of these by uncommenting and changing them
+#
+# Default: true
+# ==================================================================
+
+# IMGDIR_CPY: Enable image copy to work dir on build
 DO_IMGDIR_CPY=true
 
-# Image out paths
-IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ipq40xx/generic"
-IMGDIR_DEST="$WORK_DIR/image-out"
 
-# TODO: move caldata dirs here
+# =================================================================
+# COPY IMAGES TO WEBSERVER DIR                          (OPTIONAL)
+#
+# This feature will copy the images to your webserver downloads dir
+# It will organize in similar manner to your WORK_DIR
+#
+# Users can override any of these by uncommenting and changing them
+# ==================================================================
 
 # WEBSERVER_CPY: Copy images to webserver
 # USAGE: when enabled it will copy the images also to your webserver directory
@@ -63,57 +169,53 @@ WEBSERVER_USER="www-data"
 WEBDIR_DEST="/srv/openwrt-builds/"
 
 
-# PATCHMOD: Enable BOTH driver patch AND raw mod (see DO_RAWMOD below to pick)
-# IMPORTANT: set `DO_PATCHMOD=true` if you want to use either the patch or the raw driver mod
-# USAGE: toggle between the two with `DO_RAWMOD=true` & `DO_RAWMOD=false`
-DO_PATCHMOD=true
-
-# ==========================================================
-# RAWMOD_LIST INFINITE STRING PATCH LIST(S) BELOW (SEE DOCS)
-# ==========================================================
-
-# Note: You generally only need rawmod when making a driver
-#       modification and building it from the source. 
-#       Otherwise you would use a patch.
+# =================================================================
+# APPLY PATCHES OR RAW DRIVER MOD                       (OPTIONAL)
 #
-# Note: You will need to do a clean build and update feeds.
+# This feature will copy your patch and apply it to the source tree
+# to be built into the image.
+#
+# Users can override any of these by uncommenting and changing them
+# ==================================================================
 
-# RAWMOD - Enable raw driver mod instead of patch (DO_PATCHMOD must be true)
-DO_RAWMOD=true
+# Enable drivermod (patchmod & rawmod)
+DO_DRIVERMOD_CPY=true
 
-# ========================
-# IPQESS DUAL NETDEV PATCH
-# ========================
+# Select either patchmod or drivermod mode
+DRIVERMOD_MODE=patchmod
 
-# Set the caldata destination directory below
-IPQESS_MOD_DEST_DIR=($OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess)
+# Patches paths
+PATCHMOD_DEST_DIR="target/linux/ipq40xx/patches-6.12/"
+
+
+# ===================================
+# IPQESS DUAL NETDEV RAWMOD (EXAMPLE)
+# ===================================
 
 # IPQESS Mod Files
-RAWMOD_LIST+="ipqess.h|$WORK_DIR/IPQESS_DRIVER_MOD/ipqess.h.modified|$IPQESS_MOD_DEST_DIR/ipqess.h"$NL
-RAWMOD_LIST+="ipqess.c|$WORK_DIR/IPQESS_DRIVER_MOD/ipqess.c.modified|$IPQESS_MOD_DEST_DIR/ipqess.c"$NL
-RAWMOD_LIST+="ipqess_ethtool.c|$WORK_DIR/IPQESS_DRIVER_MOD/ipqess_ethtool.c.modified|$IPQESS_MOD_DEST_DIR/ipqess_ethtool.c"$NL
+RAWMOD_LIST+="ipqess.h|$WORK_RAWMODS_DIR/ipqess/ipqess.h.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.h"$NL
+RAWMOD_LIST+="ipqess.c|$WORK_RAWMODS_DIR/ipqess/ipqess.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.c"$NL
+RAWMOD_LIST+="ipqess_ethtool.c|$WORK_RAWMODS_DIR/ipqess/ipqess_ethtool.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess_ethtool.c"$NL
 
 
-
-
-# ===========================================================
-# CALDATA_LIST INFINITE STRING PATCH LIST(S) BELOW (SEE DOCS)
-# ===========================================================
-
+# =================================================================
+# COPY CALDATA TO IMAGE                                 (OPTIONAL)
+#
+# This feature will copy your caldata to the correct location
+# to be built into the image.
+#
 # Note: You generally only need caldata when just starting DTS
 #       work and can't pull it from ART yet or are debugging.
 #
 # Note: You will need to do a clean build and update feeds.
+#
+# Users can override any of these by uncommenting and changing them
+# ==================================================================
 
 # CALDATA FLAG
 DO_CALDATA_CPY=false
 
-# Set the caldata destination directory below
-# TODO: Dynamically determine this based on the .config / build environment
-CALDATA_DEST_DIR=(./build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-firmware-*)
-
 # Calibration Data Files
-CALDATA_LIST+="qca4019-board-2.bin|$WORK_DIR/BUILDSYS/QCA4019/board-2.bin|$CALDATA_DEST_DIR/board-2.bin"$NL
-CALDATA_LIST+="qca9984-board-2.bin|$WORK_DIR/BUILD_SYS/QCA9984/board-2.bin|$CALDATA_DEST_DIR/board-2.bin"$NL
-
+CALDATA_LIST+="qca4019-board-2.bin|$WORK_CALDATA_DIR/QCA4019/board-2.bin|ath10k/QCA4019/hw1.0/board-2.bin"$NL
+CALDATA_LIST+="qca9984-board-2.bin|$WORK_CALDATA_DIR/QCA9984/board-2.bin|ath10k/QCA9984/hw1.0/board-2.bin"$NL
 

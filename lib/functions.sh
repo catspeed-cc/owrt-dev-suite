@@ -3,6 +3,22 @@
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
 
+# Logs a message to both stderr AND SUMMARY_OUT
+# Passing in --silent causes it to only log to SUMMARY_OUT
+# For stderr only please simply use echo
+log_summary() {
+  local message="$1"
+  local silent="${2:-false}"
+
+  # Always append to the summary buffer
+  SUMMARY_OUT+="${message}${NL}"
+
+  # Only echo to stderr if NOT silent
+  if [[ "$silent" != "--silent" && "$silent" != "true" ]]; then
+    echo "$message" >&2
+  fi
+}
+
 # Calculates the difference between two HH:MM:SS strings
 # Usage: get_time_diff "22:31:05" "23:45:10"
 get_time_diff() {
@@ -10,7 +26,7 @@ get_time_diff() {
   local end_time="$2"
 
   # Convert both times to seconds since epoch (using an arbitrary fixed date)
-  # We use 'today' to ensure it works even if the times cross midnight relative to now, 
+  # We use 'today' to ensure it works even if the times cross midnight relative to now,
   # but for simple duration, a fixed date like 2000-01-01 is safer for pure time math.
   local start_sec=$(date -d "2000-01-01 $start_time" +%s)
   local end_sec=$(date -d "2000-01-01 $end_time" +%s)
@@ -74,75 +90,288 @@ resolve_single_glob() {
 # Verify all user configured variables from above
 verify_configuration() {
 
-    # TODO: Fill in the rest of checks :D
+    # =======================
+    # VERIFY ONLY THESE EARLY
+    # =======================
 
-
-    # ================
-    # IS EMPTY CHECKS
-    # ================
-
-    # Validate STARTUP_PWD exists
-    if [[ -z "$STARTUP_PWD" ]]; then
-        echo "Error: STARTUP_PWD is not set" >&2
-        return 1
+    # Validate OWRT_MFR is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$OWRT_MFR" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_MFR is not set in 'etc/config.sh' - Aborting."
     fi
 
-    # Validate PATCHMOD_DEST_DIR
-    if [ -z "${PATCHMOD_DEST_DIR}" ]; then
-        exit_with_error "❌ CRITICAL: PATCHMOD_DEST_DIR is not set in 'etc/config.sh' - Aborting."
+    # Validate OWRT_MODEL is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$OWRT_MODEL" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_MODEL is not set in 'etc/config.sh' - Aborting."
     fi
 
-    # Validate RAWMOD_DEST_DIR
-    if [ -z "${RAWMOD_DEST_DIR}" ]; then
-        exit_with_error "❌ CRITICAL: RAWMOD_DEST_DIR is not set in 'etc/config.sh' - Aborting."
+    # Validate OWRT_SOC is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$OWRT_SOC" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_SOC is not set in 'etc/config.sh' - Aborting."
     fi
 
-    # Validate RAWMOD_DEST_DIR
-    if [ -z "${CALDATA_DEST_DIR}" ]; then
-        exit_with_error "❌ CRITICAL: CALDATA_DEST_DIR is not set in 'etc/config.sh' - Aborting."
+    # Validate OWRT_SOC_CLASS is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$OWRT_SOC_CLASS" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_SOC_CLASS is not set in 'etc/config.sh' - Aborting."
     fi
 
-    # Validate OWRT_SOC is not empty
-    if [[ -z "${OWRT_SOC}" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_SOC is not set in 'etc/config.sh' - Aborting." >&2
+    # Validate OWRT_OS_TARGET is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$OWRT_OS_TARGET" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_OS_TARGET is not set in 'etc/config.sh' - Aborting."
     fi
-
-    # Validate OWRT_MFR is not empty
-    if [[ -z "${OWRT_MFR}" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_MFR is not set in 'etc/config.sh' - Aborting." >&2
-    fi
-
-    # Validate OWRT_MODEL is not empty
-    if [[ -z "${OWRT_MODEL}" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_MODEL is not set in 'etc/config.sh' - Aborting." >&2
-    fi
-
-
-    # =========================================
-    # VALUE CONSTRAINT CHECKS (ex. "$var"=true)
-    # =========================================
-
-
 
 
     # =====================================
     # INITIALIZE VARIABLES ON CONFIG VERIFY
     # =====================================
 
-    # OPENWRT PORT INFORMATION (Use these for building paths, automatically lowercased)
-    OWRT_SOC_PATH="${OWRT_SOC,,}"
-    OWRT_MFR_PATH="${OWRT_MFR,,}"
-    OWRT_MODEL_PATH="${OWRT_MODEL,,}"
+    # PURELY DERIVED FROM VALIDATED USER INPUT - NO USER OVERRIDE
+    # DO NOT VALIDATE, ASSUME CORRECTNESS
+    OWRT_MFR_LOWER="${OWRT_MFR,,}"
+    OWRT_MODEL_LOWER="${OWRT_MODEL,,}"
+    OWRT_SOC_LOWER="${OWRT_SOC,,}"
+    OWRT_SOC_CLASS_LOWER="${OWRT_SOC_CLASS,,}"
+    OWRT_OS_TARGET_LOWER="${OWRT_OS_TARGET,,}"
 
-    # Configure based on path vars above
-    WEBDIR_DEST="$WEBDIR_DEST/$OWRT_SOC_PATH/$OWRT_MFR_PATH/$OWRT_MODEL_PATH/$OWRT_VERSION"
 
-    # DTS Paths
-    DTS_SRC="$WORK_DIR/dts/$DTS_DEST_FNAME"
-    DTS_DEST_DIR="$OWRT_DEV_DIR/target/$OWRT_TARGET/$OWRT_SOC_PATH/$DTS_DEST_DIR"
+    # ===========================
+    # VALIDATE BOOLS (USED BELOW)
+    # ===========================
 
-    # PATCHMOD Paths
-    PATCHMOD_DEST_DIR="$OWRT_DEV_DIR/target/linux/ipq40xx/$PATCHMOD_DEST_DIR"
+    # Validate DEVICE_SUPPORTED flag
+    if [[ "${DEVICE_SUPPORTED}" != "true" && "${DEVICE_SUPPORTED}" != "false" ]]; then
+        exit_with_error "❌ CRITICAL: DEVICE_SUPPORTED is not set to true/false in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate SUDO_ENABLE flag
+    if [[ "${SUDO_ENABLE}" != "true" && "${SUDO_ENABLE}" != "false" ]]; then
+        exit_with_error "❌ CRITICAL: SUDO_ENABLE is not set to true/false in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate DO_DTS_CPY flag
+    if [[ "${DO_DTS_CPY}" != "true" && "${DO_DTS_CPY}" != "false" ]]; then
+        exit_with_error "❌ CRITICAL: DO_DTS_CPY is not set to true/false in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate DO_IMGDIR_CPY flag
+    if [[ "${DO_IMGDIR_CPY}" != "true" && "${DO_IMGDIR_CPY}" != "false" ]]; then
+        exit_with_error "❌ CRITICAL: DO_IMGDIR_CPY is not set to true/false in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate DO_WEBSERVER_CPY flag
+    if [[ "${DO_WEBSERVER_CPY}" != "true" && "${DO_WEBSERVER_CPY}" != "false" ]]; then
+        exit_with_error "❌ CRITICAL: DO_WEBSERVER_CPY is not set to true/false in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate DO_DRIVERMOD_CPY flag
+    if [[ "${DO_DRIVERMOD_CPY}" != "true" && "${DO_DRIVERMOD_CPY}" != "false" ]]; then
+        exit_with_error "❌ CRITICAL: DO_DRIVERMOD_CPY is not set to true/false in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate DO_CALDATA_CPY flag
+    if [[ "${DO_CALDATA_CPY}" != "true" && "${DO_CALDATA_CPY}" != "false" ]]; then
+        exit_with_error "❌ CRITICAL: DO_CALDATA_CPY is not set to true/false in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate ENABLE_SYMLINK_SHORTCUTS flag
+    if [[ "${ENABLE_SYMLINK_SHORTCUTS}" != "true" && "${ENABLE_SYMLINK_SHORTCUTS}" != "false" ]]; then
+        exit_with_error "❌ CRITICAL: ENABLE_SYMLINK_SHORTCUTS is not set to true/false in 'etc/config.sh' - Aborting."
+    fi
+
+
+    # ================
+    # IS EMPTY CHECKS
+    # ================
+
+    # Validate OWRT_REMOTE_ALIAS is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$OWRT_REMOTE_ALIAS" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_REMOTE_ALIAS is not set in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate OWRT_FORK_REPO is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$OWRT_FORK_REPO" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_FORK_REPO is not set in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate OWRT_BASE_BRANCH is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$OWRT_BASE_BRANCH" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_BASE_BRANCH is not set in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate WORK_DIR is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$WORK_DIR" ]]; then
+        exit_with_error "❌ CRITICAL: WORK_DIR is not set in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate PROJECT_DIR is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$PROJECT_DIR" ]]; then
+        exit_with_error "❌ CRITICAL: PROJECT_DIR is not set in 'etc/config.sh' - Aborting."
+    fi
+
+    # Validate OWRT_DEV_DIR is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$OWRT_DEV_DIR" ]]; then
+        exit_with_error "❌ CRITICAL: OWRT_DEV_DIR is not set in 'etc/config.sh' - Aborting."
+    fi
+
+    # CONDITIONAL VALIDATION BASED ON BOOLS
+
+    # Validate IMGDIR_SRC is not empty (REQUIRED, CRITICAL)
+    if [[ "${DO_IMGDIR_CPY}" == "true" ]]; then
+        if [[ -z "$IMGDIR_SRC" ]]; then
+            exit_with_error "❌ CRITICAL: IMGDIR_SRC is not set in 'etc/config.sh' - Aborting."
+        fi
+    fi
+
+    # Validate DTS_FNAME is not empty if DO_DTS_CPY = true (just validate not empty)
+    if [[ "${DO_DTS_CPY}" == "true" ]]; then
+        if [[ -z "$DTS_FNAME" ]]; then
+            exit_with_error "❌ CRITICAL: DTS_FNAME is not set in 'etc/config.sh' - Aborting."
+        fi
+    fi
+
+    # Validate WEBSERVER_USER is not empty (sane defaults already set, just validate not empty)
+    if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
+        if [[ -z "$WEBSERVER_USER" ]]; then
+            exit_with_error "❌ CRITICAL: WEBSERVER_USER is not set in 'etc/config.sh' - Aborting."
+        fi
+    fi
+
+    # Validate WEBDIR_DEST is not empty (sane defaults already set, just validate not empty)
+    if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
+        if [[ -z "$WEBDIR_DEST" ]]; then
+            exit_with_error "❌ CRITICAL: WEBDIR_DEST is not set in 'etc/config.sh' - Aborting."
+        fi
+    fi
+
+    # EXTRA VALIDATION REQUIRED
+
+    # Validate DRIVERMOD_MODE is not empty (sane defaults already set, validate either patchmod or rawmod, and not empty)
+    if [[ "${DO_DRIVERMOD_CPY}" == "true" ]]; then
+        if [[ -z "$DRIVERMOD_MODE" || ("$DRIVERMOD_MODE" != "patchmod" && "$DRIVERMOD_MODE" != "rawmod") ]]; then
+            exit_with_error "❌ CRITICAL: DRIVERMOD_MODE must be 'patchmod' or 'rawmod' in 'etc/config.sh'"
+        fi
+    fi
+
+    # Validate RAWMOD_LIST is not empty IF enabled (sane defaults already set, validate either patchmod or rawmod, and not empty)
+    if [[ "${DO_DRIVERMOD_CPY}" == "true" ]]; then
+        if [[ -z "$RAWMOD_LIST" || ("$DRIVERMOD_MODE" != "patchmod" && "$DRIVERMOD_MODE" != "rawmod") ]]; then
+            exit_with_error "❌ CRITICAL: RAWMOD_LIST is not set in 'etc/config.sh' - Aborting."
+        fi
+    fi
+
+    # Validate CALDATA_LIST is not empty IF enabled
+    if [[ "${DO_CALDATA_CPY}" == "true" ]]; then
+        if [[ -z "$CALDATA_LIST" ]]; then
+            exit_with_error "❌ CRITICAL: CALDATA_LIST is not set in 'etc/config.sh' - Aborting."
+        fi
+    fi
+
+
+    # ===============================
+    # AUTO DERIVED DIRECTORY DEFAULTS
+    # ===============================
+
+    # SOURCE DIRECTORIES
+
+    # Validate WORK_DTS_DIR is not empty
+    if [[ -z "$WORK_DTS_DIR" ]]; then
+        WORK_DTS_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/dts"
+        local msg=" >>> ⚠ WARNING: Using default auto-derived WORK_DTS_DIR ('$WORK_DTS_DIR')"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
+    fi
+
+    # Validate WORK_CALDATA_DIR is not empty
+    if [[ -z "$WORK_CALDATA_DIR" ]]; then
+        WORK_CALDATA_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/caldata"
+        local msg=" >>> ⚠ WARNING: Using default auto-derived WORK_CALDATA_DIR ('$WORK_CALDATA_DIR')"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
+    fi
+
+    # Validate WORK_PATCHMODS_DIR is not empty
+    if [[ -z "$WORK_PATCHMODS_DIR" ]]; then
+        WORK_PATCHMODS_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/patchmods"
+        local msg=" >>> ⚠ WARNING: Using default auto-derived WORK_PATCHMODS_DIR ('$WORK_PATCHMODS_DIR')"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
+    fi
+
+    # Validate WORK_RAWMODS_DIR is not empty
+    if [[ -z "$WORK_RAWMODS_DIR" ]]; then
+        WORK_RAWMODS_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/rawmods"
+        local msg=" >>> ⚠ WARNING: Using default auto-derived WORK_RAWMODS_DIR ('$WORK_RAWMODS_DIR')"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
+    fi
+
+    # Validate WORK_IMAGEOUT_DIR is not empty
+    if [[ -z "$WORK_IMAGEOUT_DIR" ]]; then
+        WORK_IMAGEOUT_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/image-out"
+        local msg=" >>> ⚠ WARNING: Using default auto-derived WORK_IMAGEOUT_DIR ('$WORK_IMAGEOUT_DIR')"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
+    fi
+
+    # DESTINATION DIRECTORIES
+
+    # Validate DTS_DEST_DIR is not empty
+    if [[ -z "$DTS_DEST_DIR" ]]; then
+        DTS_DEST_DIR="$OWRT_DEV_DIR/target/$OWRT_OS_TARGET_LOWER/$OWRT_SOC_CLASS_LOWER/files-6.12/arch/arm/boot/dts/qcom"
+        local msg=" >>> ⚠ WARNING: Using default auto-derived DTS_DEST_DIR ('$DTS_DEST_DIR')"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
+    fi
+
+    # Validate PATCHMOD_DEST_DIR is not empty
+    if [[ -z "$PATCHMOD_DEST_DIR" ]]; then
+        PATCHMOD_DEST_DIR="$OWRT_DEV_DIR/target/$OWRT_OS_TARGET_LOWER/$OWRT_SOC_CLASS_LOWER/patches-6.12"
+        local msg=" >>> ⚠ WARNING: Using default auto-derived PATCHMOD_DEST_DIR ('$PATCHMOD_DEST_DIR')"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
+    fi
+
+
+    # ==============================
+    # AUTO DERIVED VARIABLE DEFAULTS
+    # ==============================
+
+    # Validate OWRT_TARGET_BRANCH is not empty
+    if [[ -z "$OWRT_TARGET_BRANCH" ]]; then
+        OWRT_TARGET_BRANCH="${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}-${OWRT_BASE_BRANCH}"
+        local msg=" >>> ⚠ WARNING: Using default auto-derived OWRT_TARGET_BRANCH ('$OWRT_TARGET_BRANCH')"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
+    fi
+
+
+
+
+    # ========================================
+    # VALUE CONSTRAINT CHECKS (ex. $var -ge 6)
+    # ========================================
+
+
+
+
+    # ==============================================
+    # Create the work/project dirs and clone openwrt
+    # ==============================================
+
+    # Create the required structure if not already exists
+    if [[ ! -d "$WORK_DIR" ]]; then
+        create_workdir
+    fi
+
+    # Create the required structure if not already exists
+    if [[ ! -d "$PROJECT_DIR" ]]; then
+        create_projectsdir
+    fi
+
+    # Clone openwrt fork
+    if [[ ! -d "$OWRT_DEV_DIR" ]]; then
+        clone_openwrt
+    fi
+
 
 
 
@@ -150,27 +379,20 @@ verify_configuration() {
     # DIR EXISTS CHECKS
     # =================
 
+    # Verify the critical directories actually exist:
+    local critical_dirs=("$WORK_DIR" "$PROJECT_DIR" "$OWRT_DEV_DIR")
+    for dir in "${critical_dirs[@]}"; do
+        if [[ ! -d "$dir" ]]; then
+            exit_with_error "❌ CRITICAL: Required directory does not exist: $dir"
+        fi
+    done
+
 
 
 
     # ==================
     # FILE EXISTS CHECKS
     # ==================
-
-
-
-
-    # =====================================
-    # INITIALIZE VARIABLES ON CONFIG VERIFY
-    # =====================================
-
-    # OPENWRT PORT INFORMATION (Use these for building paths, automatically lowercased)
-    OWRT_SOC_PATH="${OWRT_SOC,,}"
-    OWRT_MFR_PATH="${OWRT_MFR,,}"
-    OWRT_MODEL_PATH="${OWRT_MODEL,,}"
-
-    # Autoconfigure fork model branch name (Ex. trendnet_tew-829dru)
-    OWRT_FORK_MODEL_BRANCH="${OWRT_MFR_PATH}_${OWRT_MODEL_PATH}-${OPENWRT_FORK_REPO_BRANCH}"
 
 
 
@@ -188,18 +410,18 @@ create_workdir() {
                 ;;
             *)
                 echo "Creating ${WORK_DIR} structure..."
-                mkdir -p "${WORK_DIR}/ports/$OWRTDS_SOC_PATH/$OWRTDS_MFR_PATH/$OWRTDS_MODEL_PATH/dts/oem"
-                mkdir -p "${WORK_DIR}/ports/$OWRTDS_SOC_PATH/$OWRTDS_MFR_PATH/$OWRTDS_MODEL_PATH/patches"
-                mkdir -p "${WORK_DIR}/ports/$OWRTDS_SOC_PATH/$OWRTDS_MFR_PATH/$OWRTDS_MODEL_PATH/driver-mod"
-                mkdir -p "${WORK_DIR}/ports/$OWRTDS_SOC_PATH/$OWRTDS_MFR_PATH/$OWRTDS_MODEL_PATH/image-out"
-                mkdir -p "${WORK_DIR}/ports/$OWRTDS_SOC_PATH/$OWRTDS_MFR_PATH/$OWRTDS_MODEL_PATH/caldata"
+                mkdir -p "$WORK_DTS_DIR/oem"
+                mkdir -p "$WORK_CALDATA_DIR"
+                mkdir -p "$WORK_PATCHMODS_DIR"
+                mkdir -p "$WORK_RAWMODS_DIR"
+                mkdir -p "$WORK_IMAGEOUT_DIR"
+                local msg=" >>> ✅ ${WORK_DIR} directory structure created"
+                echo "$msg"
+                SUMMARY_OUT+="${msg}"${NL}
                 ;;
         esac
     fi
 }
-
-# Create the required structure if not already exists
-create_workdir
 
 # Create projects dir
 create_projectsdir() {
@@ -213,61 +435,61 @@ create_projectsdir() {
             *)
                 echo "Creating ${PROJECT_DIR}..."
                 mkdir -p "${PROJECT_DIR}"
+                local msg=" >>> ✅ ${PROJECT_DIR} directory structure created"
+                echo "$msg"
+                SUMMARY_OUT+="${msg}"${NL}
                 ;;
         esac
     fi
 }
 
-# Create the required structure if not already exists
-create_projectsdir
-
 clone_openwrt() {
-    # TODO: if OWRT_OWRT_DEV_DIR does not exist
-    if [ ! -d "$OWRT_OWRT_DEV_DIR" ]; then
+    # TODO: if OWRT_DEV_DIR does not exist
+    if [ ! -d "$OWRT_DEV_DIR" ]; then
 
         # 1) Test if the git repository exists
-        if ! git ls-remote "$OPENWRT_FORK_REPO" >/dev/null 2>&1; then
-            exit_with_error "Git repository $OPENWRT_FORK_REPO does not exist please check OPENWRT_FORK_REPO variable in \`etc/config.sh\` - Aborting."
+        if ! git ls-remote "$OWRT_FORK_REPO" >/dev/null 2>&1; then
+            exit_with_error "Git repository $OWRT_FORK_REPO does not exist please check OWRT_FORK_REPO variable in \`etc/config.sh\` - Aborting."
         fi
 
         # 2) Prompt the user
-        echo -n "Cloning openwrt fork repository... Continue? [Y/n] "
+        echo -n " >>> Cloning openwrt fork repository... Continue? [Y/n] "
         read -r reply
         reply=${reply:-Y} # Default to Y if empty
 
         if [[ ! "$reply" =~ ^[Yy]$ ]]; then
-            exit_with_error "Please either configure the openwrt fork repository path in 'etc/config.sh' or continue with the clone."
+            exit_with_error "Please either configure the openwrt fork repository at the path in 'etc/config.sh' or continue with the clone."
         fi
 
         # cd to PROJECT_DIR directory
         cd "$PROJECT_DIR" || exit 1
 
-        # stderr message only (cloning openwrt into OWRT_OWRT_DEV_DIR)
-        echo "Cloning openwrt into $OWRT_OWRT_DEV_DIR" >&2
+        # stderr message only (cloning openwrt into OWRT_DEV_DIR)
+        echo " >>> Cloning openwrt into $OWRT_DEV_DIR" >&2
 
-        # clone OPENWRT_FORK_REPO into OWRT_OWRT_DEV_DIR ; cd OWRT_OWRT_DEV_DIR ; checkout OPENWRT_FORK_REPO_BRANCH ;
-        git clone "$OPENWRT_FORK_REPO" "$OWRT_OWRT_DEV_DIR" >&2
-        cd "$OWRT_OWRT_DEV_DIR" || exit 1
-        git checkout "$OPENWRT_FORK_REPO_BRANCH" >&2
+        # clone OWRT_FORK_REPO into OWRT_DEV_DIR ; cd OWRT_DEV_DIR ; checkout OWRT_BASE_BRANCH ;
+        git clone "$OWRT_FORK_REPO" "$OWRT_DEV_DIR" >&2
+        cd "$OWRT_DEV_DIR" || exit 1
 
-        # check if OWRT_FORK_MODEL_BRANCH exists if not create it from OPENWRT_FORK_REPO_BRANCH and checkout OWRT_FORK_MODEL_BRANCH
-        if ! git rev-parse --verify "$OWRT_FORK_MODEL_BRANCH" >/dev/null 2>&1; then
-            git checkout -b "$OWRT_FORK_MODEL_BRANCH" "$OPENWRT_FORK_REPO_BRANCH" >&2
+        git checkout "$OWRT_BASE_BRANCH" >&2
+
+        # check if OWRT_TARGET_BRANCH exists if not create it from OWRT_BASE_BRANCH and checkout OWRT_TARGET_BRANCH
+        if ! git rev-parse --verify "$OWRT_TARGET_BRANCH" >/dev/null 2>&1; then
+            git checkout -b "$OWRT_TARGET_BRANCH" "$OWRT_BASE_BRANCH" >&2
         else
-            git checkout "$OWRT_FORK_MODEL_BRANCH" >&2
+            git checkout "$OWRT_TARGET_BRANCH" >&2
         fi
 
         # cd back to STARTUP_PWD
         cd "$STARTUP_PWD" || exit 1
 
-        # display final SUMMARY_OUT & stderr (successful openwrt fork clone into OWRT_OWRT_DEV_DIR)
-        echo "$SUMMARY_OUT"
-        echo "Successful openwrt fork clone into $OWRT_OWRT_DEV_DIR" >&2
+        # display final SUMMARY_OUT & stderr (successful openwrt fork clone into OWRT_DEV_DIR)
+        local msg=" >>> ✅ Cloned openwrt fork into ${OWRT_DEV_DIR}"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
     fi
 }
 
-# Clone openwrt fork
-clone_openwrt
 
 # ==============================================================================
 # Dependency Installation
@@ -322,13 +544,23 @@ install_dependencies() {
     for pkg in "${packages_to_install[@]}"; do
         local is_installed=false
         for inst in "${installed_pkgs[@]}"; do
-            # Simple prefix match to catch arch-specific suffixes if needed
-            if [[ "$inst" == "$pkg" ]] || [[ "$inst" == "${pkg}"-dev ]] || [[ "$inst" == "${pkg}"-devel ]]; then
+            # Exact match for the package itself
+            if [[ "$inst" == "$pkg" ]]; then
+                is_installed=true
+                break
+            fi
+            # Exact match for common dev variants (prevents 'git' matching 'git-all')
+            # We explicitly check for '-dev' or '-devel' suffixes on the INSTALLED name
+            if [[ "$inst" == "${pkg}-dev" ]] || [[ "$inst" == "${pkg}-devel" ]]; then
                 is_installed=true
                 break
             fi
         done
-        $is_installed || filtered_pkgs+=("$pkg")
+
+        # If NOT installed, add to filtered list
+        if [[ "$is_installed" == false ]]; then
+            filtered_pkgs+=("$pkg")
+        fi
     done
 
     # If nothing to install, exit successfully
@@ -390,7 +622,7 @@ show_header() {
     echo "  📜 Script: $REAL_PATH"
     echo "  📁 PWD: $STARTUP_PWD"
     echo " ========================================================================================================================"
-    echo "  💻 SOC: $OWRT_SOC"
+    echo "  💻 SOC: $OWRT_SOC_CLASS"
     echo "  🗜 MFR: $OWRT_MFR"
     echo "  💃 MODEL: $OWRT_MODEL"
     echo " ========================================================================================================================"
@@ -472,6 +704,11 @@ parse_arguments() {
 
 exit_with_success() {
 
+    # Disable errexit to prevent silent exits in cleanup
+    set +e
+
+    cleanup_build_environment
+
     show_header
     echo " >>>"
     echo " >>> SUMMARY REPORT:"
@@ -486,6 +723,11 @@ exit_with_success() {
 }
 
 exit_with_error() {
+
+    # Disable errexit to prevent silent exits in cleanup
+    set +e
+
+    cleanup_build_environment
 
     local err_msg="$1"
     echo " >>>"
@@ -590,7 +832,7 @@ copy_file() {
     if verify_md5 "$file_src" "$file_dest"; then
 	local msg=" >>> ✅ $desc "$(cleanup_path "$file_dest")" (MATCH)"
         echo "$msg"
-        SUMMARY_OUT+="${msg}"$'\n'
+        SUMMARY_OUT+="${msg}"${NL}
         return 0
     else
         exit_with_error "$desc failed (MD5 mismatch)"
@@ -633,8 +875,8 @@ copy_patches_dir() {
     done
 
     local msg=" >>> ✅ Patches Directory Copied "$(cleanup_path "$dir_dest")
-    echo $msg
-    SUMMARY_OUT+="${msg}"$'\n'
+    echo "$msg"
+    SUMMARY_OUT+="${msg}"${NL}
 
 }
 
@@ -656,28 +898,38 @@ copy_caldata() {
         # CALDATA_BOARDNAME (Group 1), CALDATA_SRC (Group 2), CALDATA_DEST (Group 3)
         IFS='|' read -r CALDATA_BOARDNAME CALDATA_SRC CALDATA_DEST <<< "$line"
 
-        # Perform the copy using the new dynamic variables
-        copy_file "$CALDATA_SRC" "$CALDATA_DEST" || exit_with_error "Copy Caldata"
+        # 3. Construct the full paths (Build Dir + Relative Path from Config)
+        CALDATA_FINAL_DEST="$FIRMWARE_BUILD_DIR/$CALDATA_DEST"
 
-        # Generate success message and update summary
-        local msg=" >>> ✅ ${CALDATA_BOARDNAME} copied to: $(cleanup_path "$CALDATA_DEST")"
+        # 4. Extract the directory path by removing the filename
+        #    $(dirname ".../hw1.0/board-2.bin") returns ".../hw1.0"
+        mkdir -p "$(dirname "$CALDATA_FINAL_DEST")" || exit_with_error "Failed to create caldata directory structure"
+
+        # 5. Now perform the copy safely
+        copy_file "$CALDATA_SRC" "$CALDATA_FINAL_DEST" || exit_with_error "Copy Caldata"
+
+        # 6. Generate success message and update summary
+        local msg=" >>> ✅ ${CALDATA_BOARDNAME} caldata copied to: $(cleanup_path "$CALDATA_DEST")"
         echo "$msg"
-        SUMMARY_OUT+="${msg}"$'\n'
+        SUMMARY_OUT+="${msg}"${NL}
 
     done <<< "$CALDATA_LIST"
 }
 
 copy_to_imgdir() {
 
-    # clobber the image out old files
-    rm -rf "${IMGDIR_DEST}/"* || exit_with_error "Clobber image-out dir"
+    local dest_dir="$WORK_IMAGEOUT_DIR"
+    [[ -z "$dest_dir" ]] && exit_with_error "IMGDIR_DEST/WORK_IMAGEOUT_DIR is not set"
 
-    # copy the new files
-    cp -r "$IMGDIR_SRC/"* "$IMGDIR_DEST/" || exit_with_error "Copy images to image-out"
+    # clobber the image out old files
+    rm -rf "${dest_dir:?}/"* || exit_with_error "Clobber image-out dir"
+
+    # copy the new files (use OWRT_BASE_BRANCH as subdir)
+    cp -r "$IMGDIR_SRC/"* "$dest_dir/$OWRT_BASE_BRANCH/" || exit_with_error "Copy images to image-out"
 
     local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $IMGDIR_DEST"
-    echo $msg
-    SUMMARY_OUT+="${msg}"$'\n'
+    echo "$msg"
+    SUMMARY_OUT+="${msg}"${NL}
 
 }
 
@@ -687,15 +939,19 @@ copy_to_webserver() {
         # Do NOT quote the * so it expands properly
         echo " >>> Copying images to webserver..."
 
-        mkdir -p $WEBDIR_DEST
+        local dest="$WORK_IMAGEOUT_DIR/$OWRT_BASE_BRANCH"
+
+        mkdir -p "$dest"
 
         # clobber the image out old files
-        rm -rf "$WEBDIR_DEST/"* || exit_with_error "Clobber webserver image-out dir: $(cleanup_path "$WEBDIR_DEST")"
+        rm -rf "$dest/"* || exit_with_error "Clobber webserver image-out dir: $(cleanup_path "$dest")"
 
         # copy the new files
-        cp -r "$IMGDIR_SRC/"* "$WEBDIR_DEST/" || exit_with_error "Copy images to webserver image-out dir: $(cleanup_path "$WEBDIR_DEST")"
+        cp -r "$IMGDIR_SRC/"* "$dest/" || exit_with_error "Copy images to webserver image-out dir: $(cleanup_path "$dest")"
 
-        local msg=" >>> ✅ Images copied to webserver: $(cleanup_path "$WEBDIR_DEST")"
+        # TODO: SET CORRECT PERMISSIONS (SEE DOCS LOL)
+
+        local msg=" >>> ✅ Images copied to webserver: $(cleanup_path "$dest")"
         echo "$msg"
         SUMMARY_OUT+="${msg}"$NL
     fi
@@ -709,28 +965,30 @@ copy_to_webserver() {
 
 build_kernel_sources() {
 
+    # TODO: UPDATE SELECTION LOGIC (patchmod/rawmod)
+
     # Download sources (Prerequisite)
     echo " >>> Running 'make download'..."
     make download ${MAKE_CMD_ADD} || exit_with_error "Make Download"
     local msg=" >>> ✅ Sources downloaded (all)"
-    echo $msg
-    SUMMARY_OUT+="$msg"$'\n'
+    echo "$msg"
+    SUMMARY_OUT+="$msg"${NL}
 
-    if [ "$DO_PATCHMOD" = true ]; then
+    if [ "$DO_DRIVERMOD_CPY" = true ]; then
 
-        if [ -z "${PATCHMOD_DEST_DIR}" ]; then
-            exit_with_error "PATCHMOD_DEST_DIR is not set (check script config)"
-        fi
+        if [ "$DRIVERMOD_MODE" == "patchmod" ]; then
 
-        if [ "$DO_RAWMOD" != true ]; then
+            if [ -z "${PATCHMOD_DEST_DIR}" ]; then
+                exit_with_error "PATCHMOD_DEST_DIR is not set (check script config)"
+            fi
 
     	    # Copy custom patches into the target directory
             # These will be picked up automatically by the 'prepare' step
-            copy_patches_dir "${PATCHMOD_SRC_DIR}" "${PATCHMOD_DEST_DIR}"
+            copy_patches_dir "$WORK_PATCHMODS_DIR" "$OWRT_DEV_DIR/$PATCHMOD_DEST_DIR"
 
             local msg=" >>> ✅ DRIVER PATCHES copied to source tree: $PATCHMOD_SRC_DIR"
-            echo $msg
-            SUMMARY_OUT+="$msg"$'\n'
+            echo "$msg"
+            SUMMARY_OUT+="$msg"${NL}
 
         else
 
@@ -749,7 +1007,7 @@ build_kernel_sources() {
                 # Single summary message for the whole RAWMOD operation
                 local msg=" >>> ✅ IPQESS RAW DRIVER MOD ($RAWMOD_ENTRYNAME) copied to source tree: $(cleanup_path "$(dirname "$RAWMOD_SRC")")"
                 echo "$msg"
-                SUMMARY_OUT+="$msg"$'\n'
+                SUMMARY_OUT+="$msg"${NL}
             done <<< "$RAWMOD_LIST"
 
         fi
@@ -760,15 +1018,15 @@ build_kernel_sources() {
     echo " >>> Running 'make target/linux/prepare'..."
     make target/linux/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare `linux`"
     local msg=" >>> ✅ Sources prepared (linux)"
-    echo $msg
-    SUMMARY_OUT+="${msg}"$'\n'
+    echo "$msg"
+    SUMMARY_OUT+="${msg}"${NL}
 
     # Compile
     echo " >>> Running 'make target/linux/compile'..."
     make target/linux/compile ${MAKE_CMD_ADD} || exit_with_error "Make Compile `linux`"
     local msg=" >>> ✅ Sources compiled (linux) with custom patches applied"
-    echo $msg
-    SUMMARY_OUT+="${msg}"$'\n'
+    echo "$msg"
+    SUMMARY_OUT+="${msg}"${NL}
 
 }
 
@@ -780,28 +1038,26 @@ build_kernel_sources() {
 cleanup_build_environment() {
     # NOTICE: DO NOT 'echo "$msg"' inside the cleanup function!
     #         ONLY output SUMMARY_OUT
-
-    # Capture exit status BEFORE any cleanup commands overwrite $?
-    local status=$?
+    #
+    # NOTICE: WE ARE CALLED BY EXIT_WITH_ERROR AND EXIT_WITH_SUCCESS
+    #         THEREFORE WE CANNOT CALL IT INSIDE THIS FUNCTION
+    #
 
     # Guard: exit immediately if already cleaned
     [[ "${CLEANED}" == "true" ]] && return 0
 
-    # Distinguish real errors from false positives caused by set -e interacting with conditionals/subshells
-    if [[ $status -eq 0 ]]; then
-        return 0
-    fi
+    # SET CLEANED=TRUE IMMEDIATELY TO PREVENT DUPLICATE CALLS
+    CLEANED=true
+    CLEAN_SUCCESS=true
 
-    local msg=" >>> ❌ Trap detected script exit with error. Performing final cleanup."
-    SUMMARY_OUT+="${msg}"$'\n'
-
-    # Disable errexit inside cleanup to prevent silent exits
+    # Disable errexit inside cleanup to prevent silent exits (incase exit function does not)
     set +e
 
-    cd "$STARTUP_PWD"
+    # Change to the openwrt directory
+    cd "$OWRT_DEV_DIR"
 
     local msg=" >>> 🧹 Cleaning up temporary build modifications..."
-    SUMMARY_OUT+="${msg}"$'\n'
+    SUMMARY_OUT+="${msg}"${NL}
 
     # 1. Remove temporary patches from target directory
     if [ -n "${PATCHMOD_DEST_DIR}" ] && [ -d "${PATCHMOD_DEST_DIR}" ]; then
@@ -810,34 +1066,43 @@ cleanup_build_environment() {
             local filename
             filename=$(basename "$patch_file")
 
-            if [ -f "${PATCHMOD_SRC_DIR}/${filename}" ]; then
+            if [ -f "$WORK_PATCHMODS_DIR/${filename}" ]; then
                 rm -f "$patch_file"
                 local msg=" >>> 🗑️  Removed temp patch: I"$(cleanup_path "$patch_file")
                 echo "$msg"
-                SUMMARY_OUT+="${msg}"$'\n'
+                SUMMARY_OUT+="${msg}"${NL}
             fi
         done
     fi
 
     # 2. Restore modified source files (e.g., drivers) to original Git state
     local msg=" >>> ♻ Restoring modified files in target/ to original state..."
-    SUMMARY_OUT+="${msg}"$'\n'
+    SUMMARY_OUT+="${msg}"${NL}
 
     if git diff --quiet -- 'target/'; then
         local msg=" >>> ✅ No patches, caldata, or modified files found in target/"
-        SUMMARY_OUT+="${msg}"$'\n'
+        SUMMARY_OUT+="${msg}"${NL}
     else
         echo "    🔄 Resetting modified files:"
         git diff --name-only -- 'target/' | while read -r file; do
             echo "        - ${file}"
         done
 
-        git checkout HEAD -- 'target/' || exit_with_error "Failed to restore target files"
+        git checkout HEAD -- 'target/' || {
+            local msg=" >>> ⚠️  WARNING: Failed to restore target files (non-fatal during cleanup)"
+            echo "$msg" >&2
+            SUMMARY_OUT+="${msg}"${NL}
+            CLEAN_SUCCESS=false
+        }
+
     fi
 
-    local msg=" >>> ✅ Cleanup complete. Environment is pristine."
-    SUMMARY_OUT+="${msg}"$'\n'
+    if [ "$CLEAN_SUCCESS" == true ]; then
+        local msg=" >>> ✅ Cleanup complete. Environment is pristine."
+        SUMMARY_OUT+="${msg}"${NL}
+    fi
 
-    # Only exit with error if this was triggered by an actual failure
-    [[ $status -ne 0 ]] && exit_with_error "BUILD FAILED"
+    # Return to the original directory where the script was launched
+    cd "$STARTUP_PWD" || true
+
 }
