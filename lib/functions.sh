@@ -385,28 +385,48 @@ verify_configuration() {
 
 
     # ==============================================
-    # Create the work/project dirs and clone openwrt
+    # SETUP PHASE (Check & Create Directories)
     # ==============================================
+
+    local SETUP_MODE=false
 
     # Create the required structure if not already exists
     if [[ ! -d "$WORK_DIR" ]]; then
         create_workdir
+        SETUP_MODE=true
     fi
 
     # Create the required structure if not already exists
     if [[ ! -d "$PROJECT_DIR" ]]; then
         create_projectsdir
+        SETUP_MODE=true
     fi
 
     # Clone openwrt fork
     if [[ ! -d "$OWRT_DEV_DIR" ]]; then
         clone_openwrt
+        SETUP_MODE=true
     fi
 
     # Set up webserver shared directory
     if [[ ! -d "$WEBDIR_DEST" ]]; then
         create_webserver_shareddir
+        SETUP_MODE=true
     fi
+
+    # If we created anything, stop and let the user populate files
+    if [[ "$SETUP_MODE" == true ]]; then
+        log_summary ""
+        log_summary "✅ Initial setup completed successfully."
+        log_summary ""
+        log_summary "📂 Please ensure your source files exist in: $WORK_DIR"
+        log_summary "   (e.g., DTS files, patches, caldata, driver mods)"
+        log_summary ""
+        log_summary "Once files are in place, run the script again to start compilation."
+        log_summary ""
+        exit_with_success "✅ Initial setup completed successfully."
+    fi
+
 
 
 
