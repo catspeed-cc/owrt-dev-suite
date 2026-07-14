@@ -19,6 +19,37 @@ log_summary() {
   fi
 }
 
+# Safe Change Directory
+# Usage:
+#   change_directory "/path/to/dir"
+#   change_directory "/path/to/dir" "Custom error message if cd fails"
+# Exits with error if directory does not exist or cd fails
+change_directory() {
+  local target_dir="$1"
+  local custom_msg="${2:-}"
+
+  if [[ -z "$target_dir" ]]; then
+    exit_with_error "❌ CRITICAL: change_directory called with no argument"
+  fi
+
+  if [[ ! -d "$target_dir" ]]; then
+    # Use custom message if provided, otherwise default
+    if [[ -n "$custom_msg" ]]; then
+      exit_with_error "$custom_msg"
+    else
+      exit_with_error "❌ CRITICAL: Directory does not exist: $target_dir"
+    fi
+  fi
+
+  cd "$target_dir" || {
+    if [[ -n "$custom_msg" ]]; then
+      exit_with_error "$custom_msg"
+    else
+      exit_with_error "❌ CRITICAL: Failed to cd into $target_dir (permissions?)"
+    fi
+  }
+}
+
 # Calculates the difference between two HH:MM:SS strings
 # Usage: get_time_diff "22:31:05" "23:45:10"
 get_time_diff() {
@@ -462,14 +493,14 @@ clone_openwrt() {
         fi
 
         # cd to PROJECT_DIR directory
-        cd "$PROJECT_DIR" || exit 1
+        change_directory "$PROJECT_DIR"
 
         # stderr message only (cloning openwrt into OWRT_DEV_DIR)
         echo " >>> Cloning openwrt into $OWRT_DEV_DIR" >&2
 
         # clone OWRT_FORK_REPO into OWRT_DEV_DIR ; cd OWRT_DEV_DIR ; checkout OWRT_BASE_BRANCH ;
         git clone "$OWRT_FORK_REPO" "$OWRT_DEV_DIR" >&2
-        cd "$OWRT_DEV_DIR" || exit 1
+        change_directory "$OWRT_DEV_DIR"
 
         git checkout "$OWRT_BASE_BRANCH" >&2
 
@@ -481,7 +512,7 @@ clone_openwrt() {
         fi
 
         # cd back to STARTUP_PWD
-        cd "$STARTUP_PWD" || exit 1
+        change_directory "$STARTUP_PWD"
 
         # display final SUMMARY_OUT & stderr (successful openwrt fork clone into OWRT_DEV_DIR)
         local msg=" >>> ✅ Cloned openwrt fork into ${OWRT_DEV_DIR}"
@@ -919,7 +950,7 @@ copy_caldata() {
 copy_to_imgdir() {
 
     local dest_dir="$WORK_IMAGEOUT_DIR"
-    [[ -z "$dest_dir" ]] && exit_with_error "IMGDIR_DEST/WORK_IMAGEOUT_DIR is not set"
+    [[ -z "$dest_dir" ]] && exit_with_error "WORK_IMAGEOUT_DIR is not set"
 
     # clobber the image out old files
     rm -rf "${dest_dir:?}/"* || exit_with_error "Clobber image-out dir"
@@ -927,7 +958,7 @@ copy_to_imgdir() {
     # copy the new files (use OWRT_BASE_BRANCH as subdir)
     cp -r "$IMGDIR_SRC/"* "$dest_dir/$OWRT_BASE_BRANCH/" || exit_with_error "Copy images to image-out"
 
-    local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $IMGDIR_DEST"
+    local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $(cleanup_path "$dest")"
     echo "$msg"
     SUMMARY_OUT+="${msg}"${NL}
 
@@ -1053,8 +1084,11 @@ cleanup_build_environment() {
     # Disable errexit inside cleanup to prevent silent exits (incase exit function does not)
     set +e
 
-    # Change to the openwrt directory
-    cd "$OWRT_DEV_DIR"
+    # Return to the original directory where the script was launched
+    # Silently ignore failure to avoid masking the original error
+    if [[ -n "$OWRT_DEV_DIR" && -d "$OWRT_DEV_DIR" ]]; then
+        cd "$OWRT_DEV_DIR" || true
+    fi
 
     local msg=" >>> 🧹 Cleaning up temporary build modifications..."
     SUMMARY_OUT+="${msg}"${NL}
@@ -1103,6 +1137,12 @@ cleanup_build_environment() {
     fi
 
     # Return to the original directory where the script was launched
-    cd "$STARTUP_PWD" || true
+    # Silently ignore failure to avoid masking the original error
+    if [[ -n "$STARTUP_PWD" && -d "$STARTUP_PWD" ]]; then
+        cd "$STARTUP_PWD" || true
+    fi
+
+    # Return silently to allow the original exit code to pass through
+    return 0
 
 }

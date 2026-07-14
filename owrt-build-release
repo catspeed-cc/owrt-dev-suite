@@ -33,16 +33,33 @@ BUILD_ELAPSED=""
 
 # REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
 REAL_PATH=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
+
 # Fallback for macOS (BSD readlink doesn't support -f)
 if [ -z "$REAL_PATH" ]; then
     REAL_PATH="${BASH_SOURCE[0]}"
     while [ -h "$REAL_PATH" ]; do
-        DIR=$(cd -P "$(dirname "$REAL_PATH")" && pwd)
+        DIR="$(dirname "$REAL_PATH")"
+        # Check if directory exists before cd-ing
+        if [ ! -d "$DIR" ]; then
+            echo "❌ CRITICAL: Directory does not exist: $DIR" >&2
+            exit 1
+        fi
+        DIR=$(cd -P "$DIR" && pwd)
+
         REAL_PATH=$(readlink "$REAL_PATH")
         [[ $REAL_PATH != /* ]] && REAL_PATH="$DIR/$REAL_PATH"
     done
+
     # Final resolve of the last step if it wasn't a symlink loop
-    [ -e "$REAL_PATH" ] && REAL_PATH=$(cd -P "$(dirname "$REAL_PATH")" && pwd)/$(basename "$REAL_PATH")
+    if [ -e "$REAL_PATH" ]; then
+        DIR="$(dirname "$REAL_PATH")"
+        # Check if directory exists before cd-ing
+        if [ ! -d "$DIR" ]; then
+            echo "❌ CRITICAL: Directory does not exist: $DIR" >&2
+            exit 1
+        fi
+        REAL_PATH=$(cd -P "$DIR" && pwd)/$(basename "$REAL_PATH")
+    fi
 fi
 
 # REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
@@ -158,17 +175,17 @@ verify_configuration
 # ===========================================================================================
 
 # Ensure we go to our script location (owrt-dev-suite repo)
-cd "$REAL_PATH"
+change_directory "$REAL_PATH"
 
 # Get the git branch for display
-GIT_BRANCH=$(cd "$SCRIPT_DIR" && git branch --show-current)
+GIT_BRANCH=$(git branch --show-current)
 # Fallback for detached HEAD or old git versions
 if [ -z "$GIT_BRANCH" ]; then
-    GIT_BRANCH=$(cd "$SCRIPT_DIR" && git rev-parse --abbrev-ref HEAD)
+    GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 fi
 
 # Ensure we go back to the original PWD before build
-cd "$STARTUP_PWD"
+change_directory "$STARTUP_PWD"
 
 # Show the pretty header
 show_header
@@ -187,7 +204,7 @@ install_dependencies
 # ==============================================================================
 
 # Ensure we go back to the original PWD before build
-cd "$STARTUP_PWD"
+change_directory "$STARTUP_PWD"
 
 # Handle Concurrency
 if [ "$DO_SLOW" = false ]; then
@@ -218,7 +235,7 @@ trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."'
 
 echo " >>> Starting Build Process for TEW-829DRU (IPQ4019)"
 echo " >>> Working Directory: $OWRT_DEV_DIR"
-cd "$OWRT_DEV_DIR" || exit 1
+change_directory "$OWRT_DEV_DIR"
 
 # Handle Clean
 if [ "$DO_CLEAN" = true ]; then
@@ -268,49 +285,53 @@ fi
 
 
 
-# ===============
-#   FINAL BUILD
-# ===============
+# ==============================================
+# COMPILATION & POST-BUILD
+# ==============================================
 
-# PAUSE SO USER CAN SEE PROGRESS BEFORE COMPILE
+# PAUSE SO HUMAN USER CAN SEE PROGRESS BEFORE COMPILE
 sleep 5
 
-# Compile
+# 1. Temporarily disable 'errexit' to capture make's exit code manually.
+#    NOTE: The SIGINT/SIGTERM trap remains ACTIVE here for CTRL+C safety.
+set +e
+
 MAKE_CMD="make ${MAKE_CMD_ADD}"
 echo " >>> Starting compilation: ${MAKE_CMD}"
 $MAKE_CMD
 BUILD_STATUS=$?
 
-# UNSET THE CLEANUP TRAP - WE DO IT MANUAL (output appearance)
-trap - INT TERM HUP
-set +e
+# 2. Re-enable strict error checking immediately.
+#    Any failure in copy/cleanup steps will now trigger the trap & cleanup.
+set -e
 
-# Immediately copy images on success or exit_with_error on failure
-if [ $BUILD_STATUS -eq 0 ]; then
-    # Handle Copy images to IMGDIR_DEST
+# 3. Handle Build Result
+if [ "$BUILD_STATUS" -eq 0 ]; then
+    log_summary "✅ Build successful. Processing artifacts..."
+
+    # Run post-build steps (Trap is ACTIVE: failures here will cleanup)
     if [ "$DO_IMGDIR_CPY" = "true" ]; then
         copy_to_imgdir
     fi
-    # Handle Copy images to webserver
+
     if [ "$DO_WEBSERVER_CPY" = "true" ]; then
         copy_to_webserver
     fi
+
+    # Gated final manual cleanup on success
+    if [ "$CLEANED" == false ]; then
+        cleanup_build_environment
+    fi
+
+    # Calculate time elapsed
+    BUILD_STOP_DATE=$(date "+%a %d %b %Y")
+    BUILD_STOP_TIME=$(date +%H:%M:%S)
+    BUILD_ELAPSED=$(get_time_diff "$BUILD_START_TIME" "$BUILD_STOP_TIME")
+
+    # 4. Success: Disable trap manually to prevent "Cleanup called" message on exit
+    trap - INT TERM HUP
+    exit_with_success
 else
-    exit_with_error "BUILD FAILED"
+    # 5. Failure: Trigger error handler (Trap will also fire if set -e catches a downstream error)
+    exit_with_error "❌ BUILD FAILED (Status: $BUILD_STATUS)"
 fi
-
-# Gated final manual cleanup on success
-if [ "$CLEANED" == false ]; then
-    # clean up our patches and modified driver
-    # so we don't poison commits unintentionally
-    cleanup_build_environment
-fi
-
-# Calculate time elapsed
-BUILD_STOP_DATE=$(date "+%a %d %b %Y")
-BUILD_STOP_TIME=$(date +%H:%M:%S)
-
-BUILD_ELAPSED=$(get_time_diff "$BUILD_START_TIME" "$BUILD_STOP_TIME")
-
-# Call final exit outside so cleanup output lines up visually :)
-exit_with_success
