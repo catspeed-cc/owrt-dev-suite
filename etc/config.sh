@@ -102,7 +102,7 @@ IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ipq40xx/generic"
 # Required for auto-dependency install and auto webserver_cpy setup
 # ==================================================================
 
-SUDO_ENABLE=false
+SUDO_ENABLE=true
 
 
 # ==================================================================
@@ -162,11 +162,12 @@ DO_IMGDIR_CPY=true
 
 # WEBSERVER_CPY: Copy images to webserver
 # USAGE: when enabled it will copy the images also to your webserver directory
-DO_WEBSERVER_CPY=false
+DO_WEBSERVER_CPY=true
 
 # Webserver configuration
 WEBSERVER_USER="www-data"
-WEBDIR_DEST="/srv-test-1/openwrt-builds/"
+WEBDIR_SHARED_GROUP="openwrt-build"
+WEBDIR_DEST="/srv/openwrt-builds/"
 
 
 # =================================================================

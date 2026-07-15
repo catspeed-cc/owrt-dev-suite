@@ -266,6 +266,13 @@ verify_configuration() {
         fi
     fi
 
+    # Validate Webserver Group
+    if [[ "$DO_WEBSERVER_CPY" == "true" ]]; then
+        if [[ -z "$WEBDIR_SHARED_GROUP" ]]; then
+            exit_with_error "❌ CRITICAL: WEBDIR_SHARED_GROUP must be set in 'etc/config.sh' when DO_WEBSERVER_CPY=true"
+        fi
+    fi
+
     # Validate WEBDIR_DEST is not empty (sane defaults already set, just validate not empty)
     if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
         if [[ -z "$WEBDIR_DEST" ]]; then
@@ -546,7 +553,7 @@ clone_openwrt() {
 }
 
 create_webserver_shareddir() {
-    local shared_group="openwrt-deployers"
+    local shared_group="$WEBDIR_SHARED_GROUP"
     local current_user="$USER"
     local webserver_user="$WEBSERVER_USER"
     local webdir_dest="$WEBDIR_DEST"

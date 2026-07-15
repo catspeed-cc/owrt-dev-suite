@@ -127,6 +127,7 @@ DO_IMGDIR_CPY="true"
 
 DO_WEBSERVER_CPY="false"
 WEBSERVER_USER="www-data"
+WEBDIR_SHARED_GROUP="openwrt-build"
 WEBDIR_DEST="/srv/openwrt-builds/"
 
 DO_DRIVERMOD_CPY="false"
