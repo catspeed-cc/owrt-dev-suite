@@ -20,6 +20,29 @@ set -Eeuo pipefail
 # Version Information
 OWRTDS_VERSION="v0.1.0"
 
+# Ensure STARTUP_PWD does not have a trailing slash for consistent matching
+STARTUP_PWD=$(pwd)
+STARTUP_PWD="${STARTUP_PWD%/}"
+
+LOCK_FILE="$STARTUP_PWD/.owrtds.lock"
+
+# Function to remove lock file
+remove_lock() {
+    if [[ -d "$LOCK_FILE" ]]; then
+        rmdir "$LOCK_FILE" 2>/dev/null
+    fi
+}
+
+# Attempt to create lock directory atomically
+if ! mkdir "$LOCK_FILE" 2>/dev/null; then
+    echo " ❌  CRITICAL: owrt-build-release is already running!"
+    echo "     If this is an error, remove: $LOCK_FILE"
+    exit 1
+fi
+
+# trap to cleanup lock
+trap 'remove_lock' EXIT
+
 # Guard variable to prevent double cleanup
 CLEANED=false
 
@@ -145,10 +168,6 @@ CALDATA_LIST=""
 # Required to start blank/empty
 SUMMARY_OUT=""
 MAKE_CMD_ADD=""
-
-# Ensure STARTUP_PWD does not have a trailing slash for consistent matching
-STARTUP_PWD=$(pwd)
-STARTUP_PWD="${STARTUP_PWD%/}"
 
 # Import config
 if ! source "$SCRIPT_DIR/etc/config.sh"; then

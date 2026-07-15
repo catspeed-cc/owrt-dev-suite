@@ -944,6 +944,9 @@ exit_with_success() {
         cleanup_build_environment
     fi
 
+    # remove lock - only remaining is output and exit
+    remove_lock
+
     show_header
     echo " >>>"
     echo " >>> SUMMARY REPORT:"
@@ -968,6 +971,9 @@ exit_with_error() {
     if [[ "$no_cleanup_flag" != "--nocleanup" ]]; then
         cleanup_build_environment
     fi
+
+    # remove lock - only remaining is output and exit
+    remove_lock
 
     show_header
     echo " >>>"
