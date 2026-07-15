@@ -38,7 +38,7 @@ OWRT_FORK_REPO="https://github.com/catspeed-cc/openwrt.git"
 # Base openwrt branch (which openwrt version?)
 # Base branch to auto create custom port/model branches from
 # If you want to target earlier openwrt versions, change this
-OWRT_BASE_BRANCH="25.12"
+OWRT_BASE_BRANCH="openwrt-25.12"
 
 # Target custom port/model branch (your port branch)
 # We added the BASE_BRANCH so we can build multiple openwrt versions
@@ -102,7 +102,7 @@ IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ipq40xx/generic"
 # Required for auto-dependency install and auto webserver_cpy setup
 # ==================================================================
 
-SUDO_ENABLE=true
+SUDO_ENABLE=false
 
 
 # ==================================================================
@@ -162,7 +162,7 @@ DO_IMGDIR_CPY=true
 
 # WEBSERVER_CPY: Copy images to webserver
 # USAGE: when enabled it will copy the images also to your webserver directory
-DO_WEBSERVER_CPY=true
+DO_WEBSERVER_CPY=false
 
 # Webserver configuration
 WEBSERVER_USER="www-data"

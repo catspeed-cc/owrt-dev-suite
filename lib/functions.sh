@@ -839,7 +839,7 @@ show_header() {
     echo " ========================================================================================================================"
     echo "  🚀 Build Script Started"
     echo "  📦 Version: ${OWRTDS_VERSION}"
-    echo "  🌿 Branch: ${GIT_BRANCH}"
+    echo "  🌿 Branch: ${OWRT_BASE_BRANCH}"
     echo " ========================================================================================================================"
     echo "  📜 Script: $REAL_PATH"
     echo "  📁 PWD: $STARTUP_PWD"
@@ -952,6 +952,7 @@ exit_with_error() {
     cleanup_build_environment
 
     local err_msg="$1"
+    show_header
     echo " >>>"
     echo " >>> SUMMARY REPORT:"
     echo " >>>"
