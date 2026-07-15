@@ -438,6 +438,10 @@ verify_configuration() {
     # create the shared dir for the current port if it does not exist yet
     create_port_shareddir
 
+    # checkout the correct branch!
+    change_directory "$OWRT_DEV_DIR"
+    git checkout "$OWRT_TARGET_BRANCH" || exit_with_error "Unable to checkout branch: $OWRT_TARGET_BRANCH" --nocleanup
+
 
 
 

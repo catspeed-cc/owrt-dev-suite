@@ -43,7 +43,7 @@ OWRT_BASE_BRANCH="openwrt-25.12"
 # Target custom port/model branch (your port branch)
 # We added the BASE_BRANCH so we can build multiple openwrt versions
 # provided we add a new branch, backport it, and create configs
-OWRT_TARGET_BRANCH="tew-829dru-25.12"
+OWRT_TARGET_BRANCH="trendnet_tew-829dru-25.12"
 
 # DEVICE_SUPPORTED
 # Mark as supported under two conditions, either:

@@ -113,7 +113,7 @@ DO_SLOW=false
 OWRT_REMOTE_ALIAS="catspeed-cc"
 OWRT_FORK_REPO="https://github.com/catspeed-cc/openwrt.git"
 OWRT_BASE_BRANCH="25.12"
-OWRT_TARGET_BRANCH="tew-829dru-25.12"
+OWRT_TARGET_BRANCH="trendnet_tew-829dru-25.12"
 DEVICE_SUPPORTED="true"
 ENABLE_SYMLINK_SHORTCUTS="true"
 
