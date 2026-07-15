@@ -423,15 +423,15 @@ verify_configuration() {
 
     # If we created anything, stop and let the user populate files
     if [[ "$SETUP_MODE" == true ]]; then
-        log_summary ""
-        log_summary "✅ Initial setup completed successfully."
-        log_summary ""
-        log_summary "📂 Please ensure your source files exist in: $WORK_DIR"
-        log_summary "   (e.g., DTS files, patches, caldata, driver mods)"
-        log_summary ""
-        log_summary "Once files are in place, run the script again to start compilation."
-        log_summary ""
-        exit_with_success "✅ Initial setup completed successfully."
+        log_summary " >>>"
+        log_summary " >>> ✅  Initial setup completed successfully."
+        log_summary " >>>"
+        log_summary " >>> 📂  Please ensure your source files exist in: $WORK_DIR"
+        log_summary " >>>     (e.g., DTS files, patches, caldata, driver mods)"
+        log_summary " >>>"
+        log_summary " >>> Once files are in place, run the script again to start compilation."
+        log_summary " >>>"
+        exit_with_success "✅  Initial setup completed successfully."
     fi
 
 
@@ -464,22 +464,20 @@ verify_configuration() {
 # Create work dir
 create_workdir() {
     if [ ! -d "${WORK_DIR}" ]; then
-        echo "Warning: Work directory '${WORK_DIR}' does not exist."
+        echo " >>> Warning: Work directory '${WORK_DIR}' does not exist."
         read -r -p "Do you want to create it? [Y/n] " response
         case "$response" in
             [nN][oO]|[nN])
                 exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults"
                 ;;
             *)
-                echo "Creating ${WORK_DIR} structure..."
+                echo " >>> Creating ${WORK_DIR} structure..."
                 mkdir -p "$WORK_DTS_DIR/oem"
                 mkdir -p "$WORK_CALDATA_DIR"
                 mkdir -p "$WORK_PATCHMODS_DIR"
                 mkdir -p "$WORK_RAWMODS_DIR"
                 mkdir -p "$WORK_IMAGEOUT_DIR"
-                local msg=" >>> ✅ ${WORK_DIR} directory structure created"
-                echo "$msg"
-                SUMMARY_OUT+="${msg}"${NL}
+                log_summary " >>> ✅ ${WORK_DIR} directory structure created"
                 ;;
         esac
     fi
@@ -488,18 +486,16 @@ create_workdir() {
 # Create projects dir
 create_projectsdir() {
     if [ ! -d "${PROJECT_DIR}" ]; then
-        echo "Warning: Project directory '${PROJECT_DIR}' does not exist."
+        echo " >>> Warning: Project directory '${PROJECT_DIR}' does not exist."
         read -r -p "Do you want to create it? [Y/n] " response
         case "$response" in
             [nN][oO]|[nN])
                 exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults"
                 ;;
             *)
-                echo "Creating ${PROJECT_DIR}..."
+                echo " >>> Creating ${PROJECT_DIR}..."
                 mkdir -p "${PROJECT_DIR}"
-                local msg=" >>> ✅ ${PROJECT_DIR} directory structure created"
-                echo "$msg"
-                SUMMARY_OUT+="${msg}"${NL}
+                log_summary " >>> ✅ ${PROJECT_DIR} directory structure created"
                 ;;
         esac
     fi
@@ -546,9 +542,7 @@ clone_openwrt() {
         change_directory "$STARTUP_PWD"
 
         # display final SUMMARY_OUT & stderr (successful openwrt fork clone into OWRT_DEV_DIR)
-        local msg=" >>> ✅ Cloned openwrt fork into ${OWRT_DEV_DIR}"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ✅ Cloned openwrt fork into ${OWRT_DEV_DIR}"
     fi
 }
 
@@ -563,14 +557,14 @@ create_webserver_shareddir() {
 
     # Early exit if DO_WEBSERVER_CPY is not enabled
     if [[ "$DO_WEBSERVER_CPY" != "true" ]]; then
-        log_summary "⏭️  Webserver copy disabled (DO_WEBSERVER_CPY=false), skipping setup"
+        log_summary " >>> ⏭️  Webserver copy disabled (DO_WEBSERVER_CPY=false), skipping setup"
         return 0
     fi
 
-    echo "🚀 Setting up webserver shared directory..."
-    echo "   Shared group: $shared_group"
-    echo "   Build directory: $webdir_dest"
-    echo "   Web root: $web_root"
+    echo " >>> 🚀  Setting up webserver shared directory..."
+    echo " >>>     Shared group: $shared_group"
+    echo " >>>     Build directory: $webdir_dest"
+    echo " >>>     Web root: $web_root"
 
     # GLOBALS ARE VALIDATED ALREADY
 
@@ -583,8 +577,8 @@ create_webserver_shareddir() {
     # Handle sudo requirement logic
     if [[ "$needs_sudo" == true ]]; then
         if [[ "$sudo_enable" != "true" ]]; then
-            log_summary "⚠️  Sudo required to setup shared web directory"
-            log_summary ""
+            log_summary " >>> ⚠️  Sudo required to setup shared web directory"
+            echo ""
             read -p "Continue with automated setup? (Y/n): " -r response
             response=${response:-Y}
 
@@ -595,61 +589,69 @@ create_webserver_shareddir() {
 
         # Verify sudo access is available
         if ! sudo -n true 2>/dev/null; then
-            log_summary "⚠️  Passwordless sudo not available, you may be prompted for your password"
+            log_summary " >>> ⚠️   Passwordless sudo not available, you may be prompted for your password"
         fi
     else
-        log_summary "✅ Running as root, sudo not required"
+        log_summary " >>> ✅  Running as root, sudo not required"
     fi
 
     # ========== Step 1: Group Management ==========
-    echo "📋 Step 1: Group Management"
+    echo " >>> 📋  Step 1: Group Management"
 
     if ! getent group "$shared_group" > /dev/null 2>&1; then
-        echo "  📦 Creating shared group: $shared_group"
+        echo " >>> 📦  Creating shared group: $shared_group"
         sudo groupadd "$shared_group" || exit_with_error "Failed to create group $shared_group"
     else
-        log_summary "  ✅ Group $shared_group already exists"
+        log_summary " >>> ✅  Group $shared_group already exists"
     fi
 
     # Add current user to group
     if ! groups "$current_user" | grep -q "$shared_group"; then
-        echo "  👤 Adding $current_user to $shared_group"
+        echo " >>> 👤  Adding $current_user to $shared_group"
+        set +e
         sudo usermod -aG "$shared_group" "$current_user" || exit_with_error "Failed to add $current_user to $shared_group"
-        log_summary "  ⚠️  You must run 'newgrp $shared_group' to apply group membership in current session"
+        set -e
+        log_summary " >>> ⚠️  You must run 'newgrp $shared_group' to apply group membership in current session"
     else
-        log_summary "  ✅ $current_user already in $shared_group"
+        log_summary " >>> ✅  $current_user already in $shared_group"
     fi
 
     if ! groups "$webserver_user" 2>/dev/null | grep -q "$shared_group"; then
-        log_summary "  🌐 Adding $webserver_user to $shared_group"
+        log_summary " >>> 🌐  Adding $webserver_user to $shared_group"
+        set +e
         sudo usermod -aG "$shared_group" "$webserver_user" || exit_with_error "Failed to add $webserver_user to $shared_group"
+        set -e
     else
-        log_summary "  ✅ $webserver_user already in $shared_group"
+        log_summary " >>> ✅  $webserver_user already in $shared_group"
     fi
 
     # apply group membership for user in current session
     newgrp "$shared_group"
 
     # ========== Step 2: Directory Creation & Permissions ==========
-    log_summary ""
-    log_summary "📁 Step 2: Directory Creation & Permissions"
+    log_summary " >>> 📁  Step 2: Directory Creation & Permissions"
 
     if [[ ! -d "$webdir_dest" ]]; then
-        log_summary "  📦 Creating directory at $webdir_dest"
+        log_summary " >>> 📦  Creating directory at $webdir_dest"
+        set +e
         sudo mkdir -p "$webdir_dest" || exit_with_error "Failed to create directory $webdir_dest"
+        set -e
     else
-        log_summary "  ✅ Directory already exists"
+        log_summary " >>> ✅  Directory already exists"
     fi
 
-    log_summary "  🔐 Setting ownership to root:$shared_group"
+    log_summary " >>> 🔐  Setting ownership to root:$shared_group"
+    set +e
     sudo chown -R root:"$shared_group" "$webdir_dest" || exit_with_error "Failed to set ownership"
+    set -e
 
-    log_summary "  🔐 Setting permissions to 2775 (SetGID + rwxrwxr-x)"
+    log_summary " >>> 🔐  Setting permissions to 2775 (SetGID + rwxrwxr-x)"
+    set +e
     sudo chmod -R 2775 "$webdir_dest" || exit_with_error "Failed to set permissions"
+    set -e
 
     # ========== Step 3: Permission Verification ==========
-    log_summary ""
-    log_summary "✨ Step 3: Permission Verification"
+    log_summary " >>> ✨  Step 3: Permission Verification"
 
     local perms_output
     perms_output=$(ls -ld "$webdir_dest" 2>/dev/null)
@@ -661,9 +663,9 @@ create_webserver_shareddir() {
     log_summary "  Directory: $perms_output"
 
     if echo "$perms_output" | grep -q "drwxrwsr-x"; then
-        log_summary "  ✅ SetGID bit correctly applied"
+        log_summary " >>> ✅  SetGID bit correctly applied"
     else
-        log_summary "  ⚠️  SetGID bit may not be set correctly"
+        log_summary " >>> ⚠️  SetGID bit may not be set correctly"
     fi
 
     # ========== Step 4: Symlink Creation ==========
@@ -674,8 +676,7 @@ create_webserver_shareddir() {
 
     # COMMENTED CODE FOR NOW (TODO ABOVE)
 
-#    log_summary ""
-#    log_summary "🔗 Step 4: Symlink Creation"
+#    log_summary " >>> 🔗  Step 4: Symlink Creation"
 #
 #    if [[ -n "$WEBDIR_ROOT" ]] && [[ -d "$web_root" ]]; then
 #        if change_directory "$web_root"; then
@@ -686,37 +687,40 @@ create_webserver_shareddir() {
 #            elif [[ -e "$symlink_path" ]]; then
 #                exit_with_error "Path exists but is not a symlink: $symlink_path"
 #            else
-#                log_summary "  🔗 Creating symlink: $symlink_name → $webdir_dest"
+#                log_summary " >>> 🔗  Creating symlink: $symlink_name → $webdir_dest"
+#                set +e
 #                sudo ln -s "$webdir_dest" "$symlink_path" || exit_with_error "Failed to create symlink"
-#                log_summary "  ✅ Symlink created"
+#                set -e
+#                log_summary " >>> ✅  Symlink created"
 #            fi
 #        fi
 #    else
-#        log_summary "  ⏭️  Skipping symlink (WEBDIR_ROOT not set or missing)"
+#        log_summary " >>> ⏭️  Skipping symlink (WEBDIR_ROOT not set or missing)"
 #    fi
 
     # ========== Step 5: Webserver Restart ==========
-    log_summary ""
-    log_summary "🔄 Step 5: Webserver Restart"
+    log_summary " >>> 🔄  Step 5: Webserver Restart"
 
     if command -v systemctl &> /dev/null; then
-        log_summary "  🔄 Restarting nginx..."
+        log_summary " >>> 🔄  Restarting nginx..."
+        set +e
         if sudo systemctl restart nginx 2>/dev/null; then
-            log_summary "  ✅ Nginx restarted"
+            log_summary " >>> ✅  Nginx restarted"
         else
-            log_summary "  ⚠️  Failed to restart nginx"
+            log_summary " >>> ⚠️  Failed to restart nginx"
         fi
+        set -e
     fi
 
     # ========== Summary ==========
-    log_summary ""
-    log_summary "🎉 Webserver shared directory setup complete!"
-    log_summary ""
-    log_summary "📝 Next Steps:"
-    log_summary "   1. Run: newgrp $shared_group"
-    log_summary "   2. Verify: ls -ld $webdir_dest"
-    log_summary "   3. Test: touch $webdir_dest/test.txt && rm $webdir_dest/test.txt"
-    log_summary ""
+    log_summary " >>>"
+    log_summary " >>> 🎉  Webserver shared directory setup complete!"
+    log_summary " >>>"
+    log_summary " >>> 📝  Next Steps:"
+    log_summary " >>>     1. Run: newgrp $shared_group"
+    log_summary " >>>     2. Verify: ls -ld $webdir_dest"
+    log_summary " >>>     3. Test: touch $webdir_dest/test.txt && rm $webdir_dest/test.txt"
+    log_summary " >>>"
 }
 
 
