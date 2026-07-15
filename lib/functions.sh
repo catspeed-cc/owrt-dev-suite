@@ -127,27 +127,27 @@ verify_configuration() {
 
     # Validate OWRT_MFR is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_MFR" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_MFR is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "OWRT_MFR is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_MODEL is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_MODEL" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_MODEL is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "OWRT_MODEL is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_SOC is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_SOC" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_SOC is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "OWRT_SOC is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_SOC_CLASS is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_SOC_CLASS" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_SOC_CLASS is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "OWRT_SOC_CLASS is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_OS_TARGET is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_OS_TARGET" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_OS_TARGET is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "OWRT_OS_TARGET is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
 
@@ -170,42 +170,42 @@ verify_configuration() {
 
     # Validate DEVICE_SUPPORTED flag
     if [[ "${DEVICE_SUPPORTED}" != "true" && "${DEVICE_SUPPORTED}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DEVICE_SUPPORTED is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "DEVICE_SUPPORTED is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate SUDO_ENABLE flag
     if [[ "${SUDO_ENABLE}" != "true" && "${SUDO_ENABLE}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: SUDO_ENABLE is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "SUDO_ENABLE is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate DO_DTS_CPY flag
     if [[ "${DO_DTS_CPY}" != "true" && "${DO_DTS_CPY}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DO_DTS_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "DO_DTS_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate DO_IMGDIR_CPY flag
     if [[ "${DO_IMGDIR_CPY}" != "true" && "${DO_IMGDIR_CPY}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DO_IMGDIR_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "DO_IMGDIR_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate DO_WEBSERVER_CPY flag
     if [[ "${DO_WEBSERVER_CPY}" != "true" && "${DO_WEBSERVER_CPY}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DO_WEBSERVER_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "DO_WEBSERVER_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate DO_DRIVERMOD_CPY flag
     if [[ "${DO_DRIVERMOD_CPY}" != "true" && "${DO_DRIVERMOD_CPY}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DO_DRIVERMOD_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "DO_DRIVERMOD_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate DO_CALDATA_CPY flag
     if [[ "${DO_CALDATA_CPY}" != "true" && "${DO_CALDATA_CPY}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DO_CALDATA_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "DO_CALDATA_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate ENABLE_SYMLINK_SHORTCUTS flag
     if [[ "${ENABLE_SYMLINK_SHORTCUTS}" != "true" && "${ENABLE_SYMLINK_SHORTCUTS}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: ENABLE_SYMLINK_SHORTCUTS is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "ENABLE_SYMLINK_SHORTCUTS is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
 
@@ -215,32 +215,32 @@ verify_configuration() {
 
     # Validate OWRT_REMOTE_ALIAS is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_REMOTE_ALIAS" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_REMOTE_ALIAS is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "OWRT_REMOTE_ALIAS is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_FORK_REPO is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_FORK_REPO" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_FORK_REPO is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "OWRT_FORK_REPO is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_BASE_BRANCH is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_BASE_BRANCH" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_BASE_BRANCH is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "OWRT_BASE_BRANCH is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate WORK_DIR is not empty (REQUIRED, CRITICAL)
     if [[ -z "$WORK_DIR" ]]; then
-        exit_with_error "❌ CRITICAL: WORK_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "WORK_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate PROJECT_DIR is not empty (REQUIRED, CRITICAL)
     if [[ -z "$PROJECT_DIR" ]]; then
-        exit_with_error "❌ CRITICAL: PROJECT_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "PROJECT_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_DEV_DIR is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_DEV_DIR" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_DEV_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
+        exit_with_error "OWRT_DEV_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # CONDITIONAL VALIDATION BASED ON BOOLS
@@ -248,49 +248,49 @@ verify_configuration() {
     # Validate IMGDIR_SRC is not empty (REQUIRED, CRITICAL)
     if [[ "${DO_IMGDIR_CPY}" == "true" ]]; then
         if [[ -z "$IMGDIR_SRC" ]]; then
-            exit_with_error "❌ CRITICAL: IMGDIR_SRC is not set in 'etc/config.sh' - Aborting." --nocleanup
+            exit_with_error "IMGDIR_SRC is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate DTS_FNAME is not empty if DO_DTS_CPY = true (just validate not empty)
     if [[ "${DO_DTS_CPY}" == "true" ]]; then
         if [[ -z "$DTS_FNAME" ]]; then
-            exit_with_error "❌ CRITICAL: DTS_FNAME is not set in 'etc/config.sh' - Aborting." --nocleanup
+            exit_with_error "DTS_FNAME is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate WEBSERVER_USER is not empty (sane defaults already set, just validate not empty)
     if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
         if [[ -z "$WEBSERVER_USER" ]]; then
-            exit_with_error "❌ CRITICAL: WEBSERVER_USER is not set in 'etc/config.sh' - Aborting." --nocleanup
+            exit_with_error "WEBSERVER_USER is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate WEBSERVER_SHARED_GROUP is not empty (sane defaults already set, just validate not empty)
     if [[ "$DO_WEBSERVER_CPY" == "true" ]]; then
         if [[ -z "$WEBSERVER_SHARED_GROUP" ]]; then
-            exit_with_error "❌ CRITICAL: WEBSERVER_SHARED_GROUP must be set in 'etc/config.sh' when DO_WEBSERVER_CPY=true" --nocleanup
+            exit_with_error "WEBSERVER_SHARED_GROUP must be set in 'etc/config.sh' when DO_WEBSERVER_CPY=true" --nocleanup
         fi
     fi
 
     # Validate WEBSERVER_SHARED_DIR is not empty (sane defaults already set, just validate not empty)
     if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
         if [[ -z "$WEBSERVER_SHARED_DIR" ]]; then
-            exit_with_error "❌ CRITICAL: WEBSERVER_SHARED_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
+            exit_with_error "WEBSERVER_SHARED_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate WEBSERVER_ROOT is not empty (sane defaults already set, just validate not empty)
     if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
         if [[ -z "$WEBSERVER_ROOT" ]]; then
-            exit_with_error "❌ CRITICAL: WEBSERVER_ROOT is not set in 'etc/config.sh' - Aborting." --nocleanup
+            exit_with_error "WEBSERVER_ROOT is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate WEBSERVER_RESTART_CMD is not empty (sane defaults already set, just validate not empty)
     if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
         if [[ -z "$WEBSERVER_RESTART_CMD" ]]; then
-            exit_with_error "❌ CRITICAL: WEBSERVER_RESTART_CMD is not set in 'etc/config.sh' - Aborting." --nocleanup
+            exit_with_error "WEBSERVER_RESTART_CMD is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
@@ -299,21 +299,21 @@ verify_configuration() {
     # Validate DRIVERMOD_MODE is not empty (sane defaults already set, validate either patchmod or rawmod, and not empty)
     if [[ "${DO_DRIVERMOD_CPY}" == "true" ]]; then
         if [[ -z "$DRIVERMOD_MODE" || ("$DRIVERMOD_MODE" != "patchmod" && "$DRIVERMOD_MODE" != "rawmod") ]]; then
-            exit_with_error "❌ CRITICAL: DRIVERMOD_MODE must be 'patchmod' or 'rawmod' in 'etc/config.sh'" --nocleanup
+            exit_with_error "DRIVERMOD_MODE must be 'patchmod' or 'rawmod' in 'etc/config.sh'" --nocleanup
         fi
     fi
 
     # Validate RAWMOD_LIST is not empty IF enabled (sane defaults already set, validate either patchmod or rawmod, and not empty)
     if [[ "${DO_DRIVERMOD_CPY}" == "true" ]]; then
         if [[ -z "$RAWMOD_LIST" || ("$DRIVERMOD_MODE" != "patchmod" && "$DRIVERMOD_MODE" != "rawmod") ]]; then
-            exit_with_error "❌ CRITICAL: RAWMOD_LIST is not set in 'etc/config.sh' - Aborting." --nocleanup
+            exit_with_error "RAWMOD_LIST is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate CALDATA_LIST is not empty IF enabled
     if [[ "${DO_CALDATA_CPY}" == "true" ]]; then
         if [[ -z "$CALDATA_LIST" ]]; then
-            exit_with_error "❌ CRITICAL: CALDATA_LIST is not set in 'etc/config.sh' - Aborting." --nocleanup
+            exit_with_error "CALDATA_LIST is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
@@ -429,7 +429,7 @@ verify_configuration() {
         log_summary " >>>"
         log_summary " >>> Once files are in place, run the script again to start compilation."
         log_summary " >>>"
-        exit_with_success "✅  Initial setup completed successfully." --nocleanup
+        exit_with_success "Initial setup completed successfully." --nocleanup
     fi
 
 
@@ -443,7 +443,7 @@ verify_configuration() {
     local critical_dirs=("$WORK_DIR" "$PROJECT_DIR" "$OWRT_DEV_DIR")
     for dir in "${critical_dirs[@]}"; do
         if [[ ! -d "$dir" ]]; then
-            exit_with_error "❌ CRITICAL: Required directory does not exist: $dir" --nocleanup
+            exit_with_error "Required directory does not exist: $dir" --nocleanup
         fi
     done
 
