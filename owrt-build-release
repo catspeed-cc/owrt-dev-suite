@@ -130,7 +130,7 @@ WEBSERVER_USER="www-data"
 WEBSERVER_SHARED_GROUP="openwrt-build"
 WEBSERVER_SHARED_DIR="/srv/openwrt-builds/"
 WEBSERVER_ROOT="/var/www/html/downloads"
-WEBSERVER_RESTART_CMD="sudo service restart nginx"
+WEBSERVER_RESTART_CMD="sudo systemctl restart nginx"
 
 DO_DRIVERMOD_CPY="false"
 DRIVERMOD_MODE="patchmod"

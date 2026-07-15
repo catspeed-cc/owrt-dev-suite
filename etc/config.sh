@@ -176,8 +176,24 @@ WEBSERVER_SHARED_GROUP="openwrt-build"
 WEBSERVER_SHARED_DIR="/srv/openwrt-builds/"
 WEBSERVER_ROOT="/var/www/catspeed.cc/downloads"
 
-# Command to restart your webserver
-WEBSERVER_RESTART_CMD="sudo service restart nginx"
+
+# Commands to restart your webserver (choose one)
+#
+# `sudo` should be required, because you use a user account right?
+# you certainly wouldn't run as root like a neanderthal, not you.
+
+# Nginx
+WEBSERVER_RESTART_CMD="sudo systemctl restart nginx"
+
+# Lighttpd
+# WEBSERVER_RESTART_CMD="sudo systemctl restart lighttpd"
+
+# Apache
+# WEBSERVER_RESTART_CMD="sudo systemctl restart apache2"
+
+# Direct init script
+# WEBSERVER_RESTART_CMD="sudo /etc/init.d/webserver reload"
+
 
 # =================================================================
 # APPLY PATCHES OR RAW DRIVER MOD                       (OPTIONAL)
