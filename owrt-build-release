@@ -333,8 +333,8 @@ if [ "$BUILD_STATUS" -eq 0 ]; then
 
     # 4. Success: Disable trap manually to prevent "Cleanup called" message on exit
     trap - INT TERM HUP
-    exit_with_success
+    exit_with_success "BUILD COMPLETE"
 else
     # 5. Failure: Trigger error handler (Trap will also fire if set -e catches a downstream error)
-    exit_with_error "❌ BUILD FAILED (Status: $BUILD_STATUS)"
+    exit_with_error "BUILD FAILED (Status: $BUILD_STATUS)"
 fi

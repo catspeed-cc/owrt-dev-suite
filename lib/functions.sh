@@ -127,27 +127,27 @@ verify_configuration() {
 
     # Validate OWRT_MFR is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_MFR" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_MFR is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: OWRT_MFR is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_MODEL is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_MODEL" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_MODEL is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: OWRT_MODEL is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_SOC is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_SOC" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_SOC is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: OWRT_SOC is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_SOC_CLASS is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_SOC_CLASS" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_SOC_CLASS is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: OWRT_SOC_CLASS is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_OS_TARGET is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_OS_TARGET" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_OS_TARGET is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: OWRT_OS_TARGET is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
 
@@ -170,42 +170,42 @@ verify_configuration() {
 
     # Validate DEVICE_SUPPORTED flag
     if [[ "${DEVICE_SUPPORTED}" != "true" && "${DEVICE_SUPPORTED}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DEVICE_SUPPORTED is not set to true/false in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: DEVICE_SUPPORTED is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate SUDO_ENABLE flag
     if [[ "${SUDO_ENABLE}" != "true" && "${SUDO_ENABLE}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: SUDO_ENABLE is not set to true/false in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: SUDO_ENABLE is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate DO_DTS_CPY flag
     if [[ "${DO_DTS_CPY}" != "true" && "${DO_DTS_CPY}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DO_DTS_CPY is not set to true/false in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: DO_DTS_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate DO_IMGDIR_CPY flag
     if [[ "${DO_IMGDIR_CPY}" != "true" && "${DO_IMGDIR_CPY}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DO_IMGDIR_CPY is not set to true/false in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: DO_IMGDIR_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate DO_WEBSERVER_CPY flag
     if [[ "${DO_WEBSERVER_CPY}" != "true" && "${DO_WEBSERVER_CPY}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DO_WEBSERVER_CPY is not set to true/false in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: DO_WEBSERVER_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate DO_DRIVERMOD_CPY flag
     if [[ "${DO_DRIVERMOD_CPY}" != "true" && "${DO_DRIVERMOD_CPY}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DO_DRIVERMOD_CPY is not set to true/false in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: DO_DRIVERMOD_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate DO_CALDATA_CPY flag
     if [[ "${DO_CALDATA_CPY}" != "true" && "${DO_CALDATA_CPY}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: DO_CALDATA_CPY is not set to true/false in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: DO_CALDATA_CPY is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate ENABLE_SYMLINK_SHORTCUTS flag
     if [[ "${ENABLE_SYMLINK_SHORTCUTS}" != "true" && "${ENABLE_SYMLINK_SHORTCUTS}" != "false" ]]; then
-        exit_with_error "❌ CRITICAL: ENABLE_SYMLINK_SHORTCUTS is not set to true/false in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: ENABLE_SYMLINK_SHORTCUTS is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
 
@@ -215,32 +215,32 @@ verify_configuration() {
 
     # Validate OWRT_REMOTE_ALIAS is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_REMOTE_ALIAS" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_REMOTE_ALIAS is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: OWRT_REMOTE_ALIAS is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_FORK_REPO is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_FORK_REPO" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_FORK_REPO is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: OWRT_FORK_REPO is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_BASE_BRANCH is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_BASE_BRANCH" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_BASE_BRANCH is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: OWRT_BASE_BRANCH is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate WORK_DIR is not empty (REQUIRED, CRITICAL)
     if [[ -z "$WORK_DIR" ]]; then
-        exit_with_error "❌ CRITICAL: WORK_DIR is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: WORK_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate PROJECT_DIR is not empty (REQUIRED, CRITICAL)
     if [[ -z "$PROJECT_DIR" ]]; then
-        exit_with_error "❌ CRITICAL: PROJECT_DIR is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: PROJECT_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_DEV_DIR is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_DEV_DIR" ]]; then
-        exit_with_error "❌ CRITICAL: OWRT_DEV_DIR is not set in 'etc/config.sh' - Aborting."
+        exit_with_error "❌ CRITICAL: OWRT_DEV_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # CONDITIONAL VALIDATION BASED ON BOOLS
@@ -248,49 +248,49 @@ verify_configuration() {
     # Validate IMGDIR_SRC is not empty (REQUIRED, CRITICAL)
     if [[ "${DO_IMGDIR_CPY}" == "true" ]]; then
         if [[ -z "$IMGDIR_SRC" ]]; then
-            exit_with_error "❌ CRITICAL: IMGDIR_SRC is not set in 'etc/config.sh' - Aborting."
+            exit_with_error "❌ CRITICAL: IMGDIR_SRC is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate DTS_FNAME is not empty if DO_DTS_CPY = true (just validate not empty)
     if [[ "${DO_DTS_CPY}" == "true" ]]; then
         if [[ -z "$DTS_FNAME" ]]; then
-            exit_with_error "❌ CRITICAL: DTS_FNAME is not set in 'etc/config.sh' - Aborting."
+            exit_with_error "❌ CRITICAL: DTS_FNAME is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate WEBSERVER_USER is not empty (sane defaults already set, just validate not empty)
     if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
         if [[ -z "$WEBSERVER_USER" ]]; then
-            exit_with_error "❌ CRITICAL: WEBSERVER_USER is not set in 'etc/config.sh' - Aborting."
+            exit_with_error "❌ CRITICAL: WEBSERVER_USER is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate WEBSERVER_SHARED_GROUP is not empty (sane defaults already set, just validate not empty)
     if [[ "$DO_WEBSERVER_CPY" == "true" ]]; then
         if [[ -z "$WEBSERVER_SHARED_GROUP" ]]; then
-            exit_with_error "❌ CRITICAL: WEBSERVER_SHARED_GROUP must be set in 'etc/config.sh' when DO_WEBSERVER_CPY=true"
+            exit_with_error "❌ CRITICAL: WEBSERVER_SHARED_GROUP must be set in 'etc/config.sh' when DO_WEBSERVER_CPY=true" --nocleanup
         fi
     fi
 
     # Validate WEBSERVER_SHARED_DIR is not empty (sane defaults already set, just validate not empty)
     if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
         if [[ -z "$WEBSERVER_SHARED_DIR" ]]; then
-            exit_with_error "❌ CRITICAL: WEBSERVER_SHARED_DIR is not set in 'etc/config.sh' - Aborting."
+            exit_with_error "❌ CRITICAL: WEBSERVER_SHARED_DIR is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate WEBSERVER_ROOT is not empty (sane defaults already set, just validate not empty)
     if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
         if [[ -z "$WEBSERVER_ROOT" ]]; then
-            exit_with_error "❌ CRITICAL: WEBSERVER_ROOT is not set in 'etc/config.sh' - Aborting."
+            exit_with_error "❌ CRITICAL: WEBSERVER_ROOT is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate WEBSERVER_RESTART_CMD is not empty (sane defaults already set, just validate not empty)
     if [[ "${DO_WEBSERVER_CPY}" == "true" ]]; then
         if [[ -z "$WEBSERVER_RESTART_CMD" ]]; then
-            exit_with_error "❌ CRITICAL: WEBSERVER_RESTART_CMD is not set in 'etc/config.sh' - Aborting."
+            exit_with_error "❌ CRITICAL: WEBSERVER_RESTART_CMD is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
@@ -299,21 +299,21 @@ verify_configuration() {
     # Validate DRIVERMOD_MODE is not empty (sane defaults already set, validate either patchmod or rawmod, and not empty)
     if [[ "${DO_DRIVERMOD_CPY}" == "true" ]]; then
         if [[ -z "$DRIVERMOD_MODE" || ("$DRIVERMOD_MODE" != "patchmod" && "$DRIVERMOD_MODE" != "rawmod") ]]; then
-            exit_with_error "❌ CRITICAL: DRIVERMOD_MODE must be 'patchmod' or 'rawmod' in 'etc/config.sh'"
+            exit_with_error "❌ CRITICAL: DRIVERMOD_MODE must be 'patchmod' or 'rawmod' in 'etc/config.sh'" --nocleanup
         fi
     fi
 
     # Validate RAWMOD_LIST is not empty IF enabled (sane defaults already set, validate either patchmod or rawmod, and not empty)
     if [[ "${DO_DRIVERMOD_CPY}" == "true" ]]; then
         if [[ -z "$RAWMOD_LIST" || ("$DRIVERMOD_MODE" != "patchmod" && "$DRIVERMOD_MODE" != "rawmod") ]]; then
-            exit_with_error "❌ CRITICAL: RAWMOD_LIST is not set in 'etc/config.sh' - Aborting."
+            exit_with_error "❌ CRITICAL: RAWMOD_LIST is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate CALDATA_LIST is not empty IF enabled
     if [[ "${DO_CALDATA_CPY}" == "true" ]]; then
         if [[ -z "$CALDATA_LIST" ]]; then
-            exit_with_error "❌ CRITICAL: CALDATA_LIST is not set in 'etc/config.sh' - Aborting."
+            exit_with_error "❌ CRITICAL: CALDATA_LIST is not set in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
@@ -327,41 +327,31 @@ verify_configuration() {
     # Validate WORK_DTS_DIR is not empty
     if [[ -z "$WORK_DTS_DIR" ]]; then
         WORK_DTS_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/dts"
-        local msg=" >>> ⚠ WARNING: Using default auto-derived WORK_DTS_DIR ('$WORK_DTS_DIR')"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_DTS_DIR ('$WORK_DTS_DIR')"
     fi
 
     # Validate WORK_CALDATA_DIR is not empty
     if [[ -z "$WORK_CALDATA_DIR" ]]; then
         WORK_CALDATA_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/caldata"
-        local msg=" >>> ⚠ WARNING: Using default auto-derived WORK_CALDATA_DIR ('$WORK_CALDATA_DIR')"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_CALDATA_DIR ('$WORK_CALDATA_DIR')"
     fi
 
     # Validate WORK_PATCHMODS_DIR is not empty
     if [[ -z "$WORK_PATCHMODS_DIR" ]]; then
         WORK_PATCHMODS_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/patchmods"
-        local msg=" >>> ⚠ WARNING: Using default auto-derived WORK_PATCHMODS_DIR ('$WORK_PATCHMODS_DIR')"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_PATCHMODS_DIR ('$WORK_PATCHMODS_DIR')"
     fi
 
     # Validate WORK_RAWMODS_DIR is not empty
     if [[ -z "$WORK_RAWMODS_DIR" ]]; then
         WORK_RAWMODS_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/rawmods"
-        local msg=" >>> ⚠ WARNING: Using default auto-derived WORK_RAWMODS_DIR ('$WORK_RAWMODS_DIR')"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_RAWMODS_DIR ('$WORK_RAWMODS_DIR')"
     fi
 
     # Validate WORK_IMAGEOUT_DIR is not empty
     if [[ -z "$WORK_IMAGEOUT_DIR" ]]; then
         WORK_IMAGEOUT_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/image-out"
-        local msg=" >>> ⚠ WARNING: Using default auto-derived WORK_IMAGEOUT_DIR ('$WORK_IMAGEOUT_DIR')"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_IMAGEOUT_DIR ('$WORK_IMAGEOUT_DIR')"
     fi
 
     # DESTINATION DIRECTORIES
@@ -369,17 +359,13 @@ verify_configuration() {
     # Validate DTS_DEST_DIR is not empty
     if [[ -z "$DTS_DEST_DIR" ]]; then
         DTS_DEST_DIR="$OWRT_DEV_DIR/target/$OWRT_OS_TARGET_LOWER/$OWRT_SOC_CLASS_LOWER/files-6.12/arch/arm/boot/dts/qcom"
-        local msg=" >>> ⚠ WARNING: Using default auto-derived DTS_DEST_DIR ('$DTS_DEST_DIR')"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ⚠ WARNING: Using default auto-derived DTS_DEST_DIR ('$DTS_DEST_DIR')"
     fi
 
     # Validate PATCHMOD_DEST_DIR is not empty
     if [[ -z "$PATCHMOD_DEST_DIR" ]]; then
         PATCHMOD_DEST_DIR="$OWRT_DEV_DIR/target/$OWRT_OS_TARGET_LOWER/$OWRT_SOC_CLASS_LOWER/patches-6.12"
-        local msg=" >>> ⚠ WARNING: Using default auto-derived PATCHMOD_DEST_DIR ('$PATCHMOD_DEST_DIR')"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ⚠ WARNING: Using default auto-derived PATCHMOD_DEST_DIR ('$PATCHMOD_DEST_DIR')"
     fi
 
 
@@ -390,9 +376,7 @@ verify_configuration() {
     # Validate OWRT_TARGET_BRANCH is not empty
     if [[ -z "$OWRT_TARGET_BRANCH" ]]; then
         OWRT_TARGET_BRANCH="${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}-${OWRT_BASE_BRANCH}"
-        local msg=" >>> ⚠ WARNING: Using default auto-derived OWRT_TARGET_BRANCH ('$OWRT_TARGET_BRANCH')"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ⚠ WARNING: Using default auto-derived OWRT_TARGET_BRANCH ('$OWRT_TARGET_BRANCH')"
     fi
 
 
@@ -445,7 +429,7 @@ verify_configuration() {
         log_summary " >>>"
         log_summary " >>> Once files are in place, run the script again to start compilation."
         log_summary " >>>"
-        exit_with_success "✅  Initial setup completed successfully."
+        exit_with_success "✅  Initial setup completed successfully." --nocleanup
     fi
 
 
@@ -459,7 +443,7 @@ verify_configuration() {
     local critical_dirs=("$WORK_DIR" "$PROJECT_DIR" "$OWRT_DEV_DIR")
     for dir in "${critical_dirs[@]}"; do
         if [[ ! -d "$dir" ]]; then
-            exit_with_error "❌ CRITICAL: Required directory does not exist: $dir"
+            exit_with_error "❌ CRITICAL: Required directory does not exist: $dir" --nocleanup
         fi
     done
 
@@ -482,7 +466,7 @@ create_workdir() {
         read -r -p "Do you want to create it? [Y/n] " response
         case "$response" in
             [nN][oO]|[nN])
-                exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults"
+                exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults" --nocleanup
                 ;;
             *)
                 echo " >>> Creating ${WORK_DIR} structure..."
@@ -504,7 +488,7 @@ create_projectsdir() {
         read -r -p "Do you want to create it? [Y/n] " response
         case "$response" in
             [nN][oO]|[nN])
-                exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults"
+                exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults" --nocleanup
                 ;;
             *)
                 echo " >>> Creating ${PROJECT_DIR}..."
@@ -521,7 +505,7 @@ clone_openwrt() {
 
         # 1) Test if the git repository exists
         if ! git ls-remote "$OWRT_FORK_REPO" >/dev/null 2>&1; then
-            exit_with_error "Git repository $OWRT_FORK_REPO does not exist please check OWRT_FORK_REPO variable in \`etc/config.sh\` - Aborting."
+            exit_with_error "Git repository $OWRT_FORK_REPO does not exist please check OWRT_FORK_REPO variable in \`etc/config.sh\` - Aborting." --nocleanup
         fi
 
         # 2) Prompt the user
@@ -530,7 +514,7 @@ clone_openwrt() {
         reply=${reply:-Y} # Default to Y if empty
 
         if [[ ! "$reply" =~ ^[Yy]$ ]]; then
-            exit_with_error "Please either configure the openwrt fork repository at the path in 'etc/config.sh' or continue with the clone."
+            exit_with_error "Please either configure the openwrt fork repository at the path in 'etc/config.sh' or continue with the clone." --nocleanup
         fi
 
         # cd to PROJECT_DIR directory
@@ -601,7 +585,7 @@ create_webserver_shareddir() {
             response=${response:-Y}
 
             if [[ ! "$response" =~ ^[Yy]$ ]]; then
-                exit_with_error "Please either allow automated setup (requires: SUDO_ENABLE=true) or manually set up the shared web directory"
+                exit_with_error "Please either allow automated setup (requires: SUDO_ENABLE=true) or manually set up the shared web directory" --nocleanup
             fi
         fi
 
@@ -618,7 +602,7 @@ create_webserver_shareddir() {
 
     if ! getent group "$shared_group" > /dev/null 2>&1; then
         echo " >>> 📦  Creating shared group: $shared_group"
-        sudo groupadd "$shared_group" || exit_with_error "Failed to create group $shared_group"
+        sudo groupadd "$shared_group" || exit_with_error "Failed to create group $shared_group" --nocleanup
         log_summary " >>> ✅  Created $shared_group group"
     else
         log_summary " >>> ✅  $shared_group group already exists"
@@ -628,9 +612,8 @@ create_webserver_shareddir() {
     if ! groups "$current_user" | grep -q "$shared_group"; then
         echo " >>> 👤  Adding $current_user to $shared_group"
         set +e
-        sudo usermod -aG "$shared_group" "$current_user" || exit_with_error "Failed to add $current_user to $shared_group"
+        sudo usermod -aG "$shared_group" "$current_user" || exit_with_error "Failed to add $current_user to $shared_group" --nocleanup
         set -e
-        log_summary " >>> ⚠️  You must run 'newgrp $shared_group' to apply group membership in current session"
         log_summary " >>> ✅  Added $current_user to $shared_group"
     else
         log_summary " >>> ✅  $current_user already member of $shared_group"
@@ -639,24 +622,19 @@ create_webserver_shareddir() {
     if ! groups "$webserver_user" 2>/dev/null | grep -q "$shared_group"; then
         echo " >>> 🌐  Adding $webserver_user to $shared_group"
         set +e
-        sudo usermod -aG "$shared_group" "$webserver_user" || exit_with_error "Failed to add $webserver_user to $shared_group"
+        sudo usermod -aG "$shared_group" "$webserver_user" || exit_with_error "Failed to add $webserver_user to $shared_group" --nocleanup
         set -e
         log_summary " >>> ✅  Added $webserver_user to $shared_group"
     else
         log_summary " >>> ✅  $webserver_user already member of $shared_group"
     fi
 
-    # apply group membership for user in current session
-    # TODO: check the user is already in the group or not, and whether newgrp needs to be called for current shell or not
-    newgrp "$shared_group"
-    log_summary " >>> ✅  Applied 'newgrp $shared_group' to current shell user $current_user"
-
     # ========== Step 2: Directory Creation & Permissions ==========
     echo " >>> 📁  Step 2: Directory Creation & Permissions"
 
     if [[ ! -d "$webserver_shared_dir" ]]; then
         set +e
-        sudo mkdir -p "$webserver_shared_dir" || exit_with_error "Failed to create directory $webserver_shared_dir"
+        sudo mkdir -p "$webserver_shared_dir" || exit_with_error "Failed to create directory $webserver_shared_dir" --nocleanup
         set -e
         log_summary " >>> ✅  Created directory at $webserver_shared_dir"
     else
@@ -665,13 +643,13 @@ create_webserver_shareddir() {
 
     echo " >>> 🔐  Setting ownership to root:$shared_group"
     set +e
-    sudo chown -R root:"$shared_group" "$webserver_shared_dir" || exit_with_error "Failed to set ownership"
+    sudo chown -R root:"$shared_group" "$webserver_shared_dir" || exit_with_error "Failed to set ownership" --nocleanup
     set -e
     log_summary " >>> ✅  Ownership of $webserver_shared_dir set to 'root:$shared_group'"
 
     echo " >>> 🔐  Setting permissions to 2775 (SetGID + rwxrwxr-x)"
     set +e
-    sudo chmod -R 2775 "$webserver_shared_dir" || exit_with_error "Failed to set permissions"
+    sudo chmod -R 2775 "$webserver_shared_dir" || exit_with_error "Failed to set permissions" --nocleanup
     set -e
     log_summary " >>> ✅  Permissions of $webserver_shared_dir set to 775 (SetGID + rwxrwxr-x)"
 
@@ -682,7 +660,7 @@ create_webserver_shareddir() {
     perms_output=$(ls -ld "$webserver_shared_dir" 2>/dev/null)
 
     if [[ -z "$perms_output" ]]; then
-        exit_with_error "Failed to verify directory"
+        exit_with_error "Failed to verify directory" --nocleanup
     fi
 
     echo " >>>     Directory: $perms_output"
@@ -703,11 +681,11 @@ create_webserver_shareddir() {
             if [[ -L "$symlink_path" ]]; then
                 log_summary " >>> ✅  Symlink already exists"
             elif [[ -e "$symlink_path" ]]; then
-                exit_with_error "Path exists but is not a symlink: $symlink_path"
+                exit_with_error "Path exists but is not a symlink: $symlink_path" --nocleanup
             else
                 echo " >>> 🔗  Creating symlink: $symlink_name → $webserver_shared_dir"
                 set +e
-                sudo ln -s "$webserver_shared_dir" "$symlink_path" || exit_with_error "Failed to create symlink"
+                sudo ln -s "$webserver_shared_dir" "$symlink_path" || exit_with_error "Failed to create symlink" --nocleanup
                 set -e
                 log_summary " >>> ✅  Symlink created"
             fi
@@ -739,11 +717,7 @@ create_webserver_shareddir() {
     log_summary " >>>"
     log_summary " >>> 🎉  Webserver shared directory setup complete!"
     log_summary " >>>"
-    log_summary " >>> 📝  Next Steps:"
-    log_summary " >>>     1. Run: newgrp $shared_group"
-    log_summary " >>>     2. Verify: ls -ld $webserver_shared_dir"
-    log_summary " >>>     3. Test: touch $webserver_shared_dir/test.txt && rm $webserver_shared_dir/test.txt"
-    log_summary " >>>"
+
 }
 
 
@@ -959,11 +933,16 @@ parse_arguments() {
 # ==============================================================================
 
 exit_with_success() {
+    local err_msg="$1"
+    local no_cleanup_flag="${2:-}"
 
     # Disable errexit to prevent silent exits in cleanup
     set +e
 
-    cleanup_build_environment
+    # Perform cleanup ONLY if the --nocleanup flag is NOT provided
+    if [[ "$no_cleanup_flag" != "--nocleanup" ]]; then
+        cleanup_build_environment
+    fi
 
     show_header
     echo " >>>"
@@ -971,21 +950,25 @@ exit_with_success() {
     echo " >>>"
     echo -n "$SUMMARY_OUT"
     echo " >>>"
-    echo " >>> ✅ BUILD COMPLETED SUCCESSFULLY!"
+    echo " >>> ✅ SUCCESS: ${err_msg}!"
     echo " >>>"
     echo ""
     exit 0
-
 }
 
 exit_with_error() {
+    local err_msg="$1"
+    local no_cleanup_flag="${2:-}"
 
     # Disable errexit to prevent silent exits in cleanup
     set +e
 
-    cleanup_build_environment
+    # Perform cleanup ONLY if the --nocleanup flag is NOT provided
+    # (Usually you want cleanup on error, but this allows overriding if needed)
+    if [[ "$no_cleanup_flag" != "--nocleanup" ]]; then
+        cleanup_build_environment
+    fi
 
-    local err_msg="$1"
     show_header
     echo " >>>"
     echo " >>> SUMMARY REPORT:"
@@ -995,7 +978,6 @@ exit_with_error() {
     echo " >>> ❌ CRITICAL: ${err_msg}!"
     echo " >>>"
     exit 1
-
 }
 
 
@@ -1191,28 +1173,30 @@ copy_to_imgdir() {
 }
 
 copy_to_webserver() {
+    local webserver_shared_dir="$WEBSERVER_SHARED_DIR"
+    local owrt_mfr="$OWRT_MFR_LOWER"
+    local owrt_model="$OWRT_MODEL_LOWER" # Note: Ensure this variable is actually lowercased if intended
+    local owrt_base_branch="$OWRT_BASE_BRANCH"
+    local imgdir_src="$IMGDIR_SRC"
+
+    local dest="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_base_branch"
 
     if [ "$DO_WEBSERVER_CPY" == "true" ]; then
-        # Do NOT quote the * so it expands properly
+
         echo " >>> Copying images to webserver..."
 
-        local dest="$WORK_IMAGEOUT_DIR/$OWRT_BASE_BRANCH"
+        # Use sg to ensure we have write access to the SetGID directory
+        # regardless of whether the user has run 'newgrp' in this session.
+        sg "$OPENWRT_BUILD_GROUP" -c "
+            mkdir -p \"$dest\" &&
+            rm -rf \"$dest/\"* &&
+            cp -r \"$imgdir_src/\"* \"$dest/\" &&
+            chmod -R g+rw \"$dest\"
+        " || exit_with_error "Failed to copy images to webserver"
 
-        mkdir -p "$dest"
+        log_summary " >>> ✅ Images copied to webserver: $(cleanup_path "$dest")"
 
-        # clobber the image out old files
-        rm -rf "$dest/"* || exit_with_error "Clobber webserver image-out dir: $(cleanup_path "$dest")"
-
-        # copy the new files
-        cp -r "$IMGDIR_SRC/"* "$dest/" || exit_with_error "Copy images to webserver image-out dir: $(cleanup_path "$dest")"
-
-        # TODO: SET CORRECT PERMISSIONS (SEE DOCS LOL)
-
-        local msg=" >>> ✅ Images copied to webserver: $(cleanup_path "$dest")"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"$NL
     fi
-
 }
 
 
