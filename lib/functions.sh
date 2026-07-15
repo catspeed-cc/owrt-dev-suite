@@ -432,6 +432,12 @@ verify_configuration() {
         exit_with_success "Initial setup completed successfully." --nocleanup
     fi
 
+    # create the workdir for the current port if it does not exist yet
+    create_workdir
+
+    # create the shared dir for the current port if it does not exist yet
+    create_port_shareddir
+
 
 
 
@@ -461,8 +467,8 @@ verify_configuration() {
 
 # Create work dir
 create_workdir() {
-    if [ ! -d "${WORK_DIR}" ]; then
-        echo " >>> Warning: Work directory '${WORK_DIR}' does not exist."
+    if [ ! -d "$WORK_DIR" ]; then
+        echo " >>> Warning: Work directory '$WORK_DIR' does not exist."
         read -r -p "Do you want to create it? [Y/n] " response
         case "$response" in
             [nN][oO]|[nN])
@@ -475,7 +481,7 @@ create_workdir() {
                 mkdir -p "$WORK_PATCHMODS_DIR"
                 mkdir -p "$WORK_RAWMODS_DIR"
                 mkdir -p "$WORK_IMAGEOUT_DIR"
-                log_summary " >>> ✅ ${WORK_DIR} directory structure created"
+                log_summary " >>> ✅ $WORK_DIR directory structure created"
                 ;;
         esac
     fi
@@ -483,17 +489,17 @@ create_workdir() {
 
 # Create projects dir
 create_projectsdir() {
-    if [ ! -d "${PROJECT_DIR}" ]; then
-        echo " >>> Warning: Project directory '${PROJECT_DIR}' does not exist."
+    if [ ! -d "$PROJECT_DIR" ]; then
+        echo " >>> Warning: Project directory '$PROJECT_DIR' does not exist."
         read -r -p "Do you want to create it? [Y/n] " response
         case "$response" in
             [nN][oO]|[nN])
                 exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults" --nocleanup
                 ;;
             *)
-                echo " >>> Creating ${PROJECT_DIR}..."
-                mkdir -p "${PROJECT_DIR}"
-                log_summary " >>> ✅ ${PROJECT_DIR} directory structure created"
+                echo " >>> Creating $PROJECT_DIR..."
+                mkdir -p "$PROJECT_DIR"
+                log_summary " >>> ✅ $PROJECT_DIR directory structure created"
                 ;;
         esac
     fi
@@ -541,6 +547,38 @@ clone_openwrt() {
 
         # display final SUMMARY_OUT & stderr (successful openwrt fork clone into OWRT_DEV_DIR)
         log_summary " >>> ✅ Cloned openwrt fork into ${OWRT_DEV_DIR}"
+    fi
+}
+
+create_port_shareddir() {
+    local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_BASE_BRANCH"
+
+    if [ ! -d "${port_shareddir}" ]; then
+        echo " >>> Warning: Webserver shareddir directory for port '$port_shareddir' does not exist."
+
+        # Check if running in an interactive shell
+        if [[ -t 0 ]]; then
+            read -r -p "Do you want to create it? [Y/n] " response
+            case "$response" in
+                [nN][oO]|[nN])
+                    exit_with_error "Please create the directory '$port_shareddir' yourself or allow it to be created for you." --nocleanup
+                    ;;
+                *)
+                    echo " >>> Creating ${port_shareddir} directory..."
+                    mkdir -p "$port_shareddir"
+                    chown root:"$OPENWRT_BUILD_GROUP" "$port_shareddir"
+                    chmod 2775 "$port_shareddir"
+                    log_summary " >>> ✅ ${port_shareddir} directory created"
+                    ;;
+            esac
+        else
+            # Non-interactive mode: Auto-create to prevent hanging
+            echo " >>> Non-interactive mode detected. Auto-creating ${port_shareddir} directory..."
+            mkdir -p "$port_shareddir"
+            chown root:"$OPENWRT_BUILD_GROUP" "$port_shareddir"
+            chmod 2775 "$port_shareddir"
+            log_summary " >>> ✅ ${port_shareddir} directory created (auto)"
+        fi
     fi
 }
 
