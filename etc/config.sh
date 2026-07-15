@@ -147,28 +147,37 @@ DTS_DEST_DIR="$OWRT_DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qc
 # Default: true
 # ==================================================================
 
-# IMGDIR_CPY: Enable image copy to work dir on build
+# DO_IMGDIR_CPY: Enable image copy to work dir on build
 DO_IMGDIR_CPY=true
 
 
 # =================================================================
 # COPY IMAGES TO WEBSERVER DIR                          (OPTIONAL)
 #
-# This feature will copy the images to your webserver downloads dir
-# It will organize in similar manner to your WORK_DIR
+# This feature will copy the images to your webserver shared
+# directory. It will organize in similar manner to your WORK_DIR.
+# A link will be made from the shared directory to your webserver
+# downloads/ directory.
 #
 # Users can override any of these by uncommenting and changing them
 # ==================================================================
+#
+# REQUIRED:
+#  - fully configured webserver (NGINX, Lighttpd, Apache, etc.)
+#  - configured downloads/ directory with file listing enabled
+#
 
-# WEBSERVER_CPY: Copy images to webserver
-# USAGE: when enabled it will copy the images also to your webserver directory
+# DO_IMGDIR_CPY: Enable image copy to webserver shared dir on build
 DO_WEBSERVER_CPY=true
 
 # Webserver configuration
 WEBSERVER_USER="www-data"
-WEBDIR_SHARED_GROUP="openwrt-build"
-WEBDIR_DEST="/srv/openwrt-builds/"
+WEBSERVER_SHARED_GROUP="openwrt-build"
+WEBSERVER_SHARED_DIR="/srv/openwrt-builds/"
+WEBSERVER_ROOT="/var/www/catspeed.cc/downloads"
 
+# Command to restart your webserver
+WEBSERVER_RESTART_CMD="sudo service restart nginx"
 
 # =================================================================
 # APPLY PATCHES OR RAW DRIVER MOD                       (OPTIONAL)
@@ -179,13 +188,15 @@ WEBDIR_DEST="/srv/openwrt-builds/"
 # Users can override any of these by uncommenting and changing them
 # ==================================================================
 
-# Enable drivermod (patchmod & rawmod)
+# DO_DRIVERMOD_CPY: Enable drivermod (patchmod & rawmod)
 DO_DRIVERMOD_CPY=true
 
-# Select either patchmod or drivermod mode
+# Select either `patchmod` or `drivermod` mode
 DRIVERMOD_MODE=patchmod
 
-# Patches paths
+# TODO: Update PATCHMOD_DEST_DIR to use full path by using OWRT_DEV_DIR
+
+# Patches destination path (inside OWRT_DEV_DIR)
 PATCHMOD_DEST_DIR="target/linux/ipq40xx/patches-6.12/"
 
 
