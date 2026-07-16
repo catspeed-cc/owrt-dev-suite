@@ -956,18 +956,19 @@ show_header() {
 }
 
 show_help() {
-
     echo ""
-    echo "Usage: ${SCRIPT_NAME} [--help|-h]"
-    echo "Usage: ${SCRIPT_NAME} [-clean|-c] [-updatefeeds|-uf] [-verbose|-v] [-extraverbose|-vv] [-slow|-s]"
+    echo "Usage: ${SCRIPT_NAME} [OPTIONS]"
     echo ""
-    echo " -clean|-c            = make clean"
-    echo " -updatefeeds|-uf     = update feeds"
-    echo " -verbose|-v          = verbose"
-    echo " -extraverbose|-vv    = extra verbose"
-    echo " -slow|-s             = slow compile (single core, default is all cores)"
+    echo "Options:"
+    echo " -mc, --make-clean          Run 'make clean' and prepare host tools/toolchain"
+    echo " -c, --config <path>        Override config file (supports relative/absolute paths)"
+    echo " -uf, --update-feeds        Update and install feeds"
+    echo " -v, --verbose              Enable verbose output"
+    echo " -vv, --extra-verbose       Enable extra verbose output (V=99)"
+    echo " -s, --slow                 Single-core compilation (default is multi-core)"
+    echo " -ni, --non-interactive     Disable interactive prompts (for cron/CI)"
+    echo " -h, --help                 Show this help message"
     echo ""
-
 }
 
 parse_arguments() {
