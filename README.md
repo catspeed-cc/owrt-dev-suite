@@ -44,11 +44,11 @@
 - 🔍 Flexible verbosity levels (`-v`, `-vv`) & single-core compile option (`-s`)
 - 📥 Automatically copies built images to `~/work/images-out`
 - 🌐 Automatically deploys built images to your webserver
+- 📇 Manages a built image catalogue & download directory for all soc/mfr/model and OpenWRT versions on your webserver
+- 🏗️ Automated setup of minimal required ~/work and ~/projects/ directory structuress
 
 ## 🔮 Planned Features
 - 📦 Multi-version & multi-port/multi-device support with git integration (by v1.1.0)
-- 📇 Manages a built image catalogue & download directory for all SOC/MFR/model/OpenWRT versions on your webserver (by v1.1.0)
-- 🏗️ Automated setup of minimal required ~/work and ~/projects/ directory structuress(by v1.0.0)
 
 -----
 
