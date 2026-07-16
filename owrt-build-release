@@ -89,6 +89,25 @@ fi
 SCRIPT_DIR=$(dirname "$REAL_PATH")
 SCRIPT_NAME=$(basename "$REAL_PATH")
 
+# Ensure we go to our script location (owrt-dev-suite repo)
+if ! cd "$SCRIPT_DIR" 2>/dev/null; then
+    echo "Error: Unable to change directory to '$SCRIPT_DIR'. Script location invalid." >&2
+    exit 1
+fi
+
+# Get the git branch for display
+OWRTDS_BRANCH=$(git branch --show-current 2>/dev/null)
+# Fallback for detached HEAD or old git versions
+if [ -z "$OWRTDS_BRANCH" ]; then
+    OWRTDS_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+fi
+
+# Ensure we go back to the original PWD before build
+if ! cd "$STARTUP_PWD" 2>/dev/null; then
+    echo "Warning: Unable to return to '$STARTUP_PWD'. Continuing in current directory." >&2
+    # We don't exit here as the build might still proceed, but log the issue
+fi
+
 # Set up for infinite strings (NEEDED IN `lib/config.sh`)
 NL=$'\n' # leave this alone (used in multiple areas)
 
@@ -176,7 +195,6 @@ CALDATA_LIST=""
 # ====================================================================================
 
 # Required to start blank/empty
-OWRTDS_BRANCH=""
 SUMMARY_OUT=""
 MAKE_CMD_ADD=""
 
@@ -239,16 +257,6 @@ verify_configuration
 # ===========================================================================================
 # verify config - vars below this point can use each other to autoconfigure
 # ===========================================================================================
-
-# Ensure we go to our script location (owrt-dev-suite repo)
-change_directory "$SCRIPT_DIR"
-
-# Get the git branch for display
-OWRTDS_BRANCH=$(git branch --show-current 2>/dev/null)
-# Fallback for detached HEAD or old git versions
-if [ -z "$OWRTDS_BRANCH" ]; then
-    OWRTDS_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-fi
 
 # Ensure we go back to the original PWD before build
 change_directory "$STARTUP_PWD"
