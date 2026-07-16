@@ -986,20 +986,20 @@ parse_arguments() {
                 CUSTOM_CONFIG_PATH="$2"
                 shift 2
                 ;;
-            -updatefeeds|-uf)
+            -uf|--update-feeds)
                 DO_CLEAN=true
                 DO_UPDATE_FEEDS=true
                 shift
                 ;;
-            -verbose|-v)
+            -v|--verbose)
                 DO_VERBOSE=true
                 shift
                 ;;
-            -extraverbose|-vv)
+            -vv|--extra-verbose)
                 DO_XVERBOSE=true
                 shift
                 ;;
-            -slow|-s)
+            -s|--slow)
                 DO_SLOW=true
                 shift
                 ;;
@@ -1007,7 +1007,7 @@ parse_arguments() {
                 OWRTDS_INTERACTIVE=false
                 shift
                 ;;
-            --help|-h)
+            -h|--help)
                 show_help
                 exit 0
                 ;;
