@@ -445,7 +445,7 @@ verify_configuration() {
 
     # checkout the correct branch!
     change_directory "$OWRT_DEV_DIR"
-    git checkout "$OWRT_TARGET_BRANCH" || exit_with_error "Unable to checkout branch: $OWRT_TARGET_BRANCH" --nocleanup
+    git checkout -q "$OWRT_TARGET_BRANCH" || exit_with_error "Unable to checkout branch: $OWRT_TARGET_BRANCH" --nocleanup
 
 
 
@@ -579,7 +579,7 @@ clone_openwrt() {
 }
 
 create_port_shareddir() {
-    local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_BASE_BRANCH"
+    local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
 
     if [ ! -d "${port_shareddir}" ]; then
         echo " >>> Warning: Webserver shareddir directory for port '$port_shareddir' does not exist."
@@ -590,6 +590,7 @@ create_port_shareddir() {
             response=${response:-Y}
         else
             echo " >>> [NON-INTERACTIVE] Auto-creating port shareddir..."
+            response="Y" # Force auto-create in non-interactive mode
         fi
 
         case "$response" in
@@ -598,20 +599,12 @@ create_port_shareddir() {
                 ;;
             *)
                 echo " >>> Creating ${port_shareddir} directory..."
-                    mkdir -p "$port_shareddir"
-                    chown root:"$WEBSERVER_SHARED_GROUP" "$port_shareddir"
-                    chmod 2775 "$port_shareddir"
-                    log_summary " >>> ✅ ${port_shareddir} directory created"
-                    ;;
-            esac
-        else
-            # Non-interactive mode: Auto-create to prevent hanging
-            echo " >>> Non-interactive mode detected. Auto-creating ${port_shareddir} directory..."
-            mkdir -p "$port_shareddir"
-            chown root:"$WEBSERVER_SHARED_GROUP" "$port_shareddir"
-            chmod 2775 "$port_shareddir"
-            log_summary " >>> ✅ ${port_shareddir} directory created (auto)"
-        fi
+                mkdir -p "$port_shareddir"
+                chown root:"$WEBSERVER_SHARED_GROUP" "$port_shareddir"
+                chmod 2775 "$port_shareddir"
+                log_summary " >>> ✅ ${port_shareddir} directory created"
+                ;;
+        esac
     fi
 }
 
