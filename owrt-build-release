@@ -206,15 +206,28 @@ if ! source "$CONFIG_FILE"; then
     exit 1
 fi
 
-# Import dependencies
+# Source dependencies and functions early so CLI parsing utilities are available
 if ! source "$SCRIPT_DIR/lib/dependencies.sh"; then
     echo "❌ CRITICAL: Unable to source lib/dependencies.sh - Aborting." >&2
     exit 1
 fi
-
-# Import functions
 if ! source "$SCRIPT_DIR/lib/functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/functions.sh - Aborting." >&2
+    exit 1
+fi
+
+verify_configuration
+change_directory "$SCRIPT_DIR"
+show_header
+parse_arguments "$@"
+install_dependencies
+
+# ... (keep existing code) ...
+
+# Import config (now dynamically uses override if provided, otherwise falls back to default)
+local CONFIG_SOURCE="${CUSTOM_CONFIG_PATH:-$SCRIPT_DIR/etc/config.sh}"
+if ! source "$CONFIG_SOURCE"; then
+    echo "❌ CRITICAL: Unable to source $CONFIG_SOURCE - Aborting." >&2
     exit 1
 fi
 
