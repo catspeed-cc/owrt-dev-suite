@@ -198,33 +198,10 @@ CALDATA_LIST=""
 SUMMARY_OUT=""
 MAKE_CMD_ADD=""
 
-# Parse the arguments (overrides config)
-parse_arguments "$@"
 
-# Install dependencies
-install_dependencies
-
-# Resolve and validate custom config path if provided
-CONFIG_FILE="$SCRIPT_DIR/etc/config.sh"
-if [[ -n "$OWRTDS_CUSTOM_CONFIG" ]]; then
-    # Resolve relative paths against repository root ($SCRIPT_DIR)
-    if [[ "$OWRTDS_CUSTOM_CONFIG" != /* ]]; then
-        OWRTDS_CUSTOM_CONFIG="$SCRIPT_DIR/$OWRTDS_CUSTOM_CONFIG"
-    fi
-    if [[ ! -f "$OWRTDS_CUSTOM_CONFIG" ]]; then
-        echo "❌ CRITICAL: Custom config file not found: $OWRTDS_CUSTOM_CONFIG" >&2
-        exit 1
-    fi
-    CONFIG_FILE="$OWRTDS_CUSTOM_CONFIG"
-fi
-
-# Import config
-if ! source "$CONFIG_FILE"; then
-    echo "❌ CRITICAL: Unable to source $CONFIG_FILE - Aborting." >&2
-    exit 1
-fi
-
-# Source dependencies and functions early so CLI parsing utilities are available
+# ===========================================================================================
+# 1. SOURCE LIBRARIES FIRST (Defines functions like parse_arguments, install_dependencies)
+# ===========================================================================================
 if ! source "$SCRIPT_DIR/lib/dependencies.sh"; then
     echo "❌ CRITICAL: Unable to source lib/dependencies.sh - Aborting." >&2
     exit 1
@@ -234,20 +211,40 @@ if ! source "$SCRIPT_DIR/lib/functions.sh"; then
     exit 1
 fi
 
-verify_configuration
-change_directory "$SCRIPT_DIR"
-show_header
+
+# ===========================================================================================
+# 2. PARSE CLI ARGUMENTS (Detects --config/-c override before sourcing config)
+# ===========================================================================================
 parse_arguments "$@"
-install_dependencies
 
-# ... (keep existing code) ...
 
-# Import config (now dynamically uses override if provided, otherwise falls back to default)
-local CONFIG_SOURCE="${CUSTOM_CONFIG_PATH:-$SCRIPT_DIR/etc/config.sh}"
-if ! source "$CONFIG_SOURCE"; then
-    echo "❌ CRITICAL: Unable to source $CONFIG_SOURCE - Aborting." >&2
+# ===========================================================================================
+# 3. RESOLVE & SOURCE CONFIG (Uses CLI override if present, otherwise default)
+# ===========================================================================================
+CONFIG_FILE="$SCRIPT_DIR/etc/config.sh"
+
+if [[ -n "$OWRTDS_CUSTOM_CONFIG" ]]; then
+    # Resolve relative paths against repository root ($SCRIPT_DIR)
+    if [[ "$OWRTDS_CUSTOM_CONFIG" != /* ]]; then
+        OWRTDS_CUSTOM_CONFIG="$SCRIPT_DIR/$OWRTDS_CUSTOM_CONFIG"
+    fi
+
+    if [[ ! -f "$OWRTDS_CUSTOM_CONFIG" ]]; then
+        echo "❌ CRITICAL: Custom config file not found: $OWRTDS_CUSTOM_CONFIG" >&2
+        exit 1
+    fi
+    CONFIG_FILE="$OWRTDS_CUSTOM_CONFIG"
+fi
+
+if ! source "$CONFIG_FILE"; then
+    echo "❌ CRITICAL: Unable to source $CONFIG_FILE - Aborting." >&2
     exit 1
 fi
+
+# ===========================================================================================
+# 4. INSTALL DEPENDENCIES (Now available since functions.sh is sourced)
+# ===========================================================================================
+install_dependencies
 
 
 # ===========================================================================================
@@ -258,17 +255,8 @@ verify_configuration
 # verify config - vars below this point can use each other to autoconfigure
 # ===========================================================================================
 
-# Ensure we go back to the original PWD before build
-change_directory "$STARTUP_PWD"
-
-# Show the pretty header
+# Show the header (now that config is loaded and verified)
 show_header
-
-# Parse the arguments (overrides config)
-parse_arguments "$@"
-
-# Install dependencies
-install_dependencies
 
 
 
