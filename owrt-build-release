@@ -180,9 +180,29 @@ OWRTDS_BRANCH=""
 SUMMARY_OUT=""
 MAKE_CMD_ADD=""
 
+# Parse the arguments (overrides config)
+parse_arguments "$@"
+
+# Install dependencies
+install_dependencies
+
+# Resolve and validate custom config path if provided
+CONFIG_FILE="$SCRIPT_DIR/etc/config.sh"
+if [[ -n "$OWRTDS_CUSTOM_CONFIG" ]]; then
+    # Resolve relative paths against repository root ($SCRIPT_DIR)
+    if [[ "$OWRTDS_CUSTOM_CONFIG" != /* ]]; then
+        OWRTDS_CUSTOM_CONFIG="$SCRIPT_DIR/$OWRTDS_CUSTOM_CONFIG"
+    fi
+    if [[ ! -f "$OWRTDS_CUSTOM_CONFIG" ]]; then
+        echo "❌ CRITICAL: Custom config file not found: $OWRTDS_CUSTOM_CONFIG" >&2
+        exit 1
+    fi
+    CONFIG_FILE="$OWRTDS_CUSTOM_CONFIG"
+fi
+
 # Import config
-if ! source "$SCRIPT_DIR/etc/config.sh"; then
-    echo "❌ CRITICAL: Unable to source etc/config.sh - Aborting." >&2
+if ! source "$CONFIG_FILE"; then
+    echo "❌ CRITICAL: Unable to source $CONFIG_FILE - Aborting." >&2
     exit 1
 fi
 
