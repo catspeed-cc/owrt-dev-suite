@@ -1000,6 +1000,14 @@ parse_arguments() {
                 OWRTDS_INTERACTIVE=false
                 shift
                 ;;
+            -C|--config)
+                if [[ $# -lt 2 ]]; then
+                    echo "Error: --config/-C requires a path argument." >&2
+                    exit 1
+                fi
+                OWRTDS_CUSTOM_CONFIG="$2"
+                shift 2
+                ;;
             --help|-h)
                 show_help
                 exit 0
