@@ -99,6 +99,13 @@ DO_VERBOSE=false
 DO_XVERBOSE=false
 DO_SLOW=false
 
+# Interactive Mode Control
+OWRTDS_INTERACTIVE=true
+# Auto-detect non-interactive mode (e.g., piped input, cron jobs, CI/CD)
+if [[ ! -t 0 ]]; then
+    OWRTDS_INTERACTIVE=false
+fi
+
 # ====================================================================================
 # TO AVOID FAILURE IN `set -euo pipefail` MODE DEFINE USER VARIABLES WHICH ARE EITHER:
 #  - only user defined in lib/config.sh

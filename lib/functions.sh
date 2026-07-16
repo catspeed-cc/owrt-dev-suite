@@ -478,7 +478,14 @@ verify_configuration() {
 create_workdir() {
     if [ ! -d "$WORK_DIR" ]; then
         echo " >>> Warning: Work directory '$WORK_DIR' does not exist."
-        read -r -p "Do you want to create it? [Y/n] " response
+        local response="Y"
+        if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+            read -r -p "Do you want to create it? [Y/n] " response
+            response=${response:-Y}
+        else
+            echo " >>> [NON-INTERACTIVE] Auto-creating work directory structure..."
+        fi
+
         case "$response" in
             [nN][oO]|[nN])
                 exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults" --nocleanup
@@ -500,7 +507,14 @@ create_workdir() {
 create_projectsdir() {
     if [ ! -d "$PROJECT_DIR" ]; then
         echo " >>> Warning: Project directory '$PROJECT_DIR' does not exist."
-        read -r -p "Do you want to create it? [Y/n] " response
+        local response="Y"
+        if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+            read -r -p "Do you want to create it? [Y/n] " response
+            response=${response:-Y}
+        else
+            echo " >>> [NON-INTERACTIVE] Auto-creating projects directory..."
+        fi
+
         case "$response" in
             [nN][oO]|[nN])
                 exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults" --nocleanup
@@ -523,10 +537,15 @@ clone_openwrt() {
             exit_with_error "Git repository $OWRT_FORK_REPO does not exist please check OWRT_FORK_REPO variable in \`etc/config.sh\` - Aborting." --nocleanup
         fi
 
-        # 2) Prompt the user
-        echo -n " >>> Cloning openwrt fork repository... Continue? [Y/n] "
-        read -r reply
-        reply=${reply:-Y} # Default to Y if empty
+        # 2) Prompt the user (or auto-proceed if non-interactive)
+        local reply="Y"
+        if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+            echo -n " >>> Cloning openwrt fork repository... Continue? [Y/n] "
+            read -r reply
+            reply=${reply:-Y}
+        else
+            echo " >>> [NON-INTERACTIVE] Auto-proceeding with clone..."
+        fi
 
         if [[ ! "$reply" =~ ^[Yy]$ ]]; then
             exit_with_error "Please either configure the openwrt fork repository at the path in 'etc/config.sh' or continue with the clone." --nocleanup
@@ -565,15 +584,20 @@ create_port_shareddir() {
     if [ ! -d "${port_shareddir}" ]; then
         echo " >>> Warning: Webserver shareddir directory for port '$port_shareddir' does not exist."
 
-        # Check if running in an interactive shell
-        if [[ -t 0 ]]; then
+        local response="Y"
+        if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
             read -r -p "Do you want to create it? [Y/n] " response
-            case "$response" in
-                [nN][oO]|[nN])
-                    exit_with_error "Please create the directory '$port_shareddir' yourself or allow it to be created for you." --nocleanup
-                    ;;
-                *)
-                    echo " >>> Creating ${port_shareddir} directory..."
+            response=${response:-Y}
+        else
+            echo " >>> [NON-INTERACTIVE] Auto-creating port shareddir..."
+        fi
+
+        case "$response" in
+            [nN][oO]|[nN])
+                exit_with_error "Please create the directory '$port_shareddir' yourself or allow it to be created for you." --nocleanup
+                ;;
+            *)
+                echo " >>> Creating ${port_shareddir} directory..."
                     mkdir -p "$port_shareddir"
                     chown root:"$WEBSERVER_SHARED_GROUP" "$port_shareddir"
                     chmod 2775 "$port_shareddir"
@@ -628,8 +652,14 @@ create_webserver_shareddir() {
         if [[ "$sudo_enable" != "true" ]]; then
             log_summary " >>> ⚠️  Sudo required to setup shared web directory"
             echo ""
-            read -p "Continue with automated setup? (Y/n): " -r response
-            response=${response:-Y}
+
+            local response="Y"
+            if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+                read -p "Continue with automated setup? (Y/n): " -r response
+                response=${response:-Y}
+            else
+                echo " >>> [NON-INTERACTIVE] Auto-proceeding with webserver setup..."
+            fi
 
             if [[ ! "$response" =~ ^[Yy]$ ]]; then
                 exit_with_error "Please either allow automated setup (requires: SUDO_ENABLE=true) or manually set up the shared web directory" --nocleanup
@@ -846,10 +876,15 @@ install_dependencies() {
         return 0
     fi
 
-    # Prompt user
-    echo "The following packages will be installed: ${filtered_pkgs[*]}"
-    read -r -p "Continue? (Y/n) " choice
-    choice=${choice:-Y}
+    # Prompt user (or auto-proceed if non-interactive)
+    local choice="Y"
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        echo "The following packages will be installed: ${filtered_pkgs[*]}"
+        read -r -p "Continue? (Y/n) " choice
+        choice=${choice:-Y}
+    else
+        echo " >>> [NON-INTERACTIVE] Auto-proceeding with dependency installation..."
+    fi
 
     if [[ "$choice" =~ ^[Nn]$ ]]; then
         echo ""
@@ -959,6 +994,10 @@ parse_arguments() {
                 ;;
             -slow|-s)
                 DO_SLOW=true
+                shift
+                ;;
+            -ni|--non-interactive)
+                OWRTDS_INTERACTIVE=false
                 shift
                 ;;
             --help|-h)
