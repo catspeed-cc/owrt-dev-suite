@@ -98,6 +98,7 @@ DO_UPDATE_FEEDS=false
 DO_VERBOSE=false
 DO_XVERBOSE=false
 DO_SLOW=false
+OWRTDS_CUSTOM_CONFIG=""
 
 # Interactive Mode Control
 OWRTDS_INTERACTIVE=true
