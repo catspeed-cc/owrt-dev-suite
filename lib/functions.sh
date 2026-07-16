@@ -971,13 +971,20 @@ show_help() {
 }
 
 parse_arguments() {
+    local CUSTOM_CONFIG_PATH=""
 
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -clean|-c)
+            -mc|--make-clean)
                 DO_CLEAN=true
-                DO_UPDATE_FEEDS=true
                 shift
+                ;;
+            -c|--config)
+                if [[ $# -lt 1 ]]; then
+                    exit_with_error "Option $1 requires a path argument." --nocleanup
+                fi
+                CUSTOM_CONFIG_PATH="$2"
+                shift 2
                 ;;
             -updatefeeds|-uf)
                 DO_CLEAN=true
@@ -1021,6 +1028,29 @@ parse_arguments() {
         esac
     done
 
+    # Resolve and apply config override if provided
+    if [[ -n "$CUSTOM_CONFIG_PATH" ]]; then
+        local resolved_config
+        if [[ "$CUSTOM_CONFIG_PATH" == /* ]]; then
+            resolved_config="$CUSTOM_CONFIG_PATH"
+        else
+            resolved_config="$(pwd)/$CUSTOM_CONFIG_PATH"
+        fi
+
+        if [[ ! -f "$resolved_config" ]]; then
+            exit_with_error "Config file not found: $resolved_config" --nocleanup
+        fi
+
+        # Interactive mode: automatically update default config symlink
+        if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+            local default_config="$SCRIPT_DIR/etc/config.sh"
+            rm -f "$default_config" 2>/dev/null || true
+            ln -s "$resolved_config" "$default_config" || exit_with_error "Failed to create config symlink at $default_config" --nocleanup
+            log_summary " >>> ✅ Config override applied. Default config now points to $(cleanup_path "$resolved_config")"
+        fi
+
+        export CUSTOM_CONFIG_PATH="$resolved_config"
+    fi
 }
 
 
