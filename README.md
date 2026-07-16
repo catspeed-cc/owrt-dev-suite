@@ -45,7 +45,7 @@
 - 📥 Automatically copies built images to `~/work/images-out`
 - 🌐 Automatically deploys built images to your webserver
 - 📇 Manages a built image catalogue & download directory for all soc/mfr/model and OpenWRT versions on your webserver
-- 🏗️ Automated setup of minimal required ~/work and ~/projects/ directory structuress
+- 🏗️ Automated setup of minimal required ~/work and ~/projects/ directory structures
 
 ## 🔮 Planned Features
 - 📦 Multi-version & multi-port/multi-device support with git integration (by v1.1.0)
