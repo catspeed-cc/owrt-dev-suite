@@ -2,3 +2,6 @@
 	path = tools/owrt-dev-suite-utils
 	url = https://github.com/catspeed-cc/owrt-dev-suite-utils.git
 	branch = master
+[submodule "tools/goldsheet-repo"]
+	path = tools/goldsheet-repo
+	url = https://github.com/catspeed-cc/tew-829dru-goldrepo.git
