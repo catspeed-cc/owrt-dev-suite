@@ -112,8 +112,10 @@ DO_SLOW=false
 #
 OWRT_REMOTE_ALIAS="catspeed-cc"
 OWRT_FORK_REPO="https://github.com/catspeed-cc/openwrt.git"
-OWRT_BASE_BRANCH="25.12"
-OWRT_TARGET_BRANCH="trendnet_tew-829dru-25.12"
+OWRT_VERSION="25.12"
+OWRT_BASE_BRANCH="openwrt-$OWRT_VERSION"
+OWRT_TARGET_BRANCH="trendnet_tew-829dru-$OWRT_VERSION"
+
 DEVICE_SUPPORTED="true"
 ENABLE_SYMLINK_SHORTCUTS="true"
 
@@ -166,6 +168,7 @@ CALDATA_LIST=""
 # ====================================================================================
 
 # Required to start blank/empty
+OWRTDS_BRANCH=""
 SUMMARY_OUT=""
 MAKE_CMD_ADD=""
 
@@ -197,13 +200,13 @@ verify_configuration
 # ===========================================================================================
 
 # Ensure we go to our script location (owrt-dev-suite repo)
-change_directory "$REAL_PATH"
+change_directory "$SCRIPT_DIR"
 
 # Get the git branch for display
-GIT_BRANCH=$(git branch --show-current)
+OWRTDS_BRANCH=$(git branch --show-current 2>/dev/null)
 # Fallback for detached HEAD or old git versions
-if [ -z "$GIT_BRANCH" ]; then
-    GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ -z "$OWRTDS_BRANCH" ]; then
+    OWRTDS_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 fi
 
 # Ensure we go back to the original PWD before build
@@ -278,6 +281,12 @@ if [ "$DO_UPDATE_FEEDS" = true ]; then
     SUMMARY_OUT+="${msg}"${NL}
 fi
 
+if [ "$DO_CLEAN" = true ]; then
+    echo " >>> 🛠️  Ensuring host tools and toolchain are ready..."
+    make tools/install || exit_with_error "Failed to build host tools"
+    make toolchain/install || exit_with_error "Failed to build toolchain"
+fi
+
 # Handle Inject DTS (BEFORE prepare)
 if [ "$DO_DTS_CPY" = true ]; then
     echo " >>> Injecting custom DTS file..."
@@ -318,6 +327,7 @@ sleep 5
 #    NOTE: The SIGINT/SIGTERM trap remains ACTIVE here for CTRL+C safety.
 set +e
 
+# Now the main build can proceed without host tool interruptions
 MAKE_CMD="make ${MAKE_CMD_ADD}"
 echo " >>> Starting compilation: ${MAKE_CMD}"
 $MAKE_CMD
@@ -329,7 +339,7 @@ set -e
 
 # 3. Handle Build Result
 if [ "$BUILD_STATUS" -eq 0 ]; then
-    log_summary "✅ Build successful. Processing artifacts..."
+    echo "✅ Build successful. Copying images..."
 
     # Run post-build steps (Trap is ACTIVE: failures here will cleanup)
     if [ "$DO_IMGDIR_CPY" = "true" ]; then

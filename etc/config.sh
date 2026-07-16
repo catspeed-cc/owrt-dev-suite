@@ -35,15 +35,18 @@ OWRT_REMOTE_ALIAS="catspeed-cc"
 # Your fork of the openwrt repository where your ports will live
 OWRT_FORK_REPO="https://github.com/catspeed-cc/openwrt.git"
 
+# OpenWRT version to base the port branch off of
+OWRT_VERSION="25.12"
+
 # Base openwrt branch (which openwrt version?)
 # Base branch to auto create custom port/model branches from
 # If you want to target earlier openwrt versions, change this
-OWRT_BASE_BRANCH="openwrt-25.12"
+OWRT_BASE_BRANCH="openwrt-$OWRT_VERSION"
 
 # Target custom port/model branch (your port branch)
 # We added the BASE_BRANCH so we can build multiple openwrt versions
 # provided we add a new branch, backport it, and create configs
-OWRT_TARGET_BRANCH="trendnet_tew-829dru-25.12"
+OWRT_TARGET_BRANCH="trendnet_tew-829dru-$OWRT_VERSION"
 
 # DEVICE_SUPPORTED
 # Mark as supported under two conditions, either:
@@ -173,7 +176,7 @@ DO_WEBSERVER_CPY=true
 # Webserver configuration
 WEBSERVER_USER="www-data"
 WEBSERVER_SHARED_GROUP="openwrt-build"
-WEBSERVER_SHARED_DIR="/srv/openwrt-builds/"
+WEBSERVER_SHARED_DIR="/srv/openwrt-builds"
 WEBSERVER_ROOT="/var/www/catspeed.cc/downloads"
 
 
@@ -208,7 +211,7 @@ WEBSERVER_RESTART_CMD="sudo systemctl restart nginx"
 DO_DRIVERMOD_CPY=true
 
 # Select either `patchmod` or `drivermod` mode
-DRIVERMOD_MODE=patchmod
+DRIVERMOD_MODE=rawmod
 
 # TODO: Update PATCHMOD_DEST_DIR to use full path by using OWRT_DEV_DIR
 
@@ -244,6 +247,6 @@ RAWMOD_LIST+="ipqess_ethtool.c|$WORK_RAWMODS_DIR/ipqess/ipqess_ethtool.c.modifie
 DO_CALDATA_CPY=false
 
 # Calibration Data Files
-CALDATA_LIST+="qca4019-board-2.bin|$WORK_CALDATA_DIR/QCA4019/board-2.bin|ath10k/QCA4019/hw1.0/board-2.bin"$NL
-CALDATA_LIST+="qca9984-board-2.bin|$WORK_CALDATA_DIR/QCA9984/board-2.bin|ath10k/QCA9984/hw1.0/board-2.bin"$NL
+CALDATA_LIST+="qca4019-board-2.bin|$WORK_CALDATA_DIR/QCA4019/qca4019-artcaldata.bin|ath10k/QCA4019/hw1.0/board-2.bin"$NL
+CALDATA_LIST+="qca9984-board-2.bin|$WORK_CALDATA_DIR/QCA9984/qca9984-artcaldata.bin|ath10k/QCA9984/hw1.0/board-2.bin"$NL
 

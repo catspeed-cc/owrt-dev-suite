@@ -37,7 +37,7 @@ change_directory() {
     if [[ -n "$custom_msg" ]]; then
       exit_with_error "$custom_msg"
     else
-      exit_with_error "❌ CRITICAL: Directory does not exist: $target_dir"
+      exit_with_error "Directory does not exist: $target_dir"
     fi
   fi
 
@@ -221,6 +221,11 @@ verify_configuration() {
     # Validate OWRT_FORK_REPO is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_FORK_REPO" ]]; then
         exit_with_error "OWRT_FORK_REPO is not set in 'etc/config.sh' - Aborting." --nocleanup
+    fi
+
+    # Validate OWRT_VERSION is not empty (REQUIRED, CRITICAL)
+    if [[ -z "$OWRT_VERSION" ]]; then
+        exit_with_error "OWRT_VERSION is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate OWRT_BASE_BRANCH is not empty (REQUIRED, CRITICAL)
@@ -570,7 +575,7 @@ create_port_shareddir() {
                 *)
                     echo " >>> Creating ${port_shareddir} directory..."
                     mkdir -p "$port_shareddir"
-                    chown root:"$OPENWRT_BUILD_GROUP" "$port_shareddir"
+                    chown root:"$WEBSERVER_SHARED_GROUP" "$port_shareddir"
                     chmod 2775 "$port_shareddir"
                     log_summary " >>> ✅ ${port_shareddir} directory created"
                     ;;
@@ -579,7 +584,7 @@ create_port_shareddir() {
             # Non-interactive mode: Auto-create to prevent hanging
             echo " >>> Non-interactive mode detected. Auto-creating ${port_shareddir} directory..."
             mkdir -p "$port_shareddir"
-            chown root:"$OPENWRT_BUILD_GROUP" "$port_shareddir"
+            chown root:"$WEBSERVER_SHARED_GROUP" "$port_shareddir"
             chmod 2775 "$port_shareddir"
             log_summary " >>> ✅ ${port_shareddir} directory created (auto)"
         fi
@@ -889,14 +894,16 @@ show_header() {
     echo " ========================================================================================================================"
     echo "  🚀 Build Script Started"
     echo "  📦 Version: ${OWRTDS_VERSION}"
-    echo "  🌿 Branch: ${OWRT_BASE_BRANCH}"
+    echo "  🌿 Branch: ${OWRTDS_BRANCH}"
     echo " ========================================================================================================================"
     echo "  📜 Script: $REAL_PATH"
     echo "  📁 PWD: $STARTUP_PWD"
     echo " ========================================================================================================================"
     echo "  💻 SOC: $OWRT_SOC_CLASS"
-    echo "  🗜 MFR: $OWRT_MFR"
+    echo "  🗜  MFR: $OWRT_MFR"
     echo "  💃 MODEL: $OWRT_MODEL"
+    echo "  🌿 Base Branch: ${OWRT_BASE_BRANCH}"
+    echo "  🌿 Port Branch: ${OWRT_TARGET_BRANCH}"
     echo " ========================================================================================================================"
     echo "  📅 Start Date: $BUILD_START_DATE"
     echo "  📅 Start Time: $BUILD_START_TIME"
@@ -1205,14 +1212,18 @@ copy_caldata() {
 
 copy_to_imgdir() {
 
-    local dest_dir="$WORK_IMAGEOUT_DIR"
-    [[ -z "$dest_dir" ]] && exit_with_error "WORK_IMAGEOUT_DIR is not set"
+    [[ -z "$WORK_IMAGEOUT_DIR" ]] && exit_with_error "WORK_IMAGEOUT_DIR is not set"
+
+    local dest_dir="$WORK_IMAGEOUT_DIR/$OWRT_VERSION"
 
     # clobber the image out old files
     rm -rf "${dest_dir:?}/"* || exit_with_error "Clobber image-out dir"
 
+    # missing piece :)
+    mkdir -p "$dest_dir"
+
     # copy the new files (use OWRT_BASE_BRANCH as subdir)
-    cp -r "$IMGDIR_SRC/"* "$dest_dir/$OWRT_BASE_BRANCH/" || exit_with_error "Copy images to image-out"
+    cp -r "$IMGDIR_SRC/"* "$dest_dir/" || exit_with_error "Copy images to image-out"
 
     local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $(cleanup_path "$dest")"
     echo "$msg"
@@ -1221,13 +1232,16 @@ copy_to_imgdir() {
 }
 
 copy_to_webserver() {
-    local webserver_shared_dir="$WEBSERVER_SHARED_DIR"
+    local owrt_version="$OWRT_VERSION"
     local owrt_mfr="$OWRT_MFR_LOWER"
     local owrt_model="$OWRT_MODEL_LOWER" # Note: Ensure this variable is actually lowercased if intended
     local owrt_base_branch="$OWRT_BASE_BRANCH"
+    local webserver_shared_dir="$WEBSERVER_SHARED_DIR"
     local imgdir_src="$IMGDIR_SRC"
 
-    local dest="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_base_branch"
+    [[ -z "$WEBSERVER_SHARED_DIR" ]] && exit_with_error "WEBSERVER_SHARED_DIR is not set"
+
+    local dest="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_version"
 
     if [ "$DO_WEBSERVER_CPY" == "true" ]; then
 
@@ -1235,7 +1249,7 @@ copy_to_webserver() {
 
         # Use sg to ensure we have write access to the SetGID directory
         # regardless of whether the user has run 'newgrp' in this session.
-        sg "$OPENWRT_BUILD_GROUP" -c "
+        sg "$WEBSERVER_SHARED_GROUP" -c "
             mkdir -p \"$dest\" &&
             rm -rf \"$dest/\"* &&
             cp -r \"$imgdir_src/\"* \"$dest/\" &&
@@ -1259,9 +1273,7 @@ build_kernel_sources() {
     # Download sources (Prerequisite)
     echo " >>> Running 'make download'..."
     make download ${MAKE_CMD_ADD} || exit_with_error "Make Download"
-    local msg=" >>> ✅ Sources downloaded (all)"
-    echo "$msg"
-    SUMMARY_OUT+="$msg"${NL}
+    log_summary " >>> ✅ Sources downloaded (all)"
 
     if [ "$DO_DRIVERMOD_CPY" = true ]; then
 
@@ -1275,9 +1287,7 @@ build_kernel_sources() {
             # These will be picked up automatically by the 'prepare' step
             copy_patches_dir "$WORK_PATCHMODS_DIR" "$OWRT_DEV_DIR/$PATCHMOD_DEST_DIR"
 
-            local msg=" >>> ✅ DRIVER PATCHES copied to source tree: $PATCHMOD_SRC_DIR"
-            echo "$msg"
-            SUMMARY_OUT+="$msg"${NL}
+            log_summary " >>> ✅ DRIVER PATCHES copied to source tree: $OWRT_DEV_DIR/$PATCHMOD_DEST_DIR"
 
         else
 
@@ -1294,9 +1304,7 @@ build_kernel_sources() {
                 copy_file "$RAWMOD_SRC" "$RAWMOD_DEST" || exit_with_error "Copying Driver Mod ($RAWMOD_ENTRYNAME)"
 
                 # Single summary message for the whole RAWMOD operation
-                local msg=" >>> ✅ IPQESS RAW DRIVER MOD ($RAWMOD_ENTRYNAME) copied to source tree: $(cleanup_path "$(dirname "$RAWMOD_SRC")")"
-                echo "$msg"
-                SUMMARY_OUT+="$msg"${NL}
+                log_summary " >>> ✅ IPQESS RAW DRIVER MOD ($RAWMOD_ENTRYNAME) copied to source tree: $(cleanup_path "$(dirname "$RAWMOD_SRC")")"
             done <<< "$RAWMOD_LIST"
 
         fi
@@ -1305,17 +1313,13 @@ build_kernel_sources() {
 
     # Prepare (Extract + Apply Patches)
     echo " >>> Running 'make target/linux/prepare'..."
-    make target/linux/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare `linux`"
-    local msg=" >>> ✅ Sources prepared (linux)"
-    echo "$msg"
-    SUMMARY_OUT+="${msg}"${NL}
+    make target/linux/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux'"
+    log_summary " >>> ✅ Sources prepared (linux)"
 
     # Compile
     echo " >>> Running 'make target/linux/compile'..."
-    make target/linux/compile ${MAKE_CMD_ADD} || exit_with_error "Make Compile `linux`"
-    local msg=" >>> ✅ Sources compiled (linux) with custom patches applied"
-    echo "$msg"
-    SUMMARY_OUT+="${msg}"${NL}
+    make target/linux/compile ${MAKE_CMD_ADD} || exit_with_error "Make Compile 'linux'"
+    log_summary " >>> ✅ Sources compiled (linux) with custom patches applied"
 
 }
 
