@@ -293,19 +293,22 @@ function sync_config_to_dev_dir() {
     local owrt_config_src="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}.config"
 
     if [[ -f "$owrt_config_src" ]]; then
-        echo " >>> Synchronizing .config from work directory..."
         if cp "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
             printf '%s\n' "$owrt_config_src" > "$OWRT_DEV_DIR/.owrtds.cfghome"
-            make -s defconfig
-            log_summary " >>> ✅ .config synchronized and tracked via .owrtds.cfghome"
+            set +e
+            if ! make -s defconfig > /dev/null 2>&1; then
+                exit_with_error "make defconfig failed. Check your .config file." --nocleanup
+            fi
+            set -e
+            log_summary " >>> ✅ .config synchronized and tracked via .owrtds.cfghome" --silent
         else
-            exit_with_error "Failed to copy .config to $OWRT_DEV_DIR/.config"
+            exit_with_error "Failed to copy .config to $OWRT_DEV_DIR/.config" --nocleanup
         fi
     else
         # remove cfghome and .config file (there is no config, this must be old from previous run)
         rm -f "$OWRT_DEV_DIR/.config"
         rm -f "$OWRT_DEV_DIR/.owrtds.cfghome"
-        log_summary " >>> ⏭️  No custom .config found at '$owrt_config_src'. Skipping sync."
+        log_summary " >>> ⏭️  No custom .config found at '$owrt_config_src'. Skipping sync." --silent
     fi
 }
 
@@ -324,7 +327,7 @@ function sync_config_from_dev_dir() {
 
     # Guard: skip if tracking file doesn't exist
     if [[ ! -f "$cfg_home_file" ]]; then
-        log_summary " >>> ⏭️  No tracked .config source found. Skipping sync."
+        log_summary " >>> ⏭️  No tracked .config source found. Skipping sync." --silent
         return 0
     fi
 
@@ -333,7 +336,7 @@ function sync_config_from_dev_dir() {
 
     # Guard: skip if path is empty
     if [[ -z "$owrt_config_dest" ]]; then
-        log_summary " >>> ⏭️  Tracked .config path is empty. Skipping sync."
+        log_summary " >>> ⏭️  Tracked .config path is empty. Skipping sync." --silent
         return 0
     fi
 
@@ -341,20 +344,20 @@ function sync_config_from_dev_dir() {
     local dest_dir
     dest_dir=$(dirname "$owrt_config_dest")
     if [[ ! -d "$dest_dir" ]]; then
-        mkdir -p "$dest_dir" || exit_with_error "Failed to create .config destination dir"
+        mkdir -p "$dest_dir" || exit_with_error "Failed to create .config destination dir" --nocleanup
     fi
 
     # Guard: skip if build didn't produce a .config
     if [[ ! -f "$config_src" ]]; then
-        log_summary " >>> ⚠️  $config_src does not exist. Skipping sync."
+        log_summary " >>> ⚠️  $config_src does not exist. Skipping sync." --silent
         return 0
     fi
 
     # Copy the config back to WORK_DIR
     echo " >>> Synchronizing .config back to work directory..."
     if cp -f "$config_src" "$owrt_config_dest"; then
-        log_summary " >>> ✅ .config synchronized to $(cleanup_path "$owrt_config_dest")"
+        log_summary " >>> ✅ .config synchronized to $(cleanup_path "$owrt_config_dest")" --silent
     else
-        exit_with_error "Failed to copy .config to $owrt_config_dest"
+        exit_with_error "Failed to copy .config to $owrt_config_dest" --nocleanup
     fi
 }
