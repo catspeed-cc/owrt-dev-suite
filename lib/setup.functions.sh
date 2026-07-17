@@ -4,7 +4,7 @@
 
 # =============================================================================
 # create_workdir
-# Description: Creates the work directory structure if it doesn't exist.
+# Description: Creates the work directory structure if it doesn't exist, prompting the user interactively or auto-creating in non-interactive mode.
 # Parameters: None
 # Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
 # Usage Example:
@@ -40,7 +40,7 @@ create_workdir() {
 
 # =============================================================================
 # create_projectsdir
-# Description: Creates the project directory structure if it doesn't exist.
+# Description: Creates the project directory structure if it doesn't exist, prompting the user interactively or auto-creating in non-interactive mode.
 # Parameters: None
 # Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
 # Usage Example:
@@ -72,8 +72,7 @@ create_projectsdir() {
 
 # =============================================================================
 # clone_openwrt
-# Description: Clones the OpenWRT fork repository if it doesn't exist.
-#              Handles user prompts and setup of target branches.
+# Description: Clones the OpenWRT fork repository if it doesn't exist, handles branch checkout, and sets up the development directory.
 # Parameters: None
 # Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
 # Usage Example:
@@ -131,7 +130,7 @@ clone_openwrt() {
 
 # =============================================================================
 # create_port_shareddir
-# Description: Creates the port-specific shared directory structure if it doesn't exist.
+# Description: Creates the port-specific shared directory structure with appropriate permissions if it doesn't exist.
 # Parameters: None
 # Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
 # Usage Example:
@@ -169,8 +168,9 @@ create_port_shareddir() {
 
 # =============================================================================
 # create_webserver_shareddir
-# Description: Creates and configures web server shared directory structure.
-#              Handles group permissions, ownership, and symlink setup.
+# Description: Sets up web server shared directory structure, handles group
+#              management, permissions, symlink creation, and optional webserver
+#              restart.
 # Parameters: None
 # Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
 # Usage Example:
@@ -360,10 +360,11 @@ create_webserver_shareddir() {
 
 # =============================================================================
 # install_dependencies
-# Description: Detects OS package manager and installs required build dependencies.
-#              Handles user prompts for manual installation fallback.
+# Description: Detects the OS package manager, identifies missing dependencies,
+#              and installs them (with user confirmation or auto-proceed).
 # Parameters: None
-# Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
+# Returns/Exit Codes: Exits with code 0 on success; returns 1 if unsupported
+#                     package manager is detected
 # Usage Example:
 #   install_dependencies
 # =============================================================================
