@@ -2,6 +2,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
+# =============================================================================
+# build_kernel_sources
+# Description: Downloads OpenWRT sources, applies custom patches or raw driver mods, and compiles the target kernel.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 1 on failure; returns 0 on success
+# Usage Example:
+#   build_kernel_sources
+# =============================================================================
 build_kernel_sources() {
 
     # TODO: UPDATE SELECTION LOGIC (patchmod/rawmod)
@@ -59,6 +67,14 @@ build_kernel_sources() {
 
 }
 
+# =============================================================================
+# cleanup_build_environment
+# Description: Restores the OpenWRT source tree to its original state, removes temporary patches, and resets directory changes.
+# Parameters: None
+# Returns/Exit Codes: Always returns 0; sets CLEANED=true and CLEAN_SUCCESS flags
+# Usage Example:
+#   cleanup_build_environment
+# =============================================================================
 cleanup_build_environment() {
     # NOTICE: DO NOT 'echo "$msg"' inside the cleanup function!
     #         ONLY output SUMMARY_OUT
