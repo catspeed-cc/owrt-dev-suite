@@ -2,10 +2,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
-# ==============================================================================
-# Build Operations
-# ==============================================================================
-
 build_kernel_sources() {
 
     # TODO: UPDATE SELECTION LOGIC (patchmod/rawmod)
@@ -62,11 +58,6 @@ build_kernel_sources() {
     log_summary " >>> ✅ Sources compiled (linux) with custom patches applied"
 
 }
-
-
-# ==============================================================================
-# Cleanup Operations
-# ==============================================================================
 
 cleanup_build_environment() {
     # NOTICE: DO NOT 'echo "$msg"' inside the cleanup function!

@@ -222,4 +222,3 @@ copy_to_webserver() {
 
     fi
 }
-
