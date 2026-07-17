@@ -398,6 +398,9 @@ BUILD_STATUS=$?
 #    Any failure in copy/cleanup steps will now trigger the trap & cleanup.
 set -e
 
+# Synchronize final .config state back to work directory (runs unconditionally)
+sync_config_from_dev_dir
+
 # 3. Handle Build Result
 if [ "$BUILD_STATUS" -eq 0 ]; then
     echo "✅ Build successful. Copying images..."
