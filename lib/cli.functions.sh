@@ -2,6 +2,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
+# =============================================================================
+# show_help
+# Description: Prints usage information and available command-line options to stdout.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 0 after printing help
+# Usage Example:
+#   show_help
+# =============================================================================
 show_help() {
     echo ""
     echo "Usage: ${SCRIPT_NAME} [OPTIONS]"
@@ -18,6 +26,14 @@ show_help() {
     echo ""
 }
 
+# =============================================================================
+# parse_arguments
+# Description: Parses command-line flags and arguments, populating global variables.
+# Parameters: $@ (command-line arguments)
+# Returns/Exit Codes: 0 on success; exits with code 1 on unknown option or missing arg
+# Usage Example:
+#   parse_arguments "$@"
+# =============================================================================
 parse_arguments() {
 
     while [[ $# -gt 0 ]]; do
