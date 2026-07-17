@@ -2,9 +2,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
-# Logs a message to both stderr AND SUMMARY_OUT
-# Passing in --silent causes it to only log to SUMMARY_OUT
-# For stderr only please simply use echo
 log_summary() {
   local message="$1"
   local silent="${2:-false}"

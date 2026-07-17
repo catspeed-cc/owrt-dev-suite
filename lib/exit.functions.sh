@@ -2,10 +2,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
-# ==============================================================================
-# Script Termination
-# ==============================================================================
-
 exit_with_success() {
     local err_msg="$1"
     local no_cleanup_flag="${2:-}"

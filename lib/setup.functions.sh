@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
-# Create work dir
 create_workdir() {
     if [ ! -d "$WORK_DIR" ]; then
         echo " >>> Warning: Work directory '$WORK_DIR' does not exist."
@@ -31,7 +30,6 @@ create_workdir() {
     fi
 }
 
-# Create projects dir
 create_projectsdir() {
     if [ ! -d "$PROJECT_DIR" ]; then
         echo " >>> Warning: Project directory '$PROJECT_DIR' does not exist."
@@ -318,10 +316,6 @@ create_webserver_shareddir() {
 
 }
 
-# ==============================================================================
-# Dependency Installation
-# ==============================================================================
-
 install_dependencies() {
     local distro_pkg_manager=""
     local packages_to_install=()
@@ -425,4 +419,3 @@ install_dependencies() {
         pacman) sudo pacman -S --needed "${filtered_pkgs[@]}" ;;
     esac
 }
-

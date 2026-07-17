@@ -2,11 +2,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
-# Safe Change Directory
-# Usage:
-#   change_directory "/path/to/dir"
-#   change_directory "/path/to/dir" "Custom error message if cd fails"
-# Exits with error if directory does not exist or cd fails
 change_directory() {
   local target_dir="$1"
   local custom_msg="${2:-}"
@@ -33,8 +28,6 @@ change_directory() {
   }
 }
 
-# Calculates the difference between two HH:MM:SS strings
-# Usage: get_time_diff "22:31:05" "23:45:10"
 get_time_diff() {
   local start_time="$1"
   local end_time="$2"
@@ -62,9 +55,6 @@ get_time_diff() {
   printf "%dh %dm %ds\n" "$hours" "$minutes" "$seconds"
 }
 
-# Helper function to resolve glob paths safely
-# Usage: resolve_glob_path "array_name" "pattern"
-# Actually, simpler: just a validator function
 validate_path_exists() {
   local path="$1"
   local name="$2"
@@ -74,8 +64,6 @@ validate_path_exists() {
   fi
 }
 
-# Helper to resolve a glob pattern to a single path
-# Returns the path via echo, or exits on error
 resolve_single_glob() {
   local pattern="$1"
   local desc="$2"
@@ -95,8 +83,6 @@ resolve_single_glob() {
   echo "${matches[0]}"
 }
 
-# Helper to resolve a glob pattern to a single path
-# Returns the path via echo, or exits on error
 resolve_single_glob() {
   local pattern="$1"
   local desc="$2"
@@ -115,4 +101,3 @@ resolve_single_glob() {
 
   echo "${matches[0]}"
 }
-

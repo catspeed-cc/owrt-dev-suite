@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
-# Verify all user configured variables from above
 verify_configuration() {
 
     # =======================
@@ -357,4 +356,3 @@ verify_configuration() {
 
 
 }
-
