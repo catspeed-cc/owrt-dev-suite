@@ -192,12 +192,15 @@ RAWMOD_LIST=""
 DO_CALDATA_CPY="false"
 CALDATA_LIST=""
 
-# ====================================================================================
-
 # Required to start blank/empty
 SUMMARY_OUT=""
 MAKE_CMD_ADD=""
 
+CUSTOM_CONFIG_PATH=""
+
+# ====================================================================================
+
+# MAIN PROGRAM EXECUTION START
 
 # ===========================================================================================
 # 1. SOURCE LIBRARIES FIRST (Defines functions like parse_arguments, install_dependencies)
@@ -221,21 +224,37 @@ parse_arguments "$@"
 # ===========================================================================================
 # 3. RESOLVE & SOURCE CONFIG (Uses CLI override if present, otherwise default)
 # ===========================================================================================
+
 CONFIG_FILE="$SCRIPT_DIR/etc/config.sh"
 
-if [[ -n "$OWRTDS_CUSTOM_CONFIG" ]]; then
-    # Resolve relative paths against repository root ($SCRIPT_DIR)
-    if [[ "$OWRTDS_CUSTOM_CONFIG" != /* ]]; then
-        OWRTDS_CUSTOM_CONFIG="$SCRIPT_DIR/$OWRTDS_CUSTOM_CONFIG"
+# Check if user provided a custom config via CLI
+if [[ -n "$CUSTOM_CONFIG_PATH" ]]; then
+    # 1. Resolve relative paths against repository root ($SCRIPT_DIR)
+    if [[ "$CUSTOM_CONFIG_PATH" != /* ]]; then
+        CUSTOM_CONFIG_PATH="$SCRIPT_DIR/$CUSTOM_CONFIG_PATH"
     fi
 
-    if [[ ! -f "$OWRTDS_CUSTOM_CONFIG" ]]; then
-        echo "❌ CRITICAL: Custom config file not found: $OWRTDS_CUSTOM_CONFIG" >&2
+    # 2. Validate file exists
+    if [[ ! -f "$CUSTOM_CONFIG_PATH" ]]; then
+        echo "❌ CRITICAL: Custom config file not found: $CUSTOM_CONFIG_PATH" >&2
         exit 1
     fi
-    CONFIG_FILE="$OWRTDS_CUSTOM_CONFIG"
+
+    # 3. Interactive mode: Update default config symlink
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        local default_config="$SCRIPT_DIR/etc/config.sh"
+        # Remove existing file/link
+        rm -f "$default_config" 2>/dev/null || true
+        # Create new symlink (use absolute path for reliability or relative if preferred)
+        ln -s "$CUSTOM_CONFIG_PATH" "$default_config" || exit_with_error "Failed to create config symlink" --nocleanup
+        log_summary " >>> ✅ Config override applied. Default config now points to $(cleanup_path "$CUSTOM_CONFIG_PATH")"
+    fi
+
+    # 4. Set the final config file to source
+    CONFIG_FILE="$CUSTOM_CONFIG_PATH"
 fi
 
+# 5. Source the determined config
 if ! source "$CONFIG_FILE"; then
     echo "❌ CRITICAL: Unable to source $CONFIG_FILE - Aborting." >&2
     exit 1
@@ -248,11 +267,11 @@ install_dependencies
 
 
 # ===========================================================================================
-# verify config - vars above this point must not use eachother (EXCEPT CRITICAL startup vars)
+# 5. verify config - vars above this point must not use eachother (EXCEPT CRITICAL startup vars)
 # ===========================================================================================
 verify_configuration
 # ===========================================================================================
-# verify config - vars below this point can use each other to autoconfigure
+# 5. verify config - vars below this point can use each other to autoconfigure
 # ===========================================================================================
 
 # Show the header (now that config is loaded and verified)
@@ -262,7 +281,7 @@ show_header
 
 
 # ==============================================================================
-# Execution Preperation
+# 6. Execution Preperation
 # ==============================================================================
 
 # Ensure we go back to the original PWD before build
@@ -292,7 +311,7 @@ trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."'
 # we skipped my idea of using a trap exit handler - neat!
 
 # ==============================================================================
-# Execution Logic
+# 7. Execution Logic
 # ==============================================================================
 
 echo " >>> Starting Build Process for TEW-829DRU (IPQ4019)"
@@ -320,8 +339,8 @@ fi
 
 if [ "$DO_CLEAN" = true ]; then
     echo " >>> 🛠️  Ensuring host tools and toolchain are ready..."
-    make tools/install || exit_with_error "Failed to build host tools"
-    make toolchain/install || exit_with_error "Failed to build toolchain"
+    make tools/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build host tools"
+    make toolchain/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build toolchain"
 fi
 
 # Handle Inject DTS (BEFORE prepare)
