@@ -2,6 +2,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
+# =============================================================================
+# cleanup_path
+# Description: Sanitizes a file path by removing the base startup directory prefix, returning a relative path.
+# Parameters: $1 (absolute or relative filepath)
+# Returns/Exit Codes: Echoes cleaned path; returns 0 on success, 1 if no filepath provided
+# Usage Example:
+#   cleanup_path "/home/user/project/src/file.c"
+# =============================================================================
 cleanup_path() {
     local filepath="$1"
 
@@ -27,6 +35,14 @@ cleanup_path() {
     fi
 }
 
+# =============================================================================
+# verify_md5
+# Description: Compares MD5 checksums of two files and reports success or mismatch.
+# Parameters: $1 (source file path), $2 (destination file path)
+# Returns/Exit Codes: Returns 0 if hashes match; returns 1 on mismatch
+# Usage Example:
+#   verify_md5 "/path/to/source" "/path/to/dest"
+# =============================================================================
 verify_md5() {
     # Parameters
     local file_src="$1"
@@ -51,6 +67,14 @@ verify_md5() {
     fi
 }
 
+# =============================================================================
+# copy_file
+# Description: Copies a file from source to destination, creating directories as needed and verifying the copy via MD5.
+# Parameters: $1 (source file path), $2 (destination file path)
+# Returns/Exit Codes: Returns 0 on success; exits with error on failure
+# Usage Example:
+#   copy_file "/path/to/source" "/path/to/dest"
+# =============================================================================
 copy_file() {
 
     # Parameters
@@ -97,6 +121,14 @@ copy_file() {
 
 }
 
+# =============================================================================
+# copy_patches_dir
+# Description: Iterates through .patch files in a source directory and copies them to a destination directory.
+# Parameters: $1 (source directory path), $2 (destination directory path)
+# Returns/Exit Codes: Returns 0 on success; exits with error on failure
+# Usage Example:
+#   copy_patches_dir "/path/to/patches" "/path/to/target"
+# =============================================================================
 copy_patches_dir() {
 
     # Parameters
@@ -136,6 +168,14 @@ copy_patches_dir() {
 
 }
 
+# =============================================================================
+# copy_caldata
+# Description: Finds the firmware build directory and copies calibration data files based on CALDATA_LIST configuration.
+# Parameters: None
+# Returns/Exit Codes: Exits with error on failure; returns 0 on success
+# Usage Example:
+#   copy_caldata
+# =============================================================================
 copy_caldata() {
     # Find the firmware build directory once
     FIRMWARE_BUILD_DIR=$(find "$OWRT_DEV_DIR/build_dir" -type d -name "linux-firmware-*" | head -n 1)
@@ -172,6 +212,14 @@ copy_caldata() {
     done <<< "$CALDATA_LIST"
 }
 
+# =============================================================================
+# copy_to_imgdir
+# Description: Copies compiled images to the designated image output directory, clobbering previous contents.
+# Parameters: None
+# Returns/Exit Codes: Exits with error on failure; returns 0 on success
+# Usage Example:
+#   copy_to_imgdir
+# =============================================================================
 copy_to_imgdir() {
 
     [[ -z "$WORK_IMAGEOUT_DIR" ]] && exit_with_error "WORK_IMAGEOUT_DIR is not set"
@@ -193,6 +241,14 @@ copy_to_imgdir() {
 
 }
 
+# =============================================================================
+# copy_to_webserver
+# Description: Copies compiled images to the webserver shared directory using SetGID permissions for group access.
+# Parameters: None
+# Returns/Exit Codes: Exits with error on failure; returns 0 on success
+# Usage Example:
+#   copy_to_webserver
+# =============================================================================
 copy_to_webserver() {
     local owrt_version="$OWRT_VERSION"
     local owrt_mfr="$OWRT_MFR_LOWER"

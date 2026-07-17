@@ -2,6 +2,15 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
+
+# =============================================================================
+# verify_configuration
+# Description: Validates required configuration variables, applies defaults, checks boolean flags, and initializes directory structures if needed.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 1 on validation failure; returns 0 on success
+# Usage Example:
+#   verify_configuration
+# =============================================================================
 verify_configuration() {
 
     # =======================

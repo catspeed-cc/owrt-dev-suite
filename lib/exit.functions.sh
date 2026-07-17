@@ -2,6 +2,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
+# =============================================================================
+# exit_with_success
+# Description: Performs cleanup (if not disabled), removes locks, displays a summary report, and exits successfully.
+# Parameters: $1 (success message string), $2 (optional flag to skip cleanup)
+# Returns/Exit Codes: Exits with code 0
+# Usage Example:
+#   exit_with_success "Build completed successfully" "--nocleanup"
+# =============================================================================
 exit_with_success() {
     local err_msg="$1"
     local no_cleanup_flag="${2:-}"
@@ -29,6 +37,14 @@ exit_with_success() {
     exit 0
 }
 
+# =============================================================================
+# exit_with_error
+# Description: Performs cleanup (if not disabled), removes locks, displays a summary report, and exits with an error.
+# Parameters: $1 (error message string), $2 (optional flag to skip cleanup)
+# Returns/Exit Codes: Exits with code 1
+# Usage Example:
+#   exit_with_error "Compilation failed" "--nocleanup"
+# =============================================================================
 exit_with_error() {
     local err_msg="$1"
     local no_cleanup_flag="${2:-}"
@@ -55,4 +71,3 @@ exit_with_error() {
     echo " >>>"
     exit 1
 }
-

@@ -28,9 +28,9 @@ show_help() {
 
 # =============================================================================
 # parse_arguments
-# Description: Parses command-line flags and arguments, populating global variables.
+# Description: Parses command-line flags and arguments, populating global variables for script configuration.
 # Parameters: $@ (command-line arguments)
-# Returns/Exit Codes: 0 on success; exits with code 1 on unknown option or missing arg
+# Returns/Exit Codes: 0 on success; exits with code 1 on unknown option or missing argument
 # Usage Example:
 #   parse_arguments "$@"
 # =============================================================================
@@ -86,4 +86,3 @@ parse_arguments() {
     done
 
 }
-
