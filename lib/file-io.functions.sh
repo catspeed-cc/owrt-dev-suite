@@ -346,8 +346,10 @@ function sync_config_from_dev_dir() {
         return 0
     fi
 
+    # Copy the config back to WORK_DIR and delete the .config in OWRT_DEV_DIR
     echo " >>> Synchronizing .config back to work directory..."
     if cp -f "$config_src" "$owrt_config_dest"; then
+        rm -f "$config_src"
         log_summary " >>> ✅ .config synchronized to $(cleanup_path "$owrt_config_dest")"
     else
         exit_with_error "Failed to copy .config to $owrt_config_dest"
