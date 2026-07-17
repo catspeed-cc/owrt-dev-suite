@@ -28,7 +28,9 @@ parse_arguments() {
                 shift
                 ;;
             -c|--config)
-                if [[ $# -lt 1 ]]; then
+                # Check if the NEXT argument ($2) exists. 
+                # We need at least 2 args total: the flag ($1) and the path ($2).
+                if [[ $# -lt 2 ]]; then
                     exit_with_error "Option $1 requires a path argument." --nocleanup
                 fi
                 CUSTOM_CONFIG_PATH="$2"
