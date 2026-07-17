@@ -286,6 +286,11 @@ elif [ "$DO_XVERBOSE" = true ]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} V=99"
 fi
 
+# Handle silent make in non-interactive mode
+if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
+    MAKE_CMD_ADD="${MAKE_CMD_ADD} -s"
+fi
+
 # Register the trap ONLY for interruption signals (INT, TERM, HUP)
 # Do NOT trap EXIT here; let your wrappers handle normal exits.
 # Define specific handlers for each signal to pass the name correctly
@@ -306,7 +311,11 @@ change_directory "$OWRT_DEV_DIR"
 # Handle Clean
 if [ "$DO_CLEAN" = true ]; then
     echo " >>> Running 'make clean'..."
-    make clean
+    if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
+        make clean -s > /dev/null 2>&1
+    else
+        make clean
+    fi
     msg=" >>> ✅ Make clean"
     echo "$msg"
     SUMMARY_OUT+="${msg}"${NL}
