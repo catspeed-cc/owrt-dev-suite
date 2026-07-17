@@ -99,7 +99,7 @@ BUILD_START_TIME=$(date +%H:%M:%S)
 BUILD_STOP_DATE=""
 BUILD_STOP_TIME=""
 BUILD_ELAPSED=""
-BUILD_ELAPSED_SECONDS=""
+export BUILD_ELAPSED_SECONDS=""
 
 # Required to start blank/empty
 SUMMARY_OUT=""
@@ -432,7 +432,11 @@ if [ "$BUILD_STATUS" -eq 0 ]; then
     # Calculate time elapsed
     BUILD_STOP_DATE=$(date "+%a %d %b %Y")
     BUILD_STOP_TIME=$(date +%H:%M:%S)
-    BUILD_ELAPSED=$(get_time_diff "$BUILD_START_TIME" "$BUILD_STOP_TIME")
+    result=$(get_time_diff "$BUILD_START_TIME" "$BUILD_STOP_TIME")
+
+    # separate the reply into human readable and machine readable elapsed times
+    BUILD_ELAPSED=$(echo "$result" | awk '{print $1, $2, $3}') # "0h 10m 28s"
+    BUILD_ELAPSED_SECONDS=$(echo "$result" | awk '{print $4}') # "628"
 
     # 4. Success: Disable trap manually to prevent "Cleanup called" message on exit
     trap - INT TERM HUP
