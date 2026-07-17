@@ -953,8 +953,8 @@ show_help() {
     echo "Usage: ${SCRIPT_NAME} [OPTIONS]"
     echo ""
     echo "Options:"
-    echo " -mc, --make-clean          Run 'make clean' and prepare host tools/toolchain"
     echo " -c, --config <path>        Override config file (supports relative/absolute paths)"
+    echo " -mc, --make-clean          Run 'make clean' and prepare host tools/toolchain"
     echo " -uf, --update-feeds        Update and install feeds"
     echo " -v, --verbose              Enable verbose output"
     echo " -vv, --extra-verbose       Enable extra verbose output (V=99)"
@@ -1014,29 +1014,6 @@ parse_arguments() {
         esac
     done
 
-    # Resolve and apply config override if provided
-    if [[ -n "$CUSTOM_CONFIG_PATH" ]]; then
-        local resolved_config
-        if [[ "$CUSTOM_CONFIG_PATH" == /* ]]; then
-            resolved_config="$CUSTOM_CONFIG_PATH"
-        else
-            resolved_config="$(pwd)/$CUSTOM_CONFIG_PATH"
-        fi
-
-        if [[ ! -f "$resolved_config" ]]; then
-            exit_with_error "Config file not found: $resolved_config" --nocleanup
-        fi
-
-        # Interactive mode: automatically update default config symlink
-        if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-            local default_config="$SCRIPT_DIR/etc/config.sh"
-            rm -f "$default_config" 2>/dev/null || true
-            ln -s "$resolved_config" "$default_config" || exit_with_error "Failed to create config symlink at $default_config" --nocleanup
-            log_summary " >>> ✅ Config override applied. Default config now points to $(cleanup_path "$resolved_config")"
-        fi
-
-        export CUSTOM_CONFIG_PATH="$resolved_config"
-    fi
 }
 
 
@@ -1288,7 +1265,7 @@ copy_to_imgdir() {
     # copy the new files (use OWRT_BASE_BRANCH as subdir)
     cp -r "$IMGDIR_SRC/"* "$dest_dir/" || exit_with_error "Copy images to image-out"
 
-    local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $(cleanup_path "$dest")"
+    local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $(cleanup_path "$dest_dir")"
     echo "$msg"
     SUMMARY_OUT+="${msg}"${NL}
 
