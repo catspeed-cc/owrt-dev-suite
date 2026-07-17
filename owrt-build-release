@@ -24,35 +24,11 @@ OWRTDS_VERSION="v0.1.0"
 STARTUP_PWD=$(pwd)
 STARTUP_PWD="${STARTUP_PWD%/}"
 
+# mutex / lock file
 LOCK_FILE="$STARTUP_PWD/.owrtds.lock"
-
-# Function to remove lock file
-remove_lock() {
-    if [[ -d "$LOCK_FILE" ]]; then
-        rmdir "$LOCK_FILE" 2>/dev/null
-    fi
-}
-
-# Attempt to create lock directory atomically
-if ! mkdir "$LOCK_FILE" 2>/dev/null; then
-    echo " ❌  CRITICAL: owrt-build-release is already running!"
-    echo "     If this is an error, remove: $LOCK_FILE"
-    exit 1
-fi
-
-# trap to cleanup lock
-trap 'remove_lock' EXIT
 
 # Guard variable to prevent double cleanup
 CLEANED=false
-
-BUILD_START_DATE=$(date "+%a %d %b %Y")
-BUILD_START_TIME=$(date +%H:%M:%S)
-
-# Populated at the end of script
-BUILD_STOP_DATE=""
-BUILD_STOP_TIME=""
-BUILD_ELAPSED=""
 
 # REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
 REAL_PATH=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
@@ -89,24 +65,18 @@ fi
 SCRIPT_DIR=$(dirname "$REAL_PATH")
 SCRIPT_NAME=$(basename "$REAL_PATH")
 
-# Ensure we go to our script location (owrt-dev-suite repo)
-if ! cd "$SCRIPT_DIR" 2>/dev/null; then
-    echo "Error: Unable to change directory to '$SCRIPT_DIR'. Script location invalid." >&2
+# Import earlyscript.functions.sh
+if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/earlyscript.functions.sh - Aborting." >&2
     exit 1
 fi
 
-# Get the git branch for display
-OWRTDS_BRANCH=$(git branch --show-current 2>/dev/null)
-# Fallback for detached HEAD or old git versions
-if [ -z "$OWRTDS_BRANCH" ]; then
-    OWRTDS_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-fi
+# Create the mutex lock
+create_lock
 
-# Ensure we go back to the original PWD before build
-if ! cd "$STARTUP_PWD" 2>/dev/null; then
-    echo "Warning: Unable to return to '$STARTUP_PWD'. Continuing in current directory." >&2
-    # We don't exit here as the build might still proceed, but log the issue
-fi
+# Detect the OWRTDS_BRANCH
+OWRTDS_BRANCH=""
+owrtds_branch_detect
 
 # Set up for infinite strings (NEEDED IN `lib/config.sh`)
 NL=$'\n' # leave this alone (used in multiple areas)
@@ -117,7 +87,23 @@ DO_UPDATE_FEEDS=false
 DO_VERBOSE=false
 DO_XVERBOSE=false
 DO_SLOW=false
+
+CONFIG_FILE="$SCRIPT_DIR/etc/config.sh"
 OWRTDS_CUSTOM_CONFIG=""
+
+# Populate build start time
+BUILD_START_DATE=$(date "+%a %d %b %Y")
+BUILD_START_TIME=$(date +%H:%M:%S)
+
+# Populated at the end of script
+BUILD_STOP_DATE=""
+BUILD_STOP_TIME=""
+BUILD_ELAPSED=""
+
+# Required to start blank/empty
+SUMMARY_OUT=""
+MAKE_CMD_ADD=""
+CUSTOM_CONFIG_PATH=""
 
 # Interactive Mode Control
 OWRTDS_INTERACTIVE=true
@@ -192,15 +178,10 @@ RAWMOD_LIST=""
 DO_CALDATA_CPY="false"
 CALDATA_LIST=""
 
-# Required to start blank/empty
-SUMMARY_OUT=""
-MAKE_CMD_ADD=""
-
-CUSTOM_CONFIG_PATH=""
-
 # ====================================================================================
 
-# MAIN PROGRAM EXECUTION START
+
+
 
 # ===========================================================================================
 # 1. SOURCE LIBRARIES FIRST (Defines functions like parse_arguments, install_dependencies)
@@ -254,42 +235,16 @@ parse_arguments "$@"
 # 3. RESOLVE & SOURCE CONFIG (Uses CLI override if present, otherwise default)
 # ===========================================================================================
 
-CONFIG_FILE="$SCRIPT_DIR/etc/config.sh"
+resolve_configuration_file
 
-# Check if user provided a custom config via CLI
-if [[ -n "$CUSTOM_CONFIG_PATH" ]]; then
-    # 1. Resolve relative paths against repository root ($SCRIPT_DIR)
-    if [[ "$CUSTOM_CONFIG_PATH" != /* ]]; then
-        CUSTOM_CONFIG_PATH="$SCRIPT_DIR/$CUSTOM_CONFIG_PATH"
-    fi
-
-    # 2. Validate file exists
-    if [[ ! -f "$CUSTOM_CONFIG_PATH" ]]; then
-        echo "❌ CRITICAL: Custom config file not found: $CUSTOM_CONFIG_PATH" >&2
-        exit 1
-    fi
-
-    # 3. Interactive mode: Update default config symlink
-    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-        default_config="$SCRIPT_DIR/etc/config.sh"
-        # Remove existing file/link
-        rm -f "$default_config" 2>/dev/null || true
-        # Create new symlink (use absolute path for reliability or relative if preferred)
-        ln -s "$CUSTOM_CONFIG_PATH" "$default_config" || exit_with_error "Failed to create config symlink" --nocleanup
-        log_summary " >>> ✅ Config override applied. Default config now points to $(cleanup_path "$CUSTOM_CONFIG_PATH")" --silent
-    fi
-
-    # 4. Set the final config file to source
-    CONFIG_FILE="$CUSTOM_CONFIG_PATH"
-fi
-
-# 5. Source the determined config
+# Source the determined config
 if ! source "$CONFIG_FILE"; then
     echo "❌ CRITICAL: Unable to source $CONFIG_FILE - Aborting." >&2
     exit 1
 else
     log_summary " >>> ✅ Config file loaded: $CONFIG_FILE" --silent
 fi
+
 
 # ===========================================================================================
 # 4. INSTALL DEPENDENCIES (Now available since functions.sh is sourced)
@@ -307,8 +262,6 @@ verify_configuration
 
 # Show the header (now that config is loaded and verified)
 show_header
-
-
 
 
 # ==============================================================================
@@ -340,6 +293,7 @@ trap 'exit_with_error "Caught by trap - user pressed CTRL+C (SIGINT). Aborting."
 trap 'exit_with_error "Caught by trap - script terminated (SIGTERM). Aborting."' TERM
 trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."' HUP
 # we skipped my idea of using a trap exit handler - neat!
+
 
 # ==============================================================================
 # 7. Execution Logic
