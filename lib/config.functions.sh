@@ -283,6 +283,14 @@ verify_configuration() {
     # VALUE CONSTRAINT CHECKS (ex. $var -ge 6)
     # ========================================
 
+    # `DEVICE_SUPPORTED=true` should disable `DO_DTS_CPY`, `DO_DRIVERMOD_CPY`, & `DO_CALDATA_CPY`
+    if [[ -z "$DEVICE_SUPPORTED" == "true" ]]; then
+        DO_DTS_CPY=false
+        DO_DRIVERMOD_CPY=false
+        DO_CALDATA_CPY=false
+        log_summary " >>> ⚠ WARNING: Disabled DO_DTS_CPY, DO_DRIVERMOD_CPY, & DO_CALDATA_CPY because device is supported!"
+    fi
+
 
 
 
