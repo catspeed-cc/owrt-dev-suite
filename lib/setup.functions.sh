@@ -2,6 +2,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
+# =============================================================================
+# create_workdir
+# Description: Creates the work directory structure if it doesn't exist.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
+# Usage Example:
+#   create_workdir
+# =============================================================================
 create_workdir() {
     if [ ! -d "$WORK_DIR" ]; then
         echo " >>> Warning: Work directory '$WORK_DIR' does not exist."
@@ -30,6 +38,14 @@ create_workdir() {
     fi
 }
 
+# =============================================================================
+# create_projectsdir
+# Description: Creates the project directory structure if it doesn't exist.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
+# Usage Example:
+#   create_projectsdir
+# =============================================================================
 create_projectsdir() {
     if [ ! -d "$PROJECT_DIR" ]; then
         echo " >>> Warning: Project directory '$PROJECT_DIR' does not exist."
@@ -54,6 +70,15 @@ create_projectsdir() {
     fi
 }
 
+# =============================================================================
+# clone_openwrt
+# Description: Clones the OpenWRT fork repository if it doesn't exist.
+#              Handles user prompts and setup of target branches.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
+# Usage Example:
+#   clone_openwrt
+# =============================================================================
 clone_openwrt() {
     # TODO: if OWRT_DEV_DIR does not exist
     if [ ! -d "$OWRT_DEV_DIR" ]; then
@@ -104,6 +129,14 @@ clone_openwrt() {
     fi
 }
 
+# =============================================================================
+# create_port_shareddir
+# Description: Creates the port-specific shared directory structure if it doesn't exist.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
+# Usage Example:
+#   create_port_shareddir
+# =============================================================================
 create_port_shareddir() {
     local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
 
@@ -134,6 +167,15 @@ create_port_shareddir() {
     fi
 }
 
+# =============================================================================
+# create_webserver_shareddir
+# Description: Creates and configures web server shared directory structure.
+#              Handles group permissions, ownership, and symlink setup.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
+# Usage Example:
+#   create_webserver_shareddir
+# =============================================================================
 create_webserver_shareddir() {
     # ALL CAPS vars are global, validated, and defaulted already.
     local sudo_enable="$SUDO_ENABLE"
@@ -316,6 +358,15 @@ create_webserver_shareddir() {
 
 }
 
+# =============================================================================
+# install_dependencies
+# Description: Detects OS package manager and installs required build dependencies.
+#              Handles user prompts for manual installation fallback.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 0 on success; exits with error on failure
+# Usage Example:
+#   install_dependencies
+# =============================================================================
 install_dependencies() {
     local distro_pkg_manager=""
     local packages_to_install=()
