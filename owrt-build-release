@@ -260,12 +260,23 @@ verify_configuration
 # 5. verify config - vars below this point can use each other to autoconfigure
 # ===========================================================================================
 
+
+# ===========================================================================================
+# 6. Synchronize OpenWRT .config from Work Directory
+# ===========================================================================================
+sync_config_to_dev_dir
+
+
+# ===========================================================================================
+# 7. Show our pretty header :3
+# ===========================================================================================
+
 # Show the header (now that config is loaded and verified)
 show_header
 
 
 # ==============================================================================
-# 6. Execution Preperation
+# 8. Execution Preperation
 # ==============================================================================
 
 # Ensure we go back to the original PWD before build
@@ -301,7 +312,7 @@ trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."'
 
 
 # ==============================================================================
-# 7. Execution Logic
+# 9. Execution Logic
 # ==============================================================================
 
 echo " >>> Starting Build Process for TEW-829DRU (IPQ4019)"
@@ -367,7 +378,7 @@ fi
 
 
 # ==============================================
-# COMPILATION & POST-BUILD
+# 10. COMPILATION & POST-BUILD
 # ==============================================
 
 # PAUSE SO HUMAN USER CAN SEE PROGRESS BEFORE COMPILE
