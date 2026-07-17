@@ -209,8 +209,36 @@ if ! source "$SCRIPT_DIR/lib/dependencies.sh"; then
     echo "❌ CRITICAL: Unable to source lib/dependencies.sh - Aborting." >&2
     exit 1
 fi
-if ! source "$SCRIPT_DIR/lib/functions.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/functions.sh - Aborting." >&2
+if ! source "$SCRIPT_DIR/lib/utils.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/utils.functions.sh - Aborting." >&2
+    exit 1
+fi
+if ! source "$SCRIPT_DIR/lib/logging.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/logging.functions.sh - Aborting." >&2
+    exit 1
+fi
+if ! source "$SCRIPT_DIR/lib/exit.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/exit.functions.sh - Aborting." >&2
+    exit 1
+fi
+if ! source "$SCRIPT_DIR/lib/cli.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/cli.functions.sh - Aborting." >&2
+    exit 1
+fi
+if ! source "$SCRIPT_DIR/lib/config.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/config.functions.sh - Aborting." >&2
+    exit 1
+fi
+if ! source "$SCRIPT_DIR/lib/file-io.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/file-io.functions.sh - Aborting." >&2
+    exit 1
+fi
+if ! source "$SCRIPT_DIR/lib/setup.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/setup.functions.sh - Aborting." >&2
+    exit 1
+fi
+if ! source "$SCRIPT_DIR/lib/build.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/build.functions.sh - Aborting." >&2
     exit 1
 fi
 

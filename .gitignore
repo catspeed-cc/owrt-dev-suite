@@ -1,4 +1,6 @@
 
+# ignore the config.sh symlink
+etc/config.sh
 
 # aider
 .aider*

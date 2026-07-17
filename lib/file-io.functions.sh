@@ -1,0 +1,200 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
+
+verify_md5() {
+    # Parameters
+    local file_src="$1"
+    local file_dest="$2"
+
+    # Local vars
+    local desc="Checking MD5"
+
+    # Calculate and sanitize hashes
+    local file_src_md5=$(md5sum "$file_src" | awk '{print $1}')
+    local file_dest_md5=$(md5sum "$file_dest" | awk '{print $1}')
+
+    if [ "$file_src_md5" == "$file_dest_md5" ]; then
+        return 0
+    else
+        echo " >>>"
+        echo " >>> ❌ FAILURE: $desc - MISMATCH!"
+        echo " >>>      Source:      '$file_src' -> '$file_src_md5'"
+        echo " >>>      Destination: '"$(cleanup_path "$file_dest")"' -> '$file_dest_md5'"
+        echo " >>>"
+        return 1
+    fi
+}
+
+copy_file() {
+
+    # Parameters
+    local file_src="$1"
+    local file_dest="$2"
+
+    # Local variables
+    local desc="Copying File"
+    local dest_dir
+
+    # Ensure source file exists or exit_with_error
+    if [ ! -f "$file_src" ]; then
+        exit_with_error "$desc failed: ${file_src} doesn't exist"
+    fi
+
+    # Fetch the file's directory
+    dest_dir="$(dirname "$file_dest")"
+
+    # Create directory if it doesn't exist (including parents)
+    if [ ! -d "$dest_dir" ]; then
+        mkdir -p "$dest_dir"
+    fi
+
+    # Remove destination file if it already exists
+    if [ -f "$file_dest" ]; then
+        rm "$file_dest"
+    fi
+
+    # Copy file
+    if ! cp "$file_src" "$file_dest"; then
+        exit_with_error "$desc failed: "$(cleanup_path "$file_dest")
+    fi
+
+    # Verify md5 & output messages
+    if verify_md5 "$file_src" "$file_dest"; then
+        local msg=" >>> ✅ $desc "$(cleanup_path "$file_dest")" (MATCH)"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
+        return 0
+    else
+        exit_with_error "$desc failed (MD5 mismatch)"
+        return 1 # pragmatic safety: this shouldn't execute
+    fi
+
+}
+
+copy_patches_dir() {
+
+    # Parameters
+    local dir_src="$1"
+    local dir_dest="$2"
+
+    echo " >>> Copying Patches Directory ${dir_src}"
+
+    # Check if source directory exists
+    if [ ! -d "${dir_src}" ]; then
+        exit_with_error "Source directory does not exist: ${dir_src}"
+    fi
+
+    # Check if destination directory exists
+    if [ ! -d "${dir_dest}" ]; then
+        exit_with_error "Destination directory does not exist: ${dir_dest}"
+    fi
+
+    # Loop over each .patch file non-recursively and copy using your function
+    for src_file in "${dir_src}"/*.patch; do
+
+        # Check if glob matched any files (handles empty directory case)
+        [ -e "$src_file" ] || continue
+
+        # Extract just the filename for the destination
+        filename="$(basename "$src_file")"
+        dest_file="${dir_dest}/${filename}"
+
+        # Use your existing copy_file function
+        copy_file "$src_file" "$dest_file"
+
+    done
+
+    local msg=" >>> ✅ Patches Directory Copied "$(cleanup_path "$dir_dest")
+    echo "$msg"
+    SUMMARY_OUT+="${msg}"${NL}
+
+}
+
+copy_caldata() {
+    # Find the firmware build directory once
+    FIRMWARE_BUILD_DIR=$(find "$OWRT_DEV_DIR/build_dir" -type d -name "linux-firmware-*" | head -n 1)
+
+    if [ -z "$FIRMWARE_BUILD_DIR" ]; then
+        exit_with_error "Could not find linux-firmware build directory after prepare."
+    fi
+
+    # Loop over each line in CALDATA_LIST
+    # We use a here-string <<< to feed the variable into the loop
+    while IFS= read -r line; do
+        # 1. Discard empty lines (handles the trailing newline in the list)
+        [ -z "$line" ] && continue
+
+        # 2. Split the line by pipe '|' into local variables
+        # CALDATA_BOARDNAME (Group 1), CALDATA_SRC (Group 2), CALDATA_DEST (Group 3)
+        IFS='|' read -r CALDATA_BOARDNAME CALDATA_SRC CALDATA_DEST <<< "$line"
+
+        # 3. Construct the full paths (Build Dir + Relative Path from Config)
+        CALDATA_FINAL_DEST="$FIRMWARE_BUILD_DIR/$CALDATA_DEST"
+
+        # 4. Extract the directory path by removing the filename
+        #    $(dirname ".../hw1.0/board-2.bin") returns ".../hw1.0"
+        mkdir -p "$(dirname "$CALDATA_FINAL_DEST")" || exit_with_error "Failed to create caldata directory structure"
+
+        # 5. Now perform the copy safely
+        copy_file "$CALDATA_SRC" "$CALDATA_FINAL_DEST" || exit_with_error "Copy Caldata"
+
+        # 6. Generate success message and update summary
+        local msg=" >>> ✅ ${CALDATA_BOARDNAME} caldata copied to: $(cleanup_path "$CALDATA_DEST")"
+        echo "$msg"
+        SUMMARY_OUT+="${msg}"${NL}
+
+    done <<< "$CALDATA_LIST"
+}
+
+copy_to_imgdir() {
+
+    [[ -z "$WORK_IMAGEOUT_DIR" ]] && exit_with_error "WORK_IMAGEOUT_DIR is not set"
+
+    local dest_dir="$WORK_IMAGEOUT_DIR/$OWRT_VERSION"
+
+    # clobber the image out old files
+    rm -rf "${dest_dir:?}/"* || exit_with_error "Clobber image-out dir"
+
+    # missing piece :)
+    mkdir -p "$dest_dir"
+
+    # copy the new files (use OWRT_BASE_BRANCH as subdir)
+    cp -r "$IMGDIR_SRC/"* "$dest_dir/" || exit_with_error "Copy images to image-out"
+
+    local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $(cleanup_path "$dest_dir")"
+    echo "$msg"
+    SUMMARY_OUT+="${msg}"${NL}
+
+}
+
+copy_to_webserver() {
+    local owrt_version="$OWRT_VERSION"
+    local owrt_mfr="$OWRT_MFR_LOWER"
+    local owrt_model="$OWRT_MODEL_LOWER" # Note: Ensure this variable is actually lowercased if intended
+    local owrt_base_branch="$OWRT_BASE_BRANCH"
+    local webserver_shared_dir="$WEBSERVER_SHARED_DIR"
+    local imgdir_src="$IMGDIR_SRC"
+
+    [[ -z "$WEBSERVER_SHARED_DIR" ]] && exit_with_error "WEBSERVER_SHARED_DIR is not set"
+
+    local dest="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_version"
+
+    if [ "$DO_WEBSERVER_CPY" == "true" ]; then
+
+        echo " >>> Copying images to webserver..."
+
+        # Use sg to ensure we have write access to the SetGID directory
+        # regardless of whether the user has run 'newgrp' in this session.
+        sg "$WEBSERVER_SHARED_GROUP" -c "
+            mkdir -p \"$dest\" &&
+            rm -rf \"$dest/\"* &&
+            cp -r \"$imgdir_src/\"* \"$dest/\" &&
+            chmod -R g+rw \"$dest\"
+        " || exit_with_error "Failed to copy images to webserver"
+
+        log_summary " >>> ✅ Images copied to webserver: $(cleanup_path "$dest")"
+
+    fi
+}
+
