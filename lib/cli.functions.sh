@@ -19,7 +19,6 @@ show_help() {
 }
 
 parse_arguments() {
-    local CUSTOM_CONFIG_PATH=""
 
     while [[ $# -gt 0 ]]; do
         case $1 in
