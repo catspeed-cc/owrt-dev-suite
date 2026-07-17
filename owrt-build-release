@@ -243,6 +243,7 @@ if ! source "$SCRIPT_DIR/lib/build.functions.sh"; then
 fi
 
 
+
 # ===========================================================================================
 # 2. PARSE CLI ARGUMENTS (Detects --config/-c override before sourcing config)
 # ===========================================================================================
@@ -254,6 +255,8 @@ parse_arguments "$@"
 # ===========================================================================================
 
 CONFIG_FILE="$SCRIPT_DIR/etc/config.sh"
+
+echo " >>> ✅ flag provided config: $CUSTOM_CONFIG_PATH"
 
 # Check if user provided a custom config via CLI
 if [[ -n "$CUSTOM_CONFIG_PATH" ]]; then
@@ -286,6 +289,8 @@ fi
 if ! source "$CONFIG_FILE"; then
     echo "❌ CRITICAL: Unable to source $CONFIG_FILE - Aborting." >&2
     exit 1
+else
+    log_summary " >>> ✅ Config file loaded: $CONFIG_FILE" --silent
 fi
 
 # ===========================================================================================
