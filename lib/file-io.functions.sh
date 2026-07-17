@@ -278,3 +278,29 @@ copy_to_webserver() {
 
     fi
 }
+
+# =============================================================================
+# sync_config_to_dev_dir
+# Description: Synchronizes the model-specific .config from the local work directory
+#              to the OpenWrt build root ($OWRT_DEV_DIR). If successful, it records
+#              the source path in .owrtds.cfghome for future reference.
+# Parameters: None (uses global environment variables for paths)
+# Returns/Exit Codes: Exits with error on copy failure; returns 0 on success or skip
+# Usage Example:
+#   sync_config_to_dev_dir
+# =============================================================================
+function sync_config_to_dev_dir() {
+    local owrt_config_src="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}.config"
+
+    if [[ -f "$owrt_config_src" ]]; then
+        echo " >>> Synchronizing .config from work directory..."
+        if cp "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
+            printf '%s\n' "$owrt_config_src" > "$OWRT_DEV_DIR/.owrtds.cfghome"
+            log_summary " >>> ✅ .config synchronized and tracked via .owrtds.cfghome"
+        else
+            exit_with_error "Failed to copy .config to $OWRT_DEV_DIR/.config" --nocleanup
+        fi
+    else
+        log_summary " >>> ⏭️  No custom .config found at '$owrt_config_src'. Skipping sync."
+    fi
+}
