@@ -38,9 +38,26 @@ show_header() {
         BUILD_STOP_DATE=""
         BUILD_STOP_TIME=""
         BUILD_ELAPSED=""
-        local no_stop=true
+        BUILD_ELAPSED_SECONDS=""
+        local build_finished=false
     else
-        local no_stop=false
+        local build_finished=true
+    fi
+
+    if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
+        # Non-Interactive Mode: Compact, log-friendly header
+        echo ""
+        echo "=== OWRTDS ${OWRTDS_VERSION} Build: ${OWRT_MFR_UPPER} ${OWRT_MODEL_UPPER} ($(date '+%Y-%m-%d %H:%M')) ==="
+
+        if [[ "$build_finished" == "false" ]]; then
+            echo "Target: ${OWRT_SOC_CLASS_UPPER} | Profile: ${BUILD_PROFILE:-default}"
+        else
+            echo "Target: ${OWRT_SOC_CLASS_UPPER} | Profile: ${BUILD_PROFILE:-default} | Elapsed: ${BUILD_ELAPSED} (${BUILD_ELAPSED_SECONDS}s)"
+        fi
+
+        echo ""
+        # Skip colors, boxes, or pause prompts
+        return 0
     fi
 
     echo ""
@@ -64,11 +81,11 @@ show_header() {
     echo "  📅 Start Date: $BUILD_START_DATE"
     echo "  📅 Start Time: $BUILD_START_TIME"
 
-    if [ "$no_stop" == "false" ]; then
+    if [[ "$build_finished" == "true" ]]; then
         echo "  📅 Stop Date: $BUILD_STOP_DATE"
         echo "  📅 Stop Time: $BUILD_STOP_TIME"
         echo " ========================================================================================================================"
-        echo "  📅 Elapsed: $BUILD_ELAPSED"
+        echo "  📅 Elapsed: $BUILD_ELAPSED (${BUILD_ELAPSED_SECONDS}s)"
     fi
 
     echo " ========================================================================================================================"

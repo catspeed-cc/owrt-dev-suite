@@ -62,6 +62,9 @@ get_time_diff() {
     diff=$((diff * -1))
   fi
 
+  # Update global tracking build time in seconds
+  BUILD_ELAPSED_SECONDS="$diff"
+
   # Convert seconds ($diff) to elapsed time format: Xh Ym Zs
   # Using pure arithmetic ensures no leading zeros (e.g., 1h 4m 5s instead of 01h 04m 05s)
   hours=$((diff / 3600))
