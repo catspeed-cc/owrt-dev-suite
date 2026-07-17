@@ -40,7 +40,7 @@ change_directory() {
 # get_time_diff
 # Description: Calculates the elapsed time between two time strings and formats it as Xh Ym Zs.
 # Parameters: $1 (start time string), $2 (end time string)
-# Returns/Exit Codes: Echoes formatted duration string; returns 0
+# Returns/Exit Codes: Echoes formatted duration string and total seconds; returns 0
 # Usage Example:
 #   get_time_diff "14:30:00" "16:45:30"
 # =============================================================================
@@ -62,16 +62,13 @@ get_time_diff() {
     diff=$((diff * -1))
   fi
 
-  # Update global tracking build time in seconds
-  BUILD_ELAPSED_SECONDS="$diff"
-
   # Convert seconds ($diff) to elapsed time format: Xh Ym Zs
   # Using pure arithmetic ensures no leading zeros (e.g., 1h 4m 5s instead of 01h 04m 05s)
   hours=$((diff / 3600))
   minutes=$(( (diff % 3600) / 60 ))
   seconds=$((diff % 60))
 
-  printf "%dh %dm %ds\n" "$hours" "$minutes" "$seconds"
+  printf "%dh %dm %ds\n" "$hours" "$minutes" "$seconds" "$diff"
 }
 
 
