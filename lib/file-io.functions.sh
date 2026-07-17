@@ -298,9 +298,58 @@ function sync_config_to_dev_dir() {
             printf '%s\n' "$owrt_config_src" > "$OWRT_DEV_DIR/.owrtds.cfghome"
             log_summary " >>> ✅ .config synchronized and tracked via .owrtds.cfghome"
         else
-            exit_with_error "Failed to copy .config to $OWRT_DEV_DIR/.config" --nocleanup
+            exit_with_error "Failed to copy .config to $OWRT_DEV_DIR/.config"
         fi
     else
         log_summary " >>> ⏭️  No custom .config found at '$owrt_config_src'. Skipping sync."
+    fi
+}
+
+# =============================================================================
+# sync_config_from_dev_dir
+# Description: Reads the target path from $OWRT_DEV_DIR/.owrtds.cfghome and
+#              copies $OWRT_DEV_DIR/.config back to that location.
+# Parameters: None (uses global environment variables for paths)
+# Returns/Exit Codes: Exits with error on copy failure; returns 0 on success or skip
+# Usage Example:
+#   sync_config_from_dev_dir
+# =============================================================================
+function sync_config_from_dev_dir() {
+    local cfg_home_file="$OWRT_DEV_DIR/.owrtds.cfghome"
+    local config_src="$OWRT_DEV_DIR/.config"
+
+    # Guard: skip if tracking file doesn't exist
+    if [[ ! -f "$cfg_home_file" ]]; then
+        log_summary " >>> ⏭️  No tracked .config source found. Skipping sync."
+        return 0
+    fi
+
+    local owrt_config_dest
+    owrt_config_dest=$(cat "$cfg_home_file")
+
+    # Guard: skip if path is empty
+    if [[ -z "$owrt_config_dest" ]]; then
+        log_summary " >>> ⏭️  Tracked .config path is empty. Skipping sync."
+        return 0
+    fi
+
+    # Ensure destination directory exists
+    local dest_dir
+    dest_dir=$(dirname "$owrt_config_dest")
+    if [[ ! -d "$dest_dir" ]]; then
+        mkdir -p "$dest_dir" || exit_with_error "Failed to create .config destination dir"
+    fi
+
+    # Guard: skip if build didn't produce a .config
+    if [[ ! -f "$config_src" ]]; then
+        log_summary " >>> ⚠️  $config_src does not exist. Skipping sync."
+        return 0
+    fi
+
+    echo " >>> Synchronizing .config back to work directory..."
+    if cp -f "$config_src" "$owrt_config_dest"; then
+        log_summary " >>> ✅ .config synchronized to $(cleanup_path "$owrt_config_dest")"
+    else
+        exit_with_error "Failed to copy .config to $owrt_config_dest"
     fi
 }

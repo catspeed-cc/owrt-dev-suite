@@ -141,9 +141,16 @@ cleanup_build_environment() {
 
     fi
 
+    # 3. Delete cfghome file
+    local cfg_home_file="$OWRT_DEV_DIR/.owrtds.cfghome"
+    if [[ -f "$cfg_home_file" ]]; then
+        rm -f "$cfg_home_file"
+        log_summary " >>> ✅ Removed .owrtds.cfghome file." --silent
+    fi
+
+    # Signal success to the user
     if [ "$CLEAN_SUCCESS" == true ]; then
-        local msg=" >>> ✅ Cleanup complete. Environment is pristine."
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ✅ Cleanup complete. Environment is pristine." --silent
     fi
 
     # Return to the original directory where the script was launched
