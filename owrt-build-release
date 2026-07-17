@@ -99,6 +99,7 @@ BUILD_START_TIME=$(date +%H:%M:%S)
 BUILD_STOP_DATE=""
 BUILD_STOP_TIME=""
 BUILD_ELAPSED=""
+BUILD_ELAPSED_SECONDS=""
 
 # Required to start blank/empty
 SUMMARY_OUT=""
