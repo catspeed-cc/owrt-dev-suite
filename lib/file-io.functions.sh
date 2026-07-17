@@ -2,6 +2,31 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
+cleanup_path() {
+    local filepath="$1"
+
+    # Validate local input
+    if [[ -z "$filepath" ]]; then
+        echo "Error: No filepath provided" >&2
+        return 1
+    fi
+
+    # Check if filepath starts with base_path followed by a slash or is exactly base_path
+    if [[ "$filepath" == "$STARTUP_PWD" ]]; then
+        # If filepath is exactly the same as STARTUP_PWD, return current dir indicator or empty
+        echo "."
+        return 0
+    elif [[ "$filepath" == "$STARTUP_PWD/"* ]]; then
+        # Remove the base_path and the following slash
+        echo "${filepath#$STARTUP_PWD/}"
+        return 0
+    else
+        # If filepath does not start with STARTUP_PWD, return it unchanged
+        echo "$filepath"
+        return 0
+    fi
+}
+
 verify_md5() {
     # Parameters
     local file_src="$1"

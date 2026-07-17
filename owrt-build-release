@@ -256,8 +256,6 @@ parse_arguments "$@"
 
 CONFIG_FILE="$SCRIPT_DIR/etc/config.sh"
 
-echo " >>> ✅ flag provided config: $CUSTOM_CONFIG_PATH"
-
 # Check if user provided a custom config via CLI
 if [[ -n "$CUSTOM_CONFIG_PATH" ]]; then
     # 1. Resolve relative paths against repository root ($SCRIPT_DIR)
@@ -273,12 +271,12 @@ if [[ -n "$CUSTOM_CONFIG_PATH" ]]; then
 
     # 3. Interactive mode: Update default config symlink
     if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-        local default_config="$SCRIPT_DIR/etc/config.sh"
+        default_config="$SCRIPT_DIR/etc/config.sh"
         # Remove existing file/link
         rm -f "$default_config" 2>/dev/null || true
         # Create new symlink (use absolute path for reliability or relative if preferred)
         ln -s "$CUSTOM_CONFIG_PATH" "$default_config" || exit_with_error "Failed to create config symlink" --nocleanup
-        log_summary " >>> ✅ Config override applied. Default config now points to $(cleanup_path "$CUSTOM_CONFIG_PATH")"
+        log_summary " >>> ✅ Config override applied. Default config now points to $(cleanup_path "$CUSTOM_CONFIG_PATH")" --silent
     fi
 
     # 4. Set the final config file to source
