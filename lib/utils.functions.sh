@@ -68,7 +68,7 @@ get_time_diff() {
   minutes=$(( (diff % 3600) / 60 ))
   seconds=$((diff % 60))
 
-  printf "%dh %dm %ds\n" "$hours" "$minutes" "$seconds" "$diff"
+  printf "%dh %dm %ds %d\n" "$hours" "$minutes" "$seconds" "$diff"
 }
 
 
