@@ -300,7 +300,7 @@ function sync_config_to_dev_dir() {
                 exit_with_error "make defconfig failed. Check your .config file." --nocleanup
             fi
             set -e
-            log_summary " >>> ✅ .config synchronized and tracked via .owrtds.cfghome" --silent
+            # we log the .config sync elsewhere :)
         else
             exit_with_error "Failed to copy .config to $OWRT_DEV_DIR/.config" --nocleanup
         fi
