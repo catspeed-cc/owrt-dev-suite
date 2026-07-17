@@ -284,7 +284,7 @@ verify_configuration() {
     # ========================================
 
     # `DEVICE_SUPPORTED=true` should disable `DO_DTS_CPY`, `DO_DRIVERMOD_CPY`, & `DO_CALDATA_CPY`
-    if [[ -z "$DEVICE_SUPPORTED" == "true" ]]; then
+    if [[ "$DEVICE_SUPPORTED" == "true" ]]; then
         DO_DTS_CPY=false
         DO_DRIVERMOD_CPY=false
         DO_CALDATA_CPY=false
