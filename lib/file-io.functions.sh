@@ -296,11 +296,15 @@ function sync_config_to_dev_dir() {
         echo " >>> Synchronizing .config from work directory..."
         if cp "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
             printf '%s\n' "$owrt_config_src" > "$OWRT_DEV_DIR/.owrtds.cfghome"
+            make -s defconfig
             log_summary " >>> ✅ .config synchronized and tracked via .owrtds.cfghome"
         else
             exit_with_error "Failed to copy .config to $OWRT_DEV_DIR/.config"
         fi
     else
+        # remove cfghome and .config file (there is no config, this must be old from previous run)
+        rm -f "$OWRT_DEV_DIR/.config"
+        rm -f "$OWRT_DEV_DIR/.owrtds.cfghome"
         log_summary " >>> ⏭️  No custom .config found at '$owrt_config_src'. Skipping sync."
     fi
 }
@@ -346,10 +350,9 @@ function sync_config_from_dev_dir() {
         return 0
     fi
 
-    # Copy the config back to WORK_DIR and delete the .config in OWRT_DEV_DIR
+    # Copy the config back to WORK_DIR
     echo " >>> Synchronizing .config back to work directory..."
     if cp -f "$config_src" "$owrt_config_dest"; then
-        rm -f "$config_src"
         log_summary " >>> ✅ .config synchronized to $(cleanup_path "$owrt_config_dest")"
     else
         exit_with_error "Failed to copy .config to $owrt_config_dest"
