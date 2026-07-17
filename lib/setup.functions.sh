@@ -438,7 +438,7 @@ install_dependencies() {
 
     # If nothing to install, exit successfully
     if [ ${#filtered_pkgs[@]} -eq 0 ]; then
-        log_summary ">>> ✅ All required dependencies are already installed." --silent
+        log_summary " >>> ✅ All required dependencies are already installed." --silent
         return 0
     fi
 
