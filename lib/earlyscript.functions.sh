@@ -21,6 +21,8 @@
 # In addition to this, none of the user config or global variables are
 # verified or set.
 #
+# Ensure all functions are self contained, and do not rely on existing helpers.
+#
 
 # Function to remove lock file
 remove_lock() {
