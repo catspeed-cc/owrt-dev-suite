@@ -133,8 +133,8 @@ clone_openwrt() {
 #   create_port_workdir
 # =============================================================================
 create_port_workdir() {
-    if [ ! -d "$WORK_DIR" ]; then
-        echo " >>> Warning: Work directory '$WORK_DIR' does not exist."
+    if [ ! -d "$DEVICE_WORK_DIR" ]; then
+        echo " >>> Warning: Work directory '$DEVICE_WORK_DIR' does not exist."
         local response="Y"
         if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
             read -r -p "Do you want to create it? [Y/n] " response
@@ -148,13 +148,13 @@ create_port_workdir() {
                 exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults" --nocleanup
                 ;;
             *)
-                echo " >>> Creating port specific ${WORK_DIR} structure..."
+                echo " >>> Creating ${DEVICE_WORK_DIR} directory..."
                 mkdir -p "$WORK_DTS_DIR"
                 mkdir -p "$WORK_CALDATA_DIR"
                 mkdir -p "$WORK_PATCHMODS_DIR"
                 mkdir -p "$WORK_RAWMODS_DIR"
                 mkdir -p "$WORK_IMAGEOUT_DIR"
-                log_summary " >>> ✅ Port specific $WORK_DIR directory created"
+                log_summary " >>> ✅ $DEVICE_WORK_DIR directory created"
                 ;;
         esac
     fi
