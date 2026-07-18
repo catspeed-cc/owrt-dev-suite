@@ -290,7 +290,7 @@ copy_to_webserver() {
 #   sync_config_to_dev_dir
 # =============================================================================
 function sync_config_to_dev_dir() {
-    local owrt_config_src="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}.config"
+    local owrt_config_src="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}.config"
 
     if [[ -f "$owrt_config_src" ]]; then
         if cp "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then

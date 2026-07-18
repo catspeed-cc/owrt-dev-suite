@@ -159,6 +159,7 @@ create_port_workdir() {
                 mkdir -p "$WORK_RAWMODS_DIR"
                 echo " >>> Creating ${WORK_IMAGEOUT_DIR} directory..."
                 mkdir -p "$WORK_IMAGEOUT_DIR"
+                chown -R ${USER}: "$WORK_DIR"
                 log_summary " >>> ✅ $port_workdir directory created" --silent
                 ;;
         esac
@@ -197,7 +198,7 @@ create_port_shareddir() {
                 mkdir -p "$port_shareddir"
                 set +e
                 # TODO: THIS BETTER . really, below sudo lines not the greatest but should work.
-                sudo chown root:"$WEBSERVER_SHARED_GROUP" "$port_shareddir"
+                sudo chown ${USER}:"$WEBSERVER_SHARED_GROUP" "$WEBSERVER_SHARED_DIR"
                 sudo chmod 2775 "$port_shareddir"
                 set -e
                 log_summary " >>> ✅ ${port_shareddir} directory created" --silent
@@ -321,7 +322,7 @@ create_webserver_shareddir() {
 
     echo " >>> 🔐  Setting ownership to root:$shared_group"
     set +e
-    sudo chown -R root:"$shared_group" "$webserver_shared_dir" || exit_with_error "Failed to set ownership" --nocleanup
+    sudo chown -R ${USER}:"$shared_group" "$webserver_shared_dir" || exit_with_error "Failed to set ownership" --nocleanup
     set -e
     log_summary " >>> ✅  Ownership of $webserver_shared_dir set to 'root:$shared_group'"
 
