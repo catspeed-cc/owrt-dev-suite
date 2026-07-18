@@ -1,4 +1,7 @@
 
+# ignore dotfiles
+.owrtds.*
+
 # ignore the config.sh symlink
 etc/config.sh
 
