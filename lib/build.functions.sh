@@ -61,12 +61,23 @@ build_kernel_sources() {
 
     # Prepare (Extract + Apply Patches)
     echo " >>> Running 'make target/linux/prepare'..."
-    make target/linux/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux'"
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        make target/linux/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux'"
+    else
+        make target/linux/prepare ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Make Prepare 'linux'"
+    fi
+
     log_summary " >>> ✅ Sources prepared (linux)"
 
     # Compile
     echo " >>> Running 'make target/linux/compile'..."
-    make target/linux/compile ${MAKE_CMD_ADD} || exit_with_error "Make Compile 'linux'"
+
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        make target/linux/compile ${MAKE_CMD_ADD} || exit_with_error "Make Compile 'linux'"
+    else
+        make target/linux/compile ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Make Compile 'linux'"
+    fi
+
     log_summary " >>> ✅ Sources compiled (linux) with custom patches applied"
 
 }
