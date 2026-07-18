@@ -133,7 +133,7 @@ clone_openwrt() {
 #   create_port_workdir
 # =============================================================================
 create_port_workdir() {
-    local port_workdir="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
+    local port_workdir="$PORT_WORKDIR"
     if [ ! -d "$port_workdir" ]; then
         echo " >>> Warning: Work directory '$port_workdir' does not exist."
         local response="Y"
@@ -170,7 +170,7 @@ create_port_workdir() {
 #   create_port_shareddir
 # =============================================================================
 create_port_shareddir() {
-    local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
+    local port_shareddir="$PORT_SHAREDDIR"
 
     if [ ! -d "${port_shareddir}" ]; then
         echo " >>> Warning: Webserver shareddir directory '$port_shareddir' does not exist."

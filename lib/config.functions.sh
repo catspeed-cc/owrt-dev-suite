@@ -277,6 +277,10 @@ verify_configuration() {
         log_summary " >>> ⚠ WARNING: Using default auto-derived OWRT_TARGET_BRANCH ('$OWRT_TARGET_BRANCH')"
     fi
 
+    # no validation needed, autoconfigured internal global variables
+    PORT_WORKDIR="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
+    PORT_SHAREDDIR="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
+
 
 
 
@@ -329,22 +333,17 @@ verify_configuration() {
         SETUP_MODE=true
     fi
 
-    # TODO: make proper :P give override in config :P Validate above :P
-    # Derive port_workdir and port_shareddir paths
-    local port_workdir="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
-    local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
-
     # Set up port workdir
-    if [[ ! -d "$port_workdir" ]]; then
-        log_summary " >>> ⏳ Creating $port_workdir ..." --silent
+    if [[ ! -d "$PORT_WORKDIR" ]]; then
+        log_summary " >>> ⏳ Creating $PORT_WORKDIR ..." --silent
         # create the workdir for the current port if it does not exist yet
         create_port_workdir
         SETUP_MODE=true
     fi
 
     # Set up webserver port shareddir
-    if [[ ! -d "$port_shareddir" ]]; then
-        log_summary " >>> ⏳ Creating $port_shareddir ..." --silent
+    if [[ ! -d "$PORT_SHAREDDIR" ]]; then
+        log_summary " >>> ⏳ Creating $PORT_SHAREDDIR ..." --silent
         # create the shared dir for the current port if it does not exist yet
         create_port_shareddir
         SETUP_MODE=true
