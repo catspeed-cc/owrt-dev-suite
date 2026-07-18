@@ -331,14 +331,14 @@ verify_configuration() {
     local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/"
 
     # Set up port workdir
-    if [[ ! -d "$port_workdir" ]]; then
+    if [[ ! -d "$DEVICE_WORK_DIR" ]]; then
         # create the workdir for the current port if it does not exist yet
         create_port_workdir
         SETUP_MODE=true
     fi
 
     # Set up webserver port shareddir
-    if [[ ! -d "$port_shareddir" ]]; then
+    if [[ ! -d "$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION" ]]; then
         # create the shared dir for the current port if it does not exist yet
         create_port_shareddir
         SETUP_MODE=true
