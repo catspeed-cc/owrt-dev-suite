@@ -181,8 +181,9 @@ CALDATA_LIST=""
 
 # ====================================================================================
 
-
-
+# Define autoconfigured globals
+PORT_WORKDIR="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
+PORT_SHAREDDIR="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
 
 # ===========================================================================================
 # 1. SOURCE LIBRARIES FIRST (Defines functions like parse_arguments, install_dependencies)
