@@ -380,10 +380,8 @@ fi
 # Handle prepare linux-firmware
 if [ "$DO_CLEAN" = true ]; then
     echo " >>> Running 'make target/linux-firmware/prepare'..."
-    make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare `linux-firmware`"
-    msg=" >>> ✅ Sources prepared (linux-firmware)"
-    echo "$msg"
-    SUMMARY_OUT+="${msg}"${NL}
+    make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux-firmware'"
+    log_summary " >>> ✅ Sources prepared (linux-firmware)"
 fi
 
 # Handle Copy caldata
