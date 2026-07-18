@@ -392,7 +392,7 @@ fi
 # ==============================================
 
 # PAUSE SO HUMAN USER CAN SEE PROGRESS BEFORE COMPILE
-if [[ "$OWRT_INTERACTIVE" == true ]]; then sleep 5; fi
+if [[ "$OWRTDS_INTERACTIVE" == true ]]; then sleep 5; fi
 
 # 1. Temporarily disable 'errexit' to capture make's exit code manually.
 #    NOTE: The SIGINT/SIGTERM trap remains ACTIVE here for CTRL+C safety.
