@@ -37,11 +37,6 @@ verify_configuration() {
         exit_with_error "OWRT_SOC_CLASS is not set in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
-    # Validate OWRT_OS_TARGET is not empty (REQUIRED, CRITICAL)
-    if [[ -z "$OWRT_OS_TARGET" ]]; then
-        exit_with_error "OWRT_OS_TARGET is not set in 'etc/config.sh' - Aborting." --nocleanup
-    fi
-
 
     # =====================================
     # INITIALIZE VARIABLES ON CONFIG VERIFY
@@ -53,7 +48,6 @@ verify_configuration() {
     OWRT_MODEL_LOWER="${OWRT_MODEL,,}"
     OWRT_SOC_LOWER="${OWRT_SOC,,}"
     OWRT_SOC_CLASS_LOWER="${OWRT_SOC_CLASS,,}"
-    OWRT_OS_TARGET_LOWER="${OWRT_OS_TARGET,,}"
 
 
     # ===========================
@@ -255,13 +249,13 @@ verify_configuration() {
 
     # Validate DTS_DEST_DIR is not empty
     if [[ -z "$DTS_DEST_DIR" ]]; then
-        DTS_DEST_DIR="$OWRT_DEV_DIR/target/$OWRT_OS_TARGET_LOWER/$OWRT_SOC_CLASS_LOWER/files-6.12/arch/arm/boot/dts/qcom"
+        DTS_DEST_DIR="$OWRT_DEV_DIR/target/linux/$OWRT_SOC_CLASS_LOWER/files-6.12/arch/arm/boot/dts/qcom"
         log_summary " >>> ⚠ WARNING: Using default auto-derived DTS_DEST_DIR ('$DTS_DEST_DIR')"
     fi
 
     # Validate PATCHMOD_DEST_DIR is not empty
     if [[ -z "$PATCHMOD_DEST_DIR" ]]; then
-        PATCHMOD_DEST_DIR="$OWRT_DEV_DIR/target/$OWRT_OS_TARGET_LOWER/$OWRT_SOC_CLASS_LOWER/patches-6.12"
+        PATCHMOD_DEST_DIR="$OWRT_DEV_DIR/target/linux/$OWRT_SOC_CLASS_LOWER/patches-6.12"
         log_summary " >>> ⚠ WARNING: Using default auto-derived PATCHMOD_DEST_DIR ('$PATCHMOD_DEST_DIR')"
     fi
 
