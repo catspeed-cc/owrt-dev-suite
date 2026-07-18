@@ -325,9 +325,30 @@ function sync_config_from_dev_dir() {
     local cfg_home_file="$OWRT_DEV_DIR/.owrtds.cfghome"
     local config_src="$OWRT_DEV_DIR/.config"
 
-    # Guard: skip if tracking file doesn't exist
+    # Guard: no longer skip, we try and copy .config for user based on CONFIG_FILE (cli flag)
     if [[ ! -f "$cfg_home_file" ]]; then
         log_summary " >>> ⏭️  No tracked .config source found. Skipping sync." --silent
+        # Must be first run, custom config was not found thus not tracked
+        # Let's check OWRT_DEV_DIR/.config exists, and copy that to auto-derived filename based on CONFIG_FILE
+        if [[ -f "$OWRT_DEV_DIR/.config" ]]; then
+            # We found a .config to copy. Now where to copy it?
+            # Replace ".build" in CONFIG_FILE with ".config"
+            local config_dest="${CONFIG_FILE%.build}.config"
+
+            # Ensure the target directory exists (in case it's the first run)
+            mkdir -p "$(dirname "$config_dest")"
+
+            if cp "$OWRT_DEV_DIR/.config" "$config_dest"; then
+                log_summary " >>> ✅ Initial .config saved to: $config_dest"
+                # Track it immediately so next run uses this path
+                printf '%s\n' "$config_dest" > "$cfg_home_file"
+            else
+                exit_with_error "Failed to copy initial .config to $config_dest" --nocleanup
+            fi
+        else
+            # There is no custom config in the etc/*/ dir, AND there is no .config in the OWRT_DEV_DIR
+            exit_with_error "No '.config' exists. Please run 'make menuconfig' from $OWRT_DEV_DIR to create one."
+        fi
         return 0
     fi
 
