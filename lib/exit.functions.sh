@@ -25,9 +25,8 @@ exit_with_success() {
     # remove lock - only remaining is output and exit
     remove_lock
 
-    show_header
-
     if [[ "$OWRTDS_INTERACTIVE" == true ]]; then
+        show_header
         echo " >>>"
         echo " >>> SUMMARY REPORT:"
         echo " >>>"
@@ -37,7 +36,9 @@ exit_with_success() {
         echo " >>>"
         echo ""
     else
+        echo ""
         echo " >>> ✅ SUCCESS: ${err_msg}!"
+        show_header
     fi
     exit 0
 }
@@ -66,9 +67,8 @@ exit_with_error() {
     # remove lock - only remaining is output and exit
     remove_lock
 
-    show_header
-
     if [[ "$OWRTDS_INTERACTIVE" == true ]]; then
+        show_header
         echo " >>>"
         echo " >>> SUMMARY REPORT:"
         echo " >>>"
@@ -77,7 +77,9 @@ exit_with_error() {
         echo " >>> ❌ CRITICAL: ${err_msg}!"
         echo " >>>"
     else
+        echo ""
         echo " >>> ❌ CRITICAL: ${err_msg}!"
+        show_header
     fi
     exit 1
 }
