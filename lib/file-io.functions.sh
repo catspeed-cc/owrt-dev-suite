@@ -224,7 +224,7 @@ copy_to_imgdir() {
 
     [[ -z "$WORK_IMAGEOUT_DIR" ]] && exit_with_error "WORK_IMAGEOUT_DIR is not set"
 
-    local dest_dir="$WORK_IMAGEOUT_DIR/$OWRT_VERSION"
+    local dest_dir="$WORK_IMAGEOUT_DIR"
 
     # clobber the image out old files
     rm -rf "${dest_dir:?}/"* || exit_with_error "Clobber image-out dir"
