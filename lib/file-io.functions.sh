@@ -338,7 +338,7 @@ function sync_config_from_dev_dir() {
             # Ensure the target directory exists (in case it's the first run)
             mkdir -p "$(dirname "$config_dest")"
 
-            if cp "$OWRT_DEV_DIR/.config" "$config_dest"; then
+            if cp "$SCRIPT_DIR/.config" "$config_dest"; then
                 log_summary " >>> ✅ Initial .config saved to: $config_dest"
                 # Track it immediately so next run uses this path
                 printf '%s\n' "$config_dest" > "$cfg_home_file"
