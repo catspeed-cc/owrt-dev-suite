@@ -45,6 +45,7 @@ verify_configuration() {
     # PURELY DERIVED FROM VALIDATED USER INPUT - NO USER OVERRIDE
     # DO NOT VALIDATE, ASSUME CORRECTNESS
     OWRT_MFR_LOWER="${OWRT_MFR,,}"
+    OWRT_MFR_LOWER=$(echo "$OWRT_MFR" | tr '[:upper:]' '[:lower:]' | tr -d '-')
     OWRT_MODEL_LOWER="${OWRT_MODEL,,}"
     OWRT_SOC_LOWER="${OWRT_SOC,,}"
     OWRT_SOC_CLASS_LOWER="${OWRT_SOC_CLASS,,}"
