@@ -332,8 +332,12 @@ if [ "$DO_CLEAN" = true ]; then
     echo " >>> Running 'make clean'..."
     if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
         make clean -s > /dev/null 2>&1
+        rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
+        rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
     else
         make clean
+        rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
+        rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
     fi
     msg=" >>> ✅ Make clean"
     echo "$msg"
