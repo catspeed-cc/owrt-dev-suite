@@ -73,7 +73,6 @@ OWRT_MFR="TRENDnet"
 OWRT_MODEL="TEW-829DRU"
 OWRT_SOC="ipq4019"
 OWRT_SOC_CLASS="ipq40xx"
-OWRT_OS_TARGET="linux"
 
 
 # ==================================================================
