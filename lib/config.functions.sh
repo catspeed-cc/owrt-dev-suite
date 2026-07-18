@@ -331,7 +331,7 @@ verify_configuration() {
 
     # TODO: make proper :P give override in config :P Validate above :P
     # Derive port_workdir and port_shareddir paths
-    local port_workdir="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER"
+    local port_workdir="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
     local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
 
     # Set up port workdir

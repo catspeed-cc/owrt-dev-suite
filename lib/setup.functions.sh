@@ -28,7 +28,7 @@ create_workdir() {
             *)
                 echo " >>> Creating ${WORK_DIR} structure..."
                 mkdir -p "$WORK_DIR"
-                log_summary " >>> ✅ $WORK_DIR directory created"
+                log_summary " >>> ✅ $WORK_DIR directory created" --silent
                 ;;
         esac
     fi
@@ -60,7 +60,7 @@ create_projectsdir() {
             *)
                 echo " >>> Creating $PROJECT_DIR..."
                 mkdir -p "$PROJECT_DIR"
-                log_summary " >>> ✅ $PROJECT_DIR directory structure created"
+                log_summary " >>> ✅ $PROJECT_DIR directory structure created" --silent
                 ;;
         esac
     fi
@@ -133,14 +133,15 @@ clone_openwrt() {
 #   create_port_workdir
 # =============================================================================
 create_port_workdir() {
-    if [ ! -d "$DEVICE_WORK_DIR" ]; then
-        echo " >>> Warning: Work directory '$DEVICE_WORK_DIR' does not exist."
+    local port_workdir="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
+    if [ ! -d "$port_workdir" ]; then
+        echo " >>> Warning: Work directory '$port_workdir' does not exist."
         local response="Y"
         if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
             read -r -p "Do you want to create it? [Y/n] " response
             response=${response:-Y}
         else
-            echo " >>> [NON-INTERACTIVE] Auto-creating port specific work directory structure..."
+            log_summary " >>> [NON-INTERACTIVE] Auto-creating port specific work directory structure..." --silent
         fi
 
         case "$response" in
@@ -148,13 +149,13 @@ create_port_workdir() {
                 exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults" --nocleanup
                 ;;
             *)
-                echo " >>> Creating ${DEVICE_WORK_DIR} directory..."
+                echo " >>> Creating ${port_workdir} directory..."
                 mkdir -p "$WORK_DTS_DIR"
                 mkdir -p "$WORK_CALDATA_DIR"
                 mkdir -p "$WORK_PATCHMODS_DIR"
                 mkdir -p "$WORK_RAWMODS_DIR"
                 mkdir -p "$WORK_IMAGEOUT_DIR"
-                log_summary " >>> ✅ $DEVICE_WORK_DIR directory created"
+                log_summary " >>> ✅ $port_workdir directory created" --silent
                 ;;
         esac
     fi
@@ -171,15 +172,15 @@ create_port_workdir() {
 create_port_shareddir() {
     local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
 
-    if [ ! -d "${WEBSERVER_SHARED_DIR}" ]; then
-        echo " >>> Warning: Webserver shareddir directory '$WEBSERVER_SHARED_DIR' does not exist."
+    if [ ! -d "${port_shareddir}" ]; then
+        echo " >>> Warning: Webserver shareddir directory '$port_shareddir' does not exist."
 
         local response="Y"
         if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
             read -r -p "Do you want to create it? [Y/n] " response
             response=${response:-Y}
         else
-            echo " >>> [NON-INTERACTIVE] Auto-creating port's webserver shareddir..."
+            log_summary " >>> [NON-INTERACTIVE] Auto-creating port's webserver shareddir..." --silent
             response="Y" # Force auto-create in non-interactive mode
         fi
 
@@ -192,7 +193,7 @@ create_port_shareddir() {
                 mkdir -p "$port_shareddir"
                 chown root:"$WEBSERVER_SHARED_GROUP" "$port_shareddir"
                 chmod 2775 "$port_shareddir"
-                log_summary " >>> ✅ ${port_shareddir} directory created"
+                log_summary " >>> ✅ ${port_shareddir} directory created" --silent
                 ;;
         esac
     fi
@@ -223,7 +224,7 @@ create_webserver_shareddir() {
 
     # Early exit if DO_WEBSERVER_CPY is not enabled
     if [[ "$DO_WEBSERVER_CPY" != "true" ]]; then
-        log_summary " >>> ⏭️  Webserver copy disabled (DO_WEBSERVER_CPY=false), skipping setup"
+        log_summary " >>> ⏭️  Webserver copy disabled (DO_WEBSERVER_CPY=false), skipping setup" --silent
         return 0
     fi
 
