@@ -290,7 +290,7 @@ copy_to_webserver() {
 #   sync_config_to_etc_dir
 # =============================================================================
 function sync_config_to_dev_dir() {
-    local owrt_config_src="${OWRT_DEV_DIR}/etc/${OWRT_VERSION}/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}.config"
+    local owrt_config_src="${SCRIPT_DIR}/etc/${OWRT_VERSION}/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}.config"
 
     if [[ -f "$owrt_config_src" ]]; then
         if cp "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
@@ -333,12 +333,12 @@ function sync_config_from_dev_dir() {
         if [[ -f "$OWRT_DEV_DIR/.config" ]]; then
             # We found a .config to copy. Now where to copy it?
             # Replace ".build" in CONFIG_FILE with ".config"
-            local config_dest="${OWRT_DEV_DIR}/etc/${OWRT_VERSION}/${CONFIG_FILE%.build}.config"
+            local config_dest="${SCRIPT_DIR}/etc/${OWRT_VERSION}/${CONFIG_FILE%.build}.config"
 
             # Ensure the target directory exists (in case it's the first run)
             mkdir -p "$(dirname "$config_dest")"
 
-            if cp "$SCRIPT_DIR/.config" "$config_dest"; then
+            if cp "$OWRT_DEV_DIR/.config" "$config_dest"; then
                 log_summary " >>> ✅ Initial .config saved to: $config_dest"
                 # Track it immediately so next run uses this path
                 printf '%s\n' "$config_dest" > "$cfg_home_file"
