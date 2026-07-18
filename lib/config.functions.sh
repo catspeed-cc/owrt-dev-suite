@@ -313,9 +313,28 @@ verify_configuration() {
         SETUP_MODE=true
     fi
 
-    # Set up webserver shared directory
+    # Set up webserver shareddir
     if [[ ! -d "$WEBSERVER_SHARED_DIR" ]]; then
         create_webserver_shareddir
+        SETUP_MODE=true
+    fi
+
+    # TODO: make proper :P give override in config :P Validate above :P
+    # Derive port_workdir and port_shareddir paths
+    local port_workdir="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/"
+    local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/"
+
+    # Set up port workdir
+    if [[ ! -d "$port_workdir" ]]; then
+        # create the workdir for the current port if it does not exist yet
+        create_port_workdir
+        SETUP_MODE=true
+    fi
+
+    # Set up webserver port shareddir
+    if [[ ! -d "$port_shareddir" ]]; then
+        # create the shared dir for the current port if it does not exist yet
+        create_port_shareddir
         SETUP_MODE=true
     fi
 
@@ -332,11 +351,6 @@ verify_configuration() {
         exit_with_success "Initial setup completed successfully." --nocleanup
     fi
 
-    # create the workdir for the current port if it does not exist yet
-    create_workdir
-
-    # create the shared dir for the current port if it does not exist yet
-    create_port_shareddir
 
     # checkout the correct branch!
     change_directory "$OWRT_DEV_DIR"
