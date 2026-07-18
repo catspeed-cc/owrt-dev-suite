@@ -18,7 +18,7 @@
 set -Eeuo pipefail
 
 # Version Information
-OWRTDS_VERSION="v0.1.0"
+OWRTDS_VERSION=$(cat .version)
 
 # Ensure STARTUP_PWD does not have a trailing slash for consistent matching
 STARTUP_PWD=$(pwd)
