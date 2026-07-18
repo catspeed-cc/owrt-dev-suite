@@ -433,7 +433,7 @@ sync_config_from_dev_dir
 
 # 3. Handle Build Result
 if [ "$BUILD_STATUS" -eq 0 ]; then
-    echo "✅ Build successful. Copying images..."
+    echo " >>> ✅ Build successful. Copying images..."
 
     # Run post-build steps (Trap is ACTIVE: failures here will cleanup)
     if [ "$DO_IMGDIR_CPY" = "true" ]; then
