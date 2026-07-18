@@ -44,10 +44,19 @@ show_header() {
         local build_finished=true
     fi
 
+    # determine caller for header
+    if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
+        local msg_str="Building release"
+    elif [[ "$SCRIPT_NAME" == "owrt-build-all-releases" ]]; then
+        local msg_str="Building all releases"
+    else
+        local msg_str="unknown"
+    fi
+
     if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
         # Non-Interactive Mode: Compact, log-friendly header
         echo ""
-        echo "=== OWRTDS ${OWRTDS_VERSION} - build release - ${OWRT_MFR} ${OWRT_MODEL} / ${OWRT_SOC_CLASS} ($(date '+%Y-%m-%d %H:%M')) ==="
+        echo "=== OWRTDS ${OWRTDS_VERSION} - ${msg_str} - ${OWRT_MFR} ${OWRT_MODEL} / ${OWRT_SOC_CLASS} ($(date '+%Y-%m-%d %H:%M')) ==="
 
         if [[ "$build_finished" == "true" ]]; then
             echo "=== Elapsed: ${BUILD_ELAPSED} (${BUILD_ELAPSED_SECONDS}s) ==="
@@ -63,7 +72,7 @@ show_header() {
     echo " ========================================================================================================================"
     echo " |                                   'owrt-dev-suite' - Advanced OpenWRT build script                                   |"
     echo " ========================================================================================================================"
-    echo "  🚀 Build Script Started"
+    echo "  🚀 ${msg_str}"
     echo "  📦 Version: ${OWRTDS_VERSION}"
     echo "  🌿 Branch: ${OWRTDS_BRANCH}"
     echo " ========================================================================================================================"
