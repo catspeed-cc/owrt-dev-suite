@@ -333,7 +333,7 @@ function sync_config_from_dev_dir() {
         if [[ -f "$OWRT_DEV_DIR/.config" ]]; then
             # We found a .config to copy. Now where to copy it?
             # Replace ".build" in CONFIG_FILE with ".config"
-            local config_dest="${CONFIG_FILE%.build}.config"
+            local config_dest="${OWRT_DEV_DIR}/etc/${OWRT_VERSION}/${CONFIG_FILE%.build}.config"
 
             # Ensure the target directory exists (in case it's the first run)
             mkdir -p "$(dirname "$config_dest")"
