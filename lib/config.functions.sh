@@ -289,7 +289,7 @@ verify_configuration() {
         DO_DTS_CPY=false
         DO_DRIVERMOD_CPY=false
         DO_CALDATA_CPY=false
-        log_summary " >>> ⚠ WARNING: Disabled DO_DTS_CPY, DO_DRIVERMOD_CPY, & DO_CALDATA_CPY because device is supported!"
+        log_summary " >>> ⚠ WARNING: Disabled DO_DTS_CPY, DO_DRIVERMOD_CPY, & DO_CALDATA_CPY because device is supported!" --silent
     fi
 
 
@@ -327,18 +327,18 @@ verify_configuration() {
 
     # TODO: make proper :P give override in config :P Validate above :P
     # Derive port_workdir and port_shareddir paths
-    local port_workdir="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/"
-    local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/"
+    local port_workdir="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER"
+    local port_shareddir="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
 
     # Set up port workdir
-    if [[ ! -d "$DEVICE_WORK_DIR" ]]; then
+    if [[ ! -d "$port_workdir" ]]; then
         # create the workdir for the current port if it does not exist yet
         create_port_workdir
         SETUP_MODE=true
     fi
 
     # Set up webserver port shareddir
-    if [[ ! -d "$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION" ]]; then
+    if [[ ! -d "$port_shareddir" ]]; then
         # create the shared dir for the current port if it does not exist yet
         create_port_shareddir
         SETUP_MODE=true
@@ -350,14 +350,14 @@ verify_configuration() {
 
     # If we created anything, stop and let the user populate files
     if [[ "$SETUP_MODE" == true ]]; then
-        log_summary " >>>"
-        log_summary " >>> ✅  Initial setup completed successfully."
-        log_summary " >>>"
-        log_summary " >>> 📂  Please ensure your source files exist in: $WORK_DIR"
-        log_summary " >>>     (e.g., DTS files, patches, caldata, driver mods)"
-        log_summary " >>>"
-        log_summary " >>> Once files are in place, run the script again to start compilation."
-        log_summary " >>>"
+        log_summary " >>>" --silent
+        log_summary " >>> ✅  Initial setup completed successfully." --silent
+        log_summary " >>>" --silent
+        log_summary " >>> 📂  Please ensure your source files exist in: $WORK_DIR" --silent
+        log_summary " >>>     (e.g., DTS files, patches, caldata, driver mods)" --silent
+        log_summary " >>>" --silent
+        log_summary " >>> Once files are in place, run the script again to start compilation." --silent
+        log_summary " >>>" --silent
         exit_with_success "Initial setup completed successfully." --nocleanup
     fi
 
