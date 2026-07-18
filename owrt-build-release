@@ -329,8 +329,8 @@ trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."'
 # 10. Execution Logic
 # ==============================================================================
 
-echo " >>> Starting Build Process for $OWRT_MFR / $OWRT_MODEL (${OWRT_SOC_CLASS})"
-echo " >>> Working Directory: $OWRT_DEV_DIR"
+echo " >>> Starting build process for $OWRT_MFR_LOWER / $OWRT_MODEL_LOWER (${OWRT_SOC_CLASS_LOWER})"
+echo " >>> Working directory: $OWRT_DEV_DIR"
 change_directory "$OWRT_DEV_DIR"
 
 # Handle Clean
