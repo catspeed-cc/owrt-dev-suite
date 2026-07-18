@@ -344,6 +344,10 @@ verify_configuration() {
         SETUP_MODE=true
     fi
 
+    # checkout the correct branch!
+    change_directory "$OWRT_DEV_DIR"
+    git checkout -q "$OWRT_TARGET_BRANCH" || exit_with_error "Unable to checkout branch: $OWRT_TARGET_BRANCH" --nocleanup
+
     # If we created anything, stop and let the user populate files
     if [[ "$SETUP_MODE" == true ]]; then
         log_summary " >>>"
@@ -356,11 +360,6 @@ verify_configuration() {
         log_summary " >>>"
         exit_with_success "Initial setup completed successfully." --nocleanup
     fi
-
-
-    # checkout the correct branch!
-    change_directory "$OWRT_DEV_DIR"
-    git checkout -q "$OWRT_TARGET_BRANCH" || exit_with_error "Unable to checkout branch: $OWRT_TARGET_BRANCH" --nocleanup
 
 
 
