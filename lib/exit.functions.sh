@@ -26,14 +26,19 @@ exit_with_success() {
     remove_lock
 
     show_header
-    echo " >>>"
-    echo " >>> SUMMARY REPORT:"
-    echo " >>>"
-    echo -n "$SUMMARY_OUT"
-    echo " >>>"
-    echo " >>> ✅ SUCCESS: ${err_msg}!"
-    echo " >>>"
-    echo ""
+
+    if [[ "$OWRTDS_INTERACTIVE" == true ]]; then
+        echo " >>>"
+        echo " >>> SUMMARY REPORT:"
+        echo " >>>"
+        echo -n "$SUMMARY_OUT"
+        echo " >>>"
+        echo " >>> ✅ SUCCESS: ${err_msg}!"
+        echo " >>>"
+        echo ""
+    else
+        echo " >>> ✅ SUCCESS: ${err_msg}!"
+    fi
     exit 0
 }
 
@@ -62,12 +67,17 @@ exit_with_error() {
     remove_lock
 
     show_header
-    echo " >>>"
-    echo " >>> SUMMARY REPORT:"
-    echo " >>>"
-    echo -n "$SUMMARY_OUT"
-    echo " >>>"
-    echo " >>> ❌ CRITICAL: ${err_msg}!"
-    echo " >>>"
+
+    if [[ "$OWRTDS_INTERACTIVE" == true ]]; then
+        echo " >>>"
+        echo " >>> SUMMARY REPORT:"
+        echo " >>>"
+        echo -n "$SUMMARY_OUT"
+        echo " >>>"
+        echo " >>> ❌ CRITICAL: ${err_msg}!"
+        echo " >>>"
+    else
+        echo " >>> ❌ CRITICAL: ${err_msg}!"
+    fi
     exit 1
 }

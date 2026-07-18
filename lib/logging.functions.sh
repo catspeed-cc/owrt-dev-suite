@@ -50,9 +50,9 @@ show_header() {
         echo "=== OWRTDS ${OWRTDS_VERSION} Build: ${OWRT_MFR} ${OWRT_MODEL} ($(date '+%Y-%m-%d %H:%M')) ==="
 
         if [[ "$build_finished" == "false" ]]; then
-            echo "Target: ${OWRT_SOC_CLASS} | Profile: ${BUILD_PROFILE:-default}"
+            echo "Mfr: ${OWRT_MFR} Model: ${OWRT_MODEL} SOC Class: ${OWRT_SOC_CLASS}"
         else
-            echo "Target: ${OWRT_SOC_CLASS} | Profile: ${BUILD_PROFILE:-default} | Elapsed: ${BUILD_ELAPSED} (${BUILD_ELAPSED_SECONDS}s)"
+            echo "Mfr: ${OWRT_MFR} Model: ${OWRT_MODEL} SOC Class: ${OWRT_SOC_CLASS} | Elapsed: ${BUILD_ELAPSED} (${BUILD_ELAPSED_SECONDS}s)"
         fi
 
         echo ""

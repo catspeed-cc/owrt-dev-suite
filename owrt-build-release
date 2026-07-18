@@ -336,49 +336,64 @@ change_directory "$OWRT_DEV_DIR"
 # Handle Clean
 if [[ "$DO_CLEAN" == "true" ]]; then
     echo " >>> Running 'make clean'..."
-    if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
+        rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
+        log_summary " >>> ✅ Make clean"
+    else
         make clean -s > /dev/null 2>&1
         rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
         rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
-    else
-        make clean
-        rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
-        rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
     fi
-    msg=" >>> ✅ Make clean"
-    echo "$msg"
-    SUMMARY_OUT+="${msg}"${NL}
 fi
 
 # Handle Update Feeds (First, to ensure package definitions are fresh)
 if [[ "$DO_UPDATE_FEEDS" == "true" ]]; then
     echo " >>> Updating and installing feeds..."
-    ./scripts/feeds update -a
-    ./scripts/feeds install -a
-    msg=" >>> ✅ Feeds updated & installed"
-    echo "$msg"
-    SUMMARY_OUT+="${msg}"${NL}
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        log_summary " >>> ✅ Feeds updated & installed"
+    else
+        ./scripts/feeds update -a > /dev/null 2>&1
+        ./scripts/feeds install -a > /dev/null 2>&1
+    fi
 fi
 
 if [[ "$DO_CLEAN" == "true" ]]; then
-    echo " >>> 🛠️  Ensuring host tools and toolchain are ready..."
-    make tools/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build host tools"
-    make toolchain/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build toolchain"
+    echo " >>> Ensuring host tools and toolchain are ready..."
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        make tools/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build host tools"
+        make toolchain/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build toolchain"
+        log_summary " >>> ✅ Toolchain built"
+    else
+        make tools/install ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Failed to build host tools"
+        make toolchain/install ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Failed to build toolchain"
+    fi
 fi
 
 # Handle Inject DTS (BEFORE prepare)
 if [[ "$DEVICE_SUPPORTED" == "false" && "$DO_DTS_CPY" == "true" && "$DO_CLEAN" == "true" ]]; then
     echo " >>> Injecting custom DTS file..."
-    copy_file "$WORK_DTS_DIR/$DTS_FNAME" "$DTS_DEST_DIR/$DTS_FNAME"
+    copy_file "$WORK_DTS_DIR/$DTS_FNAME" "$DTS_DEST_DIR/$DTS_FNAME" > /dev/null 2>&1
     # Prepare Kernel Sources
-    build_kernel_sources
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        build_kernel_sources
+        log_summary " >>> ✅ Kernel source built"
+    else
+        build_kernel_sources > /dev/null 2>&1
+    fi
 fi
 
 # Handle prepare linux-firmware
 if [[ "$DEVICE_SUPPORTED" == "false" && "$DO_CALDATA_CPY" == "true" && "$DO_CLEAN" == "true" ]]; then
     echo " >>> Running 'make target/linux-firmware/prepare'..."
-    make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux-firmware'"
-    log_summary " >>> ✅ Sources prepared (linux-firmware)"
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux-firmware'"
+        log_summary " >>> ✅ Sources prepared (linux-firmware)"
+    else
+        make package/linux-firmware/prepare ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Make Prepare 'linux-firmware'"
+    fi
     # Handle Copy caldata
     echo " >>> Injecting board-2.bin into build_dir..."
     copy_caldata
@@ -401,8 +416,13 @@ set +e
 # Now the main build can proceed without host tool interruptions
 MAKE_CMD="make ${MAKE_CMD_ADD}"
 echo " >>> Starting compilation: ${MAKE_CMD}"
-$MAKE_CMD
-BUILD_STATUS=$?
+if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+    $MAKE_CMD
+    BUILD_STATUS=$?
+else
+    $MAKE_CMD > /dev/null 2>&1
+    BUILD_STATUS=$?
+fi
 
 # 2. Re-enable strict error checking immediately.
 #    Any failure in copy/cleanup steps will now trigger the trap & cleanup.
