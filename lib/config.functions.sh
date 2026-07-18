@@ -303,24 +303,28 @@ verify_configuration() {
 
     # Create the required structure if not already exists
     if [[ ! -d "$WORK_DIR" ]]; then
+        log_summary " >>> ⏳ Creating $WORK_DIR ..." --silent
         create_workdir
         SETUP_MODE=true
     fi
 
     # Create the required structure if not already exists
     if [[ ! -d "$PROJECT_DIR" ]]; then
+        log_summary " >>> ⏳ Creating $PROJECT_DIR ..." --silent
         create_projectsdir
         SETUP_MODE=true
     fi
 
     # Clone openwrt fork
     if [[ ! -d "$OWRT_DEV_DIR" ]]; then
+        log_summary " >>> ⏳ Cloning OpenWRT into $OWRT_DEV_DIR ... This can take a while, please grab a ☕" --silent
         clone_openwrt
         SETUP_MODE=true
     fi
 
     # Set up webserver shareddir
     if [[ ! -d "$WEBSERVER_SHARED_DIR" ]]; then
+        log_summary " >>> ⏳ Creating $WEBSERVER_SHARED_DIR ..." --silent
         create_webserver_shareddir
         SETUP_MODE=true
     fi
@@ -332,6 +336,7 @@ verify_configuration() {
 
     # Set up port workdir
     if [[ ! -d "$port_workdir" ]]; then
+        log_summary " >>> ⏳ Creating $port_workdir ..." --silent
         # create the workdir for the current port if it does not exist yet
         create_port_workdir
         SETUP_MODE=true
@@ -339,6 +344,7 @@ verify_configuration() {
 
     # Set up webserver port shareddir
     if [[ ! -d "$port_shareddir" ]]; then
+        log_summary " >>> ⏳ Creating $port_shareddir ..." --silent
         # create the shared dir for the current port if it does not exist yet
         create_port_shareddir
         SETUP_MODE=true
@@ -358,7 +364,7 @@ verify_configuration() {
         log_summary " >>>" --silent
         log_summary " >>> Once files are in place, run the script again to start compilation." --silent
         log_summary " >>>" --silent
-        exit_with_success "Initial setup completed successfully." --nocleanup
+        exit_with_success "Initial setup completed successfully" --nocleanup
     fi
 
 
