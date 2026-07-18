@@ -133,7 +133,7 @@ clone_openwrt() {
 #   create_port_workdir
 # =============================================================================
 create_port_workdir() {
-    local port_workdir="$PORT_WORKDIR"
+    local port_workdir="$DEVICE_WORK_DIR"
     if [ ! -d "$port_workdir" ]; then
         echo " >>> Warning: Work directory '$port_workdir' does not exist."
         local response="Y"
@@ -149,12 +149,18 @@ create_port_workdir() {
                 exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults" --nocleanup
                 ;;
             *)
-                echo " >>> Creating ${port_workdir} directory..."
-                mkdir -p "$WORK_DTS_DIR"
-                mkdir -p "$WORK_CALDATA_DIR"
-                mkdir -p "$WORK_PATCHMODS_DIR"
-                mkdir -p "$WORK_RAWMODS_DIR"
-                mkdir -p "$WORK_IMAGEOUT_DIR"
+                set +e
+                echo " >>> Creating ${WORK_DTS_DIR} directory..."
+                sudo mkdir -p "$WORK_DTS_DIR"
+                echo " >>> Creating ${WORK_CALDATA_DIR} directory..."
+                sudo mkdir -p "$WORK_CALDATA_DIR"
+                echo " >>> Creating ${WORK_PATCHMODS_DIR} directory..."
+                sudo mkdir -p "$WORK_PATCHMODS_DIR"
+                echo " >>> Creating ${WORK_RAWMODS_DIR} directory..."
+                sudo mkdir -p "$WORK_RAWMODS_DIR"
+                echo " >>> Creating ${WORK_IMAGEOUT_DIR} directory..."
+                sudo mkdir -p "$WORK_IMAGEOUT_DIR"
+                set -e
                 log_summary " >>> ✅ $port_workdir directory created" --silent
                 ;;
         esac
@@ -170,7 +176,7 @@ create_port_workdir() {
 #   create_port_shareddir
 # =============================================================================
 create_port_shareddir() {
-    local port_shareddir="$PORT_SHAREDDIR"
+    local port_shareddir="$DEVICE_SHARED_DIR"
 
     if [ ! -d "${port_shareddir}" ]; then
         echo " >>> Warning: Webserver shareddir directory '$port_shareddir' does not exist."
@@ -191,8 +197,11 @@ create_port_shareddir() {
             *)
                 echo " >>> Creating ${port_shareddir} directory..."
                 mkdir -p "$port_shareddir"
-                chown root:"$WEBSERVER_SHARED_GROUP" "$port_shareddir"
-                chmod 2775 "$port_shareddir"
+                set +e
+                # TODO: THIS BETTER . really, below sudo lines not the greatest but should work.
+                sudo chown root:"$WEBSERVER_SHARED_GROUP" "$port_shareddir"
+                sudo chmod 2775 "$port_shareddir"
+                set -e
                 log_summary " >>> ✅ ${port_shareddir} directory created" --silent
                 ;;
         esac

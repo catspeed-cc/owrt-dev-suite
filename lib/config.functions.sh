@@ -218,8 +218,14 @@ verify_configuration() {
 
     # Validate DEVICE_WORK_DIR is not empty
     if [[ -z "$DEVICE_WORK_DIR" ]]; then
-        DEVICE_WORK_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER"
+        DEVICE_WORK_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
         log_summary " >>> ⚠ WARNING: Using default auto-derived DEVICE_WORK_DIR ('$DEVICE_WORK_DIR')"
+    fi
+
+    # Validate DEVICE_SHARED_DIR is not empty
+    if [[ -z "$DEVICE_SHARED_DIR" ]]; then
+        DEVICE_SHARED_DIR="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived DEVICE_SHARED_DIR ('$DEVICE_SHARED_DIR')"
     fi
 
     # Validate WORK_DTS_DIR is not empty
@@ -277,9 +283,6 @@ verify_configuration() {
         log_summary " >>> ⚠ WARNING: Using default auto-derived OWRT_TARGET_BRANCH ('$OWRT_TARGET_BRANCH')"
     fi
 
-    # no validation needed, autoconfigured internal global variables
-    PORT_WORKDIR="$WORK_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
-    PORT_SHAREDDIR="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
 
 
 
@@ -307,43 +310,43 @@ verify_configuration() {
 
     # Create the required structure if not already exists
     if [[ ! -d "$WORK_DIR" ]]; then
-        log_summary " >>> ⏳ Creating $WORK_DIR ..." --silent
+        log_summary " >>> ⏳ Creating $WORK_DIR ..."
         create_workdir
         SETUP_MODE=true
     fi
 
     # Create the required structure if not already exists
     if [[ ! -d "$PROJECT_DIR" ]]; then
-        log_summary " >>> ⏳ Creating $PROJECT_DIR ..." --silent
+        log_summary " >>> ⏳ Creating $PROJECT_DIR ..."
         create_projectsdir
         SETUP_MODE=true
     fi
 
     # Clone openwrt fork
     if [[ ! -d "$OWRT_DEV_DIR" ]]; then
-        log_summary " >>> ⏳ Cloning OpenWRT into $OWRT_DEV_DIR ... This can take a while, please grab a ☕" --silent
+        log_summary " >>> ⏳ Cloning OpenWRT into $OWRT_DEV_DIR ... This can take a while, please grab a ☕"
         clone_openwrt
         SETUP_MODE=true
     fi
 
     # Set up webserver shareddir
     if [[ ! -d "$WEBSERVER_SHARED_DIR" ]]; then
-        log_summary " >>> ⏳ Creating $WEBSERVER_SHARED_DIR ..." --silent
+        log_summary " >>> ⏳ Creating $WEBSERVER_SHARED_DIR ..."
         create_webserver_shareddir
         SETUP_MODE=true
     fi
 
     # Set up port workdir
-    if [[ ! -d "$PORT_WORKDIR" ]]; then
-        log_summary " >>> ⏳ Creating $PORT_WORKDIR ..." --silent
+    if [[ ! -d "$DEVICE_WORK_DIR" ]]; then
+        log_summary " >>> ⏳ Creating $DEVICE_WORK_DIR ..."
         # create the workdir for the current port if it does not exist yet
         create_port_workdir
         SETUP_MODE=true
     fi
 
     # Set up webserver port shareddir
-    if [[ ! -d "$PORT_SHAREDDIR" ]]; then
-        log_summary " >>> ⏳ Creating $PORT_SHAREDDIR ..." --silent
+    if [[ ! -d "$DEVICE_SHARED_DIR" ]]; then
+        log_summary " >>> ⏳ Creating $DEVICE_SHARED_DIR ..."
         # create the shared dir for the current port if it does not exist yet
         create_port_shareddir
         SETUP_MODE=true
