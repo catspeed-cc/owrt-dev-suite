@@ -114,7 +114,7 @@ SUDO_ENABLE=true
 # Users can override any of these by uncommenting and changing them
 # ==================================================================
 
-# DEVICE_WORK_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru"
+# DEVICE_WORK_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12"
 
 # Example override: $WORK_DIR/ipq40xx/trendnet/tew-829dru/<directory>
 # WORK_DTS_DIR="$DEVICE_WORK_DIR/dts"
