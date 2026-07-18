@@ -216,10 +216,10 @@ verify_configuration() {
 
     # SOURCE DIRECTORIES
 
-    # Validate DEVICE_DIR is not empty
+    # Validate DEVICE_WORK_DIR is not empty
     if [[ -z "$DEVICE_WORK_DIR" ]]; then
         DEVICE_WORK_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived DEVICE_DIR ('$DEVICE_WORK_DIR')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived DEVICE_WORK_DIR ('$DEVICE_WORK_DIR')"
     fi
 
     # Validate WORK_DTS_DIR is not empty
