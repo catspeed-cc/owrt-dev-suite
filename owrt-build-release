@@ -283,6 +283,7 @@ show_header
 # 8. Check if there is a .config file , if not exit_with_error
 # ===========================================================================================
 
+# Checks if there is a .config in the OWRT_DEV_DIR after having copied it from sync_config_to_etc_dir above
 if [[ ! -f "$OWRT_DEV_DIR/.config" ]]; then
     exit_with_error "No .config file found. Ensure the file exists. (run 'make menuconfig' to create one, then copy it to your work directory for the device)"
 fi

@@ -280,17 +280,17 @@ copy_to_webserver() {
 }
 
 # =============================================================================
-# sync_config_to_dev_dir
-# Description: Synchronizes the model-specific .config from the local work directory
+# sync_config_to_etc_dir
+# Description: Synchronizes the model-specific .config from the etc/ directory
 #              to the OpenWrt build root ($OWRT_DEV_DIR). If successful, it records
 #              the source path in .owrtds.cfghome for future reference.
 # Parameters: None (uses global environment variables for paths)
 # Returns/Exit Codes: Exits with error on copy failure; returns 0 on success or skip
 # Usage Example:
-#   sync_config_to_dev_dir
+#   sync_config_to_etc_dir
 # =============================================================================
 function sync_config_to_dev_dir() {
-    local owrt_config_src="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}.config"
+    local owrt_config_src="${OWRT_DEV_DIR}/etc/${OWRT_VERSION}/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}.config"
 
     if [[ -f "$owrt_config_src" ]]; then
         if cp "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
@@ -313,13 +313,13 @@ function sync_config_to_dev_dir() {
 }
 
 # =============================================================================
-# sync_config_from_dev_dir
+# sync_config_from_etc_dir
 # Description: Reads the target path from $OWRT_DEV_DIR/.owrtds.cfghome and
 #              copies $OWRT_DEV_DIR/.config back to that location.
 # Parameters: None (uses global environment variables for paths)
 # Returns/Exit Codes: Exits with error on copy failure; returns 0 on success or skip
 # Usage Example:
-#   sync_config_from_dev_dir
+#   sync_config_from_etc_dir
 # =============================================================================
 function sync_config_from_dev_dir() {
     local cfg_home_file="$OWRT_DEV_DIR/.owrtds.cfghome"
