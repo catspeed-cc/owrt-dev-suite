@@ -27,12 +27,8 @@ create_workdir() {
                 ;;
             *)
                 echo " >>> Creating ${WORK_DIR} structure..."
-                mkdir -p "$WORK_DTS_DIR/oem"
-                mkdir -p "$WORK_CALDATA_DIR"
-                mkdir -p "$WORK_PATCHMODS_DIR"
-                mkdir -p "$WORK_RAWMODS_DIR"
-                mkdir -p "$WORK_IMAGEOUT_DIR"
-                log_summary " >>> ✅ $WORK_DIR directory structure created"
+                mkdir -p "$WORK_DIR"
+                log_summary " >>> ✅ $WORK_DIR directory created"
                 ;;
         esac
     fi
