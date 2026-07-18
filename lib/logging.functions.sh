@@ -47,12 +47,12 @@ show_header() {
     if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
         # Non-Interactive Mode: Compact, log-friendly header
         echo ""
-        echo "=== OWRTDS ${OWRTDS_VERSION} Build: ${OWRT_MFR_UPPER} ${OWRT_MODEL_UPPER} ($(date '+%Y-%m-%d %H:%M')) ==="
+        echo "=== OWRTDS ${OWRTDS_VERSION} Build: ${OWRT_MFR} ${OWRT_MODEL} ($(date '+%Y-%m-%d %H:%M')) ==="
 
         if [[ "$build_finished" == "false" ]]; then
-            echo "Target: ${OWRT_SOC_CLASS_UPPER} | Profile: ${BUILD_PROFILE:-default}"
+            echo "Target: ${OWRT_SOC_CLASS} | Profile: ${BUILD_PROFILE:-default}"
         else
-            echo "Target: ${OWRT_SOC_CLASS_UPPER} | Profile: ${BUILD_PROFILE:-default} | Elapsed: ${BUILD_ELAPSED} (${BUILD_ELAPSED_SECONDS}s)"
+            echo "Target: ${OWRT_SOC_CLASS} | Profile: ${BUILD_PROFILE:-default} | Elapsed: ${BUILD_ELAPSED} (${BUILD_ELAPSED_SECONDS}s)"
         fi
 
         echo ""
