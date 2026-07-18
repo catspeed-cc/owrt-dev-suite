@@ -375,7 +375,10 @@ function sync_config_from_dev_dir() {
     fi
 
     # Copy the config back to WORK_DIR
-    echo " >>> Synchronizing .config back to work directory..."
+    if [[ "$OWRDTS_INTERACTIVE" == "false" ]]; then
+        echo " >>> Synchronizing .config back to work directory..."
+    fi
+
     if cp -f "$config_src" "$owrt_config_dest"; then
         log_summary " >>> ✅ .config synchronized to $(cleanup_path "$owrt_config_dest")" --silent
     else
