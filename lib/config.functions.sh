@@ -219,43 +219,43 @@ verify_configuration() {
     # Validate DEVICE_WORK_DIR is not empty
     if [[ -z "$DEVICE_WORK_DIR" ]]; then
         DEVICE_WORK_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived DEVICE_WORK_DIR ('$DEVICE_WORK_DIR')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived DEVICE_WORK_DIR ('$DEVICE_WORK_DIR')" --silent
     fi
 
     # Validate DEVICE_SHARED_DIR is not empty
     if [[ -z "$DEVICE_SHARED_DIR" ]]; then
         DEVICE_SHARED_DIR="$WEBSERVER_SHARED_DIR/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/$OWRT_VERSION"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived DEVICE_SHARED_DIR ('$DEVICE_SHARED_DIR')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived DEVICE_SHARED_DIR ('$DEVICE_SHARED_DIR')" --silent
     fi
 
     # Validate WORK_DTS_DIR is not empty
     if [[ -z "$WORK_DTS_DIR" ]]; then
         WORK_DTS_DIR="$DEVICE_WORK_DIR/dts"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_DTS_DIR ('$WORK_DTS_DIR')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_DTS_DIR ('$WORK_DTS_DIR')" --silent
     fi
 
     # Validate WORK_CALDATA_DIR is not empty
     if [[ -z "$WORK_CALDATA_DIR" ]]; then
         WORK_CALDATA_DIR="$DEVICE_WORK_DIR/caldata"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_CALDATA_DIR ('$WORK_CALDATA_DIR')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_CALDATA_DIR ('$WORK_CALDATA_DIR')" --silent
     fi
 
     # Validate WORK_PATCHMODS_DIR is not empty
     if [[ -z "$WORK_PATCHMODS_DIR" ]]; then
         WORK_PATCHMODS_DIR="$DEVICE_WORK_DIR/patchmods"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_PATCHMODS_DIR ('$WORK_PATCHMODS_DIR')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_PATCHMODS_DIR ('$WORK_PATCHMODS_DIR')" --silent
     fi
 
     # Validate WORK_RAWMODS_DIR is not empty
     if [[ -z "$WORK_RAWMODS_DIR" ]]; then
         WORK_RAWMODS_DIR="$DEVICE_WORK_DIR/rawmods"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_RAWMODS_DIR ('$WORK_RAWMODS_DIR')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_RAWMODS_DIR ('$WORK_RAWMODS_DIR')" --silent
     fi
 
     # Validate WORK_IMAGEOUT_DIR is not empty
     if [[ -z "$WORK_IMAGEOUT_DIR" ]]; then
         WORK_IMAGEOUT_DIR="$DEVICE_WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/image-out"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_IMAGEOUT_DIR ('$WORK_IMAGEOUT_DIR')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_IMAGEOUT_DIR ('$WORK_IMAGEOUT_DIR')" --silent
     fi
 
     # DESTINATION DIRECTORIES
@@ -263,13 +263,13 @@ verify_configuration() {
     # Validate DTS_DEST_DIR is not empty
     if [[ -z "$DTS_DEST_DIR" ]]; then
         DTS_DEST_DIR="$OWRT_DEV_DIR/target/linux/$OWRT_SOC_CLASS_LOWER/files-6.12/arch/arm/boot/dts/qcom"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived DTS_DEST_DIR ('$DTS_DEST_DIR')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived DTS_DEST_DIR ('$DTS_DEST_DIR')" --silent
     fi
 
     # Validate PATCHMOD_DEST_DIR is not empty
     if [[ -z "$PATCHMOD_DEST_DIR" ]]; then
         PATCHMOD_DEST_DIR="$OWRT_DEV_DIR/target/linux/$OWRT_SOC_CLASS_LOWER/patches-6.12"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived PATCHMOD_DEST_DIR ('$PATCHMOD_DEST_DIR')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived PATCHMOD_DEST_DIR ('$PATCHMOD_DEST_DIR')" --silent
     fi
 
 
@@ -280,7 +280,7 @@ verify_configuration() {
     # Validate OWRT_TARGET_BRANCH is not empty
     if [[ -z "$OWRT_TARGET_BRANCH" ]]; then
         OWRT_TARGET_BRANCH="${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}-${OWRT_BASE_BRANCH}"
-        log_summary " >>> ⚠ WARNING: Using default auto-derived OWRT_TARGET_BRANCH ('$OWRT_TARGET_BRANCH')"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived OWRT_TARGET_BRANCH ('$OWRT_TARGET_BRANCH')" --silent
     fi
 
 
