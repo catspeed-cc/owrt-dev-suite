@@ -149,18 +149,16 @@ create_port_workdir() {
                 exit_with_error "Please configure your paths in 'etc/config.sh' or accept the defaults" --nocleanup
                 ;;
             *)
-                set +e
                 echo " >>> Creating ${WORK_DTS_DIR} directory..."
-                sudo mkdir -p "$WORK_DTS_DIR"
+                mkdir -p "$WORK_DTS_DIR"
                 echo " >>> Creating ${WORK_CALDATA_DIR} directory..."
-                sudo mkdir -p "$WORK_CALDATA_DIR"
+                mkdir -p "$WORK_CALDATA_DIR"
                 echo " >>> Creating ${WORK_PATCHMODS_DIR} directory..."
-                sudo mkdir -p "$WORK_PATCHMODS_DIR"
+                mkdir -p "$WORK_PATCHMODS_DIR"
                 echo " >>> Creating ${WORK_RAWMODS_DIR} directory..."
-                sudo mkdir -p "$WORK_RAWMODS_DIR"
+                mkdir -p "$WORK_RAWMODS_DIR"
                 echo " >>> Creating ${WORK_IMAGEOUT_DIR} directory..."
-                sudo mkdir -p "$WORK_IMAGEOUT_DIR"
-                set -e
+                mkdir -p "$WORK_IMAGEOUT_DIR"
                 log_summary " >>> ✅ $port_workdir directory created" --silent
                 ;;
         esac
