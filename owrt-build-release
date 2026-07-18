@@ -334,7 +334,7 @@ echo " >>> Working Directory: $OWRT_DEV_DIR"
 change_directory "$OWRT_DEV_DIR"
 
 # Handle Clean
-if [ "$DO_CLEAN" = true ]; then
+if [[ "$DO_CLEAN" == "true" ]]; then
     echo " >>> Running 'make clean'..."
     if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
         make clean -s > /dev/null 2>&1
@@ -351,7 +351,7 @@ if [ "$DO_CLEAN" = true ]; then
 fi
 
 # Handle Update Feeds (First, to ensure package definitions are fresh)
-if [ "$DO_UPDATE_FEEDS" = true ]; then
+if [[ "$DO_UPDATE_FEEDS" == "true" ]]; then
     echo " >>> Updating and installing feeds..."
     ./scripts/feeds update -a
     ./scripts/feeds install -a
@@ -360,32 +360,26 @@ if [ "$DO_UPDATE_FEEDS" = true ]; then
     SUMMARY_OUT+="${msg}"${NL}
 fi
 
-if [ "$DO_CLEAN" = true ]; then
+if [[ "$DO_CLEAN" == "true" ]]; then
     echo " >>> 🛠️  Ensuring host tools and toolchain are ready..."
     make tools/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build host tools"
     make toolchain/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build toolchain"
 fi
 
 # Handle Inject DTS (BEFORE prepare)
-if [ "$DO_DTS_CPY" = true ]; then
+if [[ "$DEVICE_SUPPORTED" == "false" && "$DO_DTS_CPY" == "true" && "$DO_CLEAN" == "true" ]]; then
     echo " >>> Injecting custom DTS file..."
     copy_file "$WORK_DTS_DIR/$DTS_FNAME" "$DTS_DEST_DIR/$DTS_FNAME"
-fi
-
-# Handle Prepare Kernel Sources
-if [ "$DO_CLEAN" = true ]; then
+    # Prepare Kernel Sources
     build_kernel_sources
 fi
 
 # Handle prepare linux-firmware
-if [ "$DO_CLEAN" = true ]; then
+if [[ "$DEVICE_SUPPORTED" == "false" && "$DO_CALDATA_CPY" == "true" && "$DO_CLEAN" == "true" ]]; then
     echo " >>> Running 'make target/linux-firmware/prepare'..."
     make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux-firmware'"
     log_summary " >>> ✅ Sources prepared (linux-firmware)"
-fi
-
-# Handle Copy caldata
-if [ "$DO_CALDATA_CPY" = "true" ]; then
+    # Handle Copy caldata
     echo " >>> Injecting board-2.bin into build_dir..."
     copy_caldata
 fi
@@ -398,7 +392,7 @@ fi
 # ==============================================
 
 # PAUSE SO HUMAN USER CAN SEE PROGRESS BEFORE COMPILE
-if [[ "$OWRT_INTERACTIVE" == true ]]; then sleep 5 fi
+if [[ "$OWRT_INTERACTIVE" == true ]]; then sleep 5; fi
 
 # 1. Temporarily disable 'errexit' to capture make's exit code manually.
 #    NOTE: The SIGINT/SIGTERM trap remains ACTIVE here for CTRL+C safety.
