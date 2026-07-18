@@ -114,12 +114,14 @@ SUDO_ENABLE=true
 # Users can override any of these by uncommenting and changing them
 # ==================================================================
 
+# DEVICE_WORK_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru"
+
 # Example override: $WORK_DIR/ipq40xx/trendnet/tew-829dru/<directory>
-# WORK_DTS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/dts"
-# WORK_CALDATA_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/caldata"
-# WORK_PATCHMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/patchmods"
-# WORK_RAWMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/rawmods"
-# WORK_IMAGEOUT_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/image-out"
+# WORK_DTS_DIR="$DEVICE_DIR/dts"
+# WORK_CALDATA_DIR="$DEVICE_DIR/caldata"
+# WORK_PATCHMODS_DIR="$DEVICE_DIR/patchmods"
+# WORK_RAWMODS_DIR="$DEVICE_DIR/rawmods"
+# WORK_IMAGEOUT_DIR="$DEVICE_DIR/image-out"
 
 
 

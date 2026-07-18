@@ -216,33 +216,39 @@ verify_configuration() {
 
     # SOURCE DIRECTORIES
 
+    # Validate DEVICE_DIR is not empty
+    if [[ -z "$DEVICE_WORK_DIR" ]]; then
+        DEVICE_WORK_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER"
+        log_summary " >>> ⚠ WARNING: Using default auto-derived DEVICE_DIR ('$DEVICE_WORK_DIR')"
+    fi
+
     # Validate WORK_DTS_DIR is not empty
     if [[ -z "$WORK_DTS_DIR" ]]; then
-        WORK_DTS_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/dts"
+        WORK_DTS_DIR="$DEVICE_WORK_DIR/dts"
         log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_DTS_DIR ('$WORK_DTS_DIR')"
     fi
 
     # Validate WORK_CALDATA_DIR is not empty
     if [[ -z "$WORK_CALDATA_DIR" ]]; then
-        WORK_CALDATA_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/caldata"
+        WORK_CALDATA_DIR="$DEVICE_WORK_DIR/caldata"
         log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_CALDATA_DIR ('$WORK_CALDATA_DIR')"
     fi
 
     # Validate WORK_PATCHMODS_DIR is not empty
     if [[ -z "$WORK_PATCHMODS_DIR" ]]; then
-        WORK_PATCHMODS_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/patchmods"
+        WORK_PATCHMODS_DIR="$DEVICE_WORK_DIR/patchmods"
         log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_PATCHMODS_DIR ('$WORK_PATCHMODS_DIR')"
     fi
 
     # Validate WORK_RAWMODS_DIR is not empty
     if [[ -z "$WORK_RAWMODS_DIR" ]]; then
-        WORK_RAWMODS_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/rawmods"
+        WORK_RAWMODS_DIR="$DEVICE_WORK_DIR/rawmods"
         log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_RAWMODS_DIR ('$WORK_RAWMODS_DIR')"
     fi
 
     # Validate WORK_IMAGEOUT_DIR is not empty
     if [[ -z "$WORK_IMAGEOUT_DIR" ]]; then
-        WORK_IMAGEOUT_DIR="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/image-out"
+        WORK_IMAGEOUT_DIR="$DEVICE_WORK_DIR/$OWRT_SOC_CLASS_LOWER/$OWRT_MFR_LOWER/$OWRT_MODEL_LOWER/image-out"
         log_summary " >>> ⚠ WARNING: Using default auto-derived WORK_IMAGEOUT_DIR ('$WORK_IMAGEOUT_DIR')"
     fi
 
