@@ -47,12 +47,12 @@ show_header() {
     if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
         # Non-Interactive Mode: Compact, log-friendly header
         echo ""
-        echo "=== OWRTDS ${OWRTDS_VERSION} Build - ${OWRT_MFR} ${OWRT_MODEL} ($(date '+%Y-%m-%d %H:%M')) ==="
+        echo "=== OWRTDS ${OWRTDS_VERSION} - build release - ${OWRT_MFR} ${OWRT_MODEL} ($(date '+%Y-%m-%d %H:%M')) ==="
 
         if [[ "$build_finished" == "false" ]]; then
-            echo "Manufacturer: ${OWRT_MFR} | Model: ${OWRT_MODEL} | SOC Class: ${OWRT_SOC_CLASS}"
+            #echo "Manufacturer: ${OWRT_MFR} | Model: ${OWRT_MODEL} | SOC Class: ${OWRT_SOC_CLASS}"
         else
-            echo "Manufacturer: ${OWRT_MFR} | Model: ${OWRT_MODEL} | SOC Class: ${OWRT_SOC_CLASS} | Elapsed: ${BUILD_ELAPSED} (${BUILD_ELAPSED_SECONDS}s)"
+            echo "=== Elapsed: ${BUILD_ELAPSED} (${BUILD_ELAPSED_SECONDS}s) ==="
         fi
 
         echo ""
