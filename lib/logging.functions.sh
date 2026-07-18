@@ -56,6 +56,7 @@ show_header() {
         fi
 
         echo ""
+
         # Skip colors, boxes, or pause prompts
         return 0
     fi

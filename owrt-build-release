@@ -329,7 +329,7 @@ trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."'
 # 10. Execution Logic
 # ==============================================================================
 
-echo " >>> Starting build process for $OWRT_MFR_LOWER / $OWRT_MODEL_LOWER (${OWRT_SOC_CLASS_LOWER})"
+echo " >>> Starting build process for $OWRT_MFR / $OWRT_MODEL_LOWER (${OWRT_SOC_CLASS_LOWER})"
 echo " >>> Working directory: $OWRT_DEV_DIR"
 change_directory "$OWRT_DEV_DIR"
 
@@ -375,7 +375,7 @@ fi
 # Handle Inject DTS (BEFORE prepare)
 if [[ "$DEVICE_SUPPORTED" == "false" && "$DO_DTS_CPY" == "true" && "$DO_CLEAN" == "true" ]]; then
     echo " >>> Injecting custom DTS file..."
-    copy_file "$WORK_DTS_DIR/$DTS_FNAME" "$DTS_DEST_DIR/$DTS_FNAME" > /dev/null 2>&1
+    copy_file "$WORK_DTS_DIR/$DTS_FNAME" "$DTS_DEST_DIR/$DTS_FNAME"
     # Prepare Kernel Sources
     if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
         build_kernel_sources
