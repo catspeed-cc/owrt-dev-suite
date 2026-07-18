@@ -381,7 +381,7 @@ if [[ "$DEVICE_SUPPORTED" == "false" && "$DO_DTS_CPY" == "true" && "$DO_CLEAN" =
         build_kernel_sources
         log_summary " >>> ✅ Kernel source built"
     else
-        build_kernel_sources > /dev/null 2>&1
+        build_kernel_sources
     fi
 fi
 

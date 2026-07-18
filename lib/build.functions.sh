@@ -16,8 +16,12 @@ build_kernel_sources() {
 
     # Download sources (Prerequisite)
     echo " >>> Running 'make download'..."
-    make download ${MAKE_CMD_ADD} || exit_with_error "Make Download"
-    log_summary " >>> ✅ Sources downloaded (all)"
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        make download ${MAKE_CMD_ADD} || exit_with_error "Make Download"
+    else
+        make download ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Make Download"
+    fi
+    log_summary " >>> ✅ Sources downloaded"
 
     if [ "$DO_DRIVERMOD_CPY" = true ]; then
 

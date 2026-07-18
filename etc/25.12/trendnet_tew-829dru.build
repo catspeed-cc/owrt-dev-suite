@@ -225,9 +225,9 @@ PATCHMOD_DEST_DIR="target/linux/ipq40xx/patches-6.12/"
 # ===================================
 
 # IPQESS Mod Files
-RAWMOD_LIST+="ipqess.h|$WORK_RAWMODS_DIR/ipqess/ipqess.h.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.h"$NL
-RAWMOD_LIST+="ipqess.c|$WORK_RAWMODS_DIR/ipqess/ipqess.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.c"$NL
-RAWMOD_LIST+="ipqess_ethtool.c|$WORK_RAWMODS_DIR/ipqess/ipqess_ethtool.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess_ethtool.c"$NL
+RAWMOD_LIST+="ipqess.h|$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12/rawmods/ipqess/ipqess.h.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.h"$NL
+RAWMOD_LIST+="ipqess.c|$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12/rawmods/ipqess/ipqess.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.c"$NL
+RAWMOD_LIST+="ipqess_ethtool.c|$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12/rawmods/ipqess/ipqess_ethtool.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess_ethtool.c"$NL
 
 
 # =================================================================
