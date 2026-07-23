@@ -86,7 +86,7 @@ reset_config_variables() {
     OWRT_SUPPORTED="true"
     OWRT_STABLE="false"
 
-    OWRTDS_NONINTERACTIVE_BUILD="false"
+    OWRTDS_ENABLE_BATCH_BUILD="false"
 
     SUDO_ENABLE="false"
 

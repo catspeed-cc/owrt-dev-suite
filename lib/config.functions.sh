@@ -65,9 +65,9 @@ verify_configuration() {
         exit_with_error "OWRT_STABLE is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
-    # Validate OWRTDS_NONINTERACTIVE_BUILD flag
-    if [[ "${OWRTDS_NONINTERACTIVE_BUILD}" != "true" && "${OWRTDS_NONINTERACTIVE_BUILD}" != "false" ]]; then
-        exit_with_error "OWRTDS_NONINTERACTIVE_BUILD is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+    # Validate OWRTDS_ENABLE_BATCH_BUILD flag
+    if [[ "${OWRTDS_ENABLE_BATCH_BUILD}" != "true" && "${OWRTDS_ENABLE_BATCH_BUILD}" != "false" ]]; then
+        exit_with_error "OWRTDS_ENABLE_BATCH_BUILD is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate SUDO_ENABLE flag
