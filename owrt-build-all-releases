@@ -85,11 +85,8 @@ for config_file in ./configs/*/*.build; do
         continue
     fi
 
-    # Validate only if we intend to build it
-    if ! verify_configuration; then
-        echo "❌ Configuration invalid for $(basename "$config_file"). Skipping."
-        continue
-    fi
+    # Just verify the config, it is meant to be built. The function handles failure via exit_with_error
+    verify_configuration
 
     echo "🚀 Starting build: $(basename "$config_file")"
 
