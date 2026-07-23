@@ -78,7 +78,6 @@ reset_config_variables() {
     #
     # USER CONFIG VARIABLES (DEFAULTS)
     #
-    OWRT_REMOTE_ALIAS=""
     OWRT_FORK_REPO=""
     OWRT_VERSION=""
     OWRT_BASE_BRANCH=""

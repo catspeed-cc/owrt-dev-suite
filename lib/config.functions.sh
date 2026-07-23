@@ -100,11 +100,6 @@ verify_configuration() {
     # IS EMPTY CHECKS
     # ================
 
-    # Validate OWRT_REMOTE_ALIAS is not empty (REQUIRED, CRITICAL)
-    if [[ -z "$OWRT_REMOTE_ALIAS" ]]; then
-        exit_with_error "OWRT_REMOTE_ALIAS is not set in 'etc/config.sh' - Aborting." --nocleanup
-    fi
-
     # Validate OWRT_FORK_REPO is not empty (REQUIRED, CRITICAL)
     if [[ -z "$OWRT_FORK_REPO" ]]; then
         exit_with_error "OWRT_FORK_REPO is not set in 'etc/config.sh' - Aborting." --nocleanup
