@@ -10,7 +10,7 @@
 
 
 # Version Information
-OWRTDS_VERSION=$(cat .version)
+OWRTDS_VERSION=$(cat "$STARTUP_PWD/.version")
 
 # mutex / lock file
 LOCK_FILE="$STARTUP_PWD/.owrtds.lock"
