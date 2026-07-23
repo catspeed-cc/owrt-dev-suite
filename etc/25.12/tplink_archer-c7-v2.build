@@ -48,11 +48,12 @@ OWRT_BASE_BRANCH="openwrt-$OWRT_VERSION"
 # provided we add a new branch, backport it, and create configs
 OWRT_TARGET_BRANCH="openwrt-$OWRT_VERSION"
 
-# DEVICE_SUPPORTED
+# OWRT_SUPPORTED & OWRT_STABLE
 # Mark as supported under two conditions, either:
 #  - device is already supported in openwrt mainline
 #  - your port is complete (caldata from art, driver patches complete)
-DEVICE_SUPPORTED="true"
+OWRT_SUPPORTED="true"
+OWRT_STABLE="true"
 
 # ENABLE_SYMLINK_SHORTCUTS
 # Each model will have a symlink in root to your port model's directory
