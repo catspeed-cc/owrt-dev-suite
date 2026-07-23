@@ -55,7 +55,7 @@ verify_configuration() {
     # VALIDATE BOOLS (USED BELOW)
     # ===========================
 
-    # Validate DEVICE_SUPPORTED flag
+    # Validate OWRT_SUPPORTED flag
     if [[ "${OWRT_SUPPORTED}" != "true" && "${OWRT_SUPPORTED}" != "false" ]]; then
         exit_with_error "OWRT_SUPPORTED is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
@@ -296,8 +296,8 @@ verify_configuration() {
     # VALUE CONSTRAINT CHECKS (ex. $var -ge 6)
     # ========================================
 
-    # `DEVICE_SUPPORTED=true` should disable `DO_DTS_CPY`, `DO_DRIVERMOD_CPY`, & `DO_CALDATA_CPY`
-    if [[ "$DEVICE_SUPPORTED" == "true" ]]; then
+    # `OWRT_SUPPORTED=true` should disable `DO_DTS_CPY`, `DO_DRIVERMOD_CPY`, & `DO_CALDATA_CPY`
+    if [[ "$OWRT_SUPPORTED" == "true" ]]; then
         DO_DTS_CPY=false
         DO_DRIVERMOD_CPY=false
         DO_CALDATA_CPY=false

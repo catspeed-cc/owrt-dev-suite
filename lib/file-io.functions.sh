@@ -375,7 +375,7 @@ function sync_config_from_dev_dir() {
     fi
 
     # Copy the config back to WORK_DIR
-    if [[ "$OWRDTS_INTERACTIVE" == "false" ]]; then
+    if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
         echo " >>> Synchronizing .config back to work directory..."
     fi
 
