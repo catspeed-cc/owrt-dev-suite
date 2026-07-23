@@ -79,7 +79,7 @@ for config_file in ./configs/*/*.build; do
 
     # CHECK FLAG FIRST: Skip if not marked for batch build
     # (Using your current variable name, though OWRTDS_ENABLE_BATCH_BUILD is clearer)
-    if [[ "$OWRTDS_NONINTERACTIVE_BUILD" != "true" ]]; then
+    if [[ "$OWRTDS_ENABLE_BATCH_BUILD" != "true" ]]; then
         # Optional: Add a debug log if you want to see skipped files
         # echo "⏭️  Skipping $(basename "$config_file"): Not enabled for batch build."
         continue
