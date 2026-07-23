@@ -1,4 +1,7 @@
 
+# allow version file
+!.owrtds.version
+
 # ignore dotfiles
 .owrtds.*
 
