@@ -86,7 +86,7 @@ OWRT_STABLE=true         # True for completed ports, False for WIP/Broken (not s
 #
 # Default: false
 # ==================================================================
-OWRTDS_NONINTERACTIVE_BUILD=true
+OWRTDS_ENABLE_BATCH_BUILD=true
 
 
 # ==================================================================
