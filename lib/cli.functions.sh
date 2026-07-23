@@ -43,13 +43,17 @@ parse_arguments() {
                 shift
                 ;;
             -c|--config)
-                # Check if the NEXT argument ($2) exists. 
-                # We need at least 2 args total: the flag ($1) and the path ($2).
-                if [[ $# -lt 2 ]]; then
-                    exit_with_error "Option $1 requires a path argument." --nocleanup
+                if [[ "$SCRIPT_NAME" == "owrt-build-all-releases" ]]; then
+                    # Check if the NEXT argument ($2) exists. 
+                    # We need at least 2 args total: the flag ($1) and the path ($2).
+                    if [[ $# -lt 2 ]]; then
+                        exit_with_error "Option $1 requires a path argument." --nocleanup
+                    fi
+                    CUSTOM_CONFIG_PATH="$2"
+                    shift 2
+                else
+                    log_summary " >>> ⚠  WARNING: ignoring --config/-c parameter. owrt-build-all-releases does not support this flag." --silent
                 fi
-                CUSTOM_CONFIG_PATH="$2"
-                shift 2
                 ;;
             -uf|--update-feeds)
                 DO_CLEAN=true
