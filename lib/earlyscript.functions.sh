@@ -83,8 +83,14 @@ reset_config_variables() {
     OWRT_BASE_BRANCH=""
     OWRT_TARGET_BRANCH=""
 
-    DEVICE_SUPPORTED="true"
-    ENABLE_SYMLINK_SHORTCUTS="true"
+    OWRT_SUPPORTED="true"
+    OWRT_STABLE="false"
+
+    OWRTDS_NONINTERACTIVE_BUILD="false"
+
+    SUDO_ENABLE="false"
+
+    ENABLE_SYMLINK_SHORTCUTS="false"
 
     OWRT_MFR=""
     OWRT_MODEL=""
@@ -101,8 +107,6 @@ reset_config_variables() {
     PROJECT_DIR=""
     OWRT_DEV_DIR=""
     IMGDIR_SRC=""
-
-    SUDO_ENABLE="false"
 
     DEVICE_WORK_DIR=""
 
