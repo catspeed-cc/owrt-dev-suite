@@ -70,13 +70,43 @@ fi
 # 1. Execution Logic
 # ==============================================================================
 
-#
+for config_file in ./configs/*/*.build; do
+    [[ -f "$config_file" ]] || continue
 
+    # Reset variables, source config, verify...
+    reset_config_variables
+    source "$config_file"
 
+    # CHECK FLAG FIRST: Skip if not marked for batch build
+    # (Using your current variable name, though OWRTDS_ENABLE_BATCH_BUILD is clearer)
+    if [[ "$OWRTDS_NONINTERACTIVE_BUILD" != "true" ]]; then
+        # Optional: Add a debug log if you want to see skipped files
+        # echo "⏭️  Skipping $(basename "$config_file"): Not enabled for batch build."
+        continue
+    fi
 
+    # Validate only if we intend to build it
+    if ! verify_configuration; then
+        echo "❌ Configuration invalid for $(basename "$config_file"). Skipping."
+        continue
+    fi
 
-# ==============================================
-# 2. POST-BUILD-LOOP
-# ==============================================
+    echo "🚀 Starting build: $(basename "$config_file")"
 
-#
+    # Run the main script (non interactive, no make clean or update feeds as it assumes all is ready to compile)
+    "$SCRIPT_DIR"/owrt-build-release --config "$config_file" "$@"
+
+    # 4. The "Escape Hatch" (Interactive Only)
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        echo ""
+        echo "⏸️  Build step finished."
+        echo "    Press Ctrl+C now to EXIT the entire batch script."
+        echo "    (Wait 2 seconds to continue to the next config...)"
+
+        # If user hits Ctrl+C here, this script dies immediately.
+        # If they wait, the loop continues.
+        sleep 2
+    fi
+done
+
+echo "✅ Batch process completed."
