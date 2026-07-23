@@ -1,0 +1,82 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
+
+
+# ============================================
+# NOTE: DO NOT CONFIGURE ANYTHING IN THIS FILE
+# Edit `./etc/config.sh` to configure
+# ============================================
+
+
+# NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
+#
+# REASONS:
+# - Script is heavy in file operations
+# - One unbound variable within a derived path can mangle an undesired location
+# - I need to see and know when something is unbound and fix it
+set -Eeuo pipefail
+
+# Ensure STARTUP_PWD does not have a trailing slash for consistent matching
+STARTUP_PWD=$(pwd)
+STARTUP_PWD="${STARTUP_PWD%/}"
+
+# REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
+REAL_PATH=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
+
+# Fallback for macOS (BSD readlink doesn't support -f)
+if [ -z "$REAL_PATH" ]; then
+    REAL_PATH="${BASH_SOURCE[0]}"
+    while [ -h "$REAL_PATH" ]; do
+        DIR="$(dirname "$REAL_PATH")"
+        # Check if directory exists before cd-ing
+        if [ ! -d "$DIR" ]; then
+            echo "❌ CRITICAL: Directory does not exist: $DIR" >&2
+            exit 1
+        fi
+        DIR=$(cd -P "$DIR" && pwd)
+
+        REAL_PATH=$(readlink "$REAL_PATH")
+        [[ $REAL_PATH != /* ]] && REAL_PATH="$DIR/$REAL_PATH"
+    done
+
+    # Final resolve of the last step if it wasn't a symlink loop
+    if [ -e "$REAL_PATH" ]; then
+        DIR="$(dirname "$REAL_PATH")"
+        # Check if directory exists before cd-ing
+        if [ ! -d "$DIR" ]; then
+            echo "❌ CRITICAL: Directory does not exist: $DIR" >&2
+            exit 1
+        fi
+        REAL_PATH=$(cd -P "$DIR" && pwd)/$(basename "$REAL_PATH")
+    fi
+fi
+
+# REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
+SCRIPT_DIR=$(dirname "$REAL_PATH")
+SCRIPT_NAME=$(basename "$REAL_PATH")
+
+
+# Import lib/common.sh
+if ! source "$SCRIPT_DIR/lib/common.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
+    exit 1
+fi
+
+
+
+
+# ==============================================================================
+# 1. Execution Logic
+# ==============================================================================
+
+#
+
+
+
+
+# ==============================================
+# 2. POST-BUILD-LOOP
+# ==============================================
+
+#
