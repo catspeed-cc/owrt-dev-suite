@@ -63,3 +63,77 @@ owrtds_branch_detect() {
         # We don't exit here as the build might still proceed, but log the issue
     fi
 }
+
+# TODO: comments explaining function in same format as others
+reset_config_variables() {
+
+    # ====================================================================================
+    # TO AVOID FAILURE IN `set -euo pipefail` MODE DEFINE USER VARIABLES WHICH ARE EITHER:
+    #  - only user defined in lib/config.sh
+    #  - derived from user defined but user overrideable in lib/config.sh
+    # Internal/Derived only variables will remain defined inline where used
+    # ====================================================================================
+    #
+    # DO NOT MANUAL EDIT THESE - THEY ARE DEFAULTS. USER EDITS IN `etc/config.sh`.
+    #
+    # USER CONFIG VARIABLES (DEFAULTS)
+    #
+    OWRT_REMOTE_ALIAS=""
+    OWRT_FORK_REPO=""
+    OWRT_VERSION=""
+    OWRT_BASE_BRANCH=""
+    OWRT_TARGET_BRANCH=""
+
+    DEVICE_SUPPORTED="true"
+    ENABLE_SYMLINK_SHORTCUTS="true"
+
+    OWRT_MFR=""
+    OWRT_MODEL=""
+    OWRT_SOC=""
+    OWRT_SOC_CLASS=""
+
+    OWRT_MFR_LOWER=""
+    OWRT_MFR_LOWER=""
+    OWRT_MODEL_LOWER=""
+    OWRT_SOC_LOWER=""
+    OWRT_SOC_CLASS_LOWER=""
+
+    WORK_DIR=""
+    PROJECT_DIR=""
+    OWRT_DEV_DIR=""
+    IMGDIR_SRC=""
+
+    SUDO_ENABLE="false"
+
+    DEVICE_WORK_DIR=""
+
+    WORK_DTS_DIR=""
+    WORK_CALDATA_DIR=""
+    WORK_PATCHMODS_DIR=""
+    WORK_RAWMODS_DIR=""
+    WORK_IMAGEOUT_DIR=""
+
+    DO_DTS_CPY="false"
+    DTS_FNAME=""
+    DTS_DEST_DIR=""
+
+    DO_IMGDIR_CPY="true"
+
+    DO_WEBSERVER_CPY="false"
+    WEBSERVER_USER=""
+    WEBSERVER_SHARED_GROUP=""
+    WEBSERVER_SHARED_DIR=""
+    WEBSERVER_ROOT=""
+    WEBSERVER_RESTART_CMD=""
+
+    DEVICE_SHARED_DIR=""
+
+    DO_DRIVERMOD_CPY="false"
+    DRIVERMOD_MODE=""
+    PATCHMOD_DEST_DIR=""
+    RAWMOD_LIST=""
+
+    DO_CALDATA_CPY="false"
+    CALDATA_LIST=""
+
+}
