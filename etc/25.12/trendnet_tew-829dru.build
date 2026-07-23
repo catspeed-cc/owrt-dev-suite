@@ -26,11 +26,6 @@
 # OPENWRT SOURCE & REPO                                  (REQUIRED)
 # ==================================================================
 
-# Remote Alias
-# Use a unique remote ailias for each remote to keep them separate
-# Non-functional, but set anyways for when multi-port arrives
-OWRT_REMOTE_ALIAS="catspeed-cc"
-
 # YOUR OPENWRT FORK REPOSITORY INFO
 # Your fork of the openwrt repository where your ports will live
 OWRT_FORK_REPO="https://github.com/catspeed-cc/openwrt.git"
@@ -48,15 +43,78 @@ OWRT_BASE_BRANCH="openwrt-$OWRT_VERSION"
 # provided we add a new branch, backport it, and create configs
 OWRT_TARGET_BRANCH="trendnet_tew-829dru-$OWRT_VERSION"
 
-# DEVICE_SUPPORTED
-# Mark as supported under two conditions, either:
-#  - device is already supported in openwrt mainline
-#  - your port is complete (caldata from art, driver patches complete)
-DEVICE_SUPPORTED="false"
 
-# ENABLE_SYMLINK_SHORTCUTS
+# ==================================================================
+# PORT SUPPORT - IMPORTANT, PLEASE READ!                 (REQUIRED)
+#
+# Port support flags are mostly for metadata files for your builds.
+# Depending on which flags are set, the metadata file will adjust
+# it's warnings to match.
+#
+# There will be a single metadata file for each device in it's image
+# directory. Each manufacturer will have a combined metadata file
+# listing the metadata for all of the manufacturers' devices in the
+# shareddir root
+#
+# Default: false
+# Required for auto-dependency install and auto webserver_cpy setup
+# ==================================================================
+#
+# Mark the device as supported when:
+#  - device is already supported in openwrt mainline
+#
+# Mark the device as stable when:
+#  - significant hardware working (wifi, switches, spi/nand, etc)
+#  - caldata is pulled from SPI ART partition
+#
+# Mark the device as unstable when:
+#  - device does not work completely
+#  - significant hardware not working (wifi, switches, spi/nand, etc)
+#  - caldata needs to be built into image
+#  - work in progress or broken
+#
+
+OWRT_SUPPORTED=false      # True for mainline (supported in OpenWRT)
+OWRT_STABLE=false         # True for completed ports, False for WIP/Broken (not supported in OpenWRT)
+
+
+# ==================================================================
+# PORT SUPPORT - IMPORTANT, PLEASE READ!                 (REQUIRED)
+#
+# This flag controls whether or not `owrt-build-all-releases` builds
+# this specific configuration when it runs manually or via cron.
+#
+# Default: false
+# ==================================================================
+OWRTDS_NONINTERACTIVE_BUILD=false
+
+
+# ==================================================================
+# SUDO ENABLE                                            (OPTIONAL)
+#
+# Enable sudo commands (will ask for password). You can disable this
+# if you use root account, but it is not reccommended.
+#
+# It is *HIGHLY* reccommended to use a regular user account that has
+# access to sudo with password.
+#
+# Default: false
+# Required for auto-dependency install and auto webserver_cpy setup
+# ==================================================================
+
+SUDO_ENABLE=true
+
+
+# ==================================================================
+# SHORTCUT SYMLINKS                                      (OPTIONAL)
+#
 # Each model will have a symlink in root to your port model's directory
 # containing the DTS, image-out, rawmod, patchmod, caldata, directories
+#
+# Default: false
+# Required for auto-dependency install and auto webserver_cpy setup
+# ==================================================================
+
 ENABLE_SYMLINK_SHORTCUTS="true"
 
 
@@ -73,7 +131,6 @@ OWRT_MFR="TRENDnet"
 OWRT_MODEL="TEW-829DRU"
 OWRT_SOC="ipq4019"
 OWRT_SOC_CLASS="ipq40xx"
-OWRT_OS_TARGET="linux"
 
 
 # ==================================================================
@@ -92,21 +149,6 @@ OWRT_DEV_DIR="$PROJECT_DIR/openwrt-dev"
 # Needed for both IMGDIR_CPY and WEBSERVER_CPY features
 IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ipq40xx/generic"
 
-# ==================================================================
-# SHORTCUT SYMLINKS                                      (OPTIONAL)
-#
-# Enable sudo commands (will ask for password). You can disable this
-# if you use root account, but it is not reccommended.
-#
-# It is *HIGHLY* reccommended to use a regular user account that has
-# access to sudo with password (encouraged)
-#
-# Default: false
-# Required for auto-dependency install and auto webserver_cpy setup
-# ==================================================================
-
-SUDO_ENABLE=true
-
 
 # ==================================================================
 # WORK SUB-DIRECTORIES - Override Points                 (OPTIONAL)
@@ -115,12 +157,14 @@ SUDO_ENABLE=true
 # Users can override any of these by uncommenting and changing them
 # ==================================================================
 
+# DEVICE_WORK_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12"
+
 # Example override: $WORK_DIR/ipq40xx/trendnet/tew-829dru/<directory>
-# WORK_DTS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/dts"
-# WORK_CALDATA_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/caldata"
-# WORK_PATCHMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/patchmods"
-# WORK_RAWMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/rawmods"
-# WORK_IMAGEOUT_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/image-out"
+# WORK_DTS_DIR="$DEVICE_WORK_DIR/dts"
+# WORK_CALDATA_DIR="$DEVICE_WORK_DIR/caldata"
+# WORK_PATCHMODS_DIR="$DEVICE_WORK_DIR/patchmods"
+# WORK_RAWMODS_DIR="$DEVICE_WORK_DIR/rawmods"
+# WORK_IMAGEOUT_DIR="$DEVICE_WORK_DIR/image-out"
 
 
 
@@ -224,9 +268,9 @@ PATCHMOD_DEST_DIR="target/linux/ipq40xx/patches-6.12/"
 # ===================================
 
 # IPQESS Mod Files
-RAWMOD_LIST+="ipqess.h|$WORK_RAWMODS_DIR/ipqess/ipqess.h.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.h"$NL
-RAWMOD_LIST+="ipqess.c|$WORK_RAWMODS_DIR/ipqess/ipqess.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.c"$NL
-RAWMOD_LIST+="ipqess_ethtool.c|$WORK_RAWMODS_DIR/ipqess/ipqess_ethtool.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess_ethtool.c"$NL
+RAWMOD_LIST+="ipqess.h|$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12/rawmods/ipqess/ipqess.h.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.h"$NL
+RAWMOD_LIST+="ipqess.c|$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12/rawmods/ipqess/ipqess.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.c"$NL
+RAWMOD_LIST+="ipqess_ethtool.c|$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12/rawmods/ipqess/ipqess_ethtool.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess_ethtool.c"$NL
 
 
 # =================================================================

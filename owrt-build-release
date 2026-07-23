@@ -17,42 +17,9 @@
 # - I need to see and know when something is unbound and fix it
 set -Eeuo pipefail
 
-# Version Information
-OWRTDS_VERSION="v0.1.0"
-
 # Ensure STARTUP_PWD does not have a trailing slash for consistent matching
 STARTUP_PWD=$(pwd)
 STARTUP_PWD="${STARTUP_PWD%/}"
-
-LOCK_FILE="$STARTUP_PWD/.owrtds.lock"
-
-# Function to remove lock file
-remove_lock() {
-    if [[ -d "$LOCK_FILE" ]]; then
-        rmdir "$LOCK_FILE" 2>/dev/null
-    fi
-}
-
-# Attempt to create lock directory atomically
-if ! mkdir "$LOCK_FILE" 2>/dev/null; then
-    echo " ❌  CRITICAL: owrt-build-release is already running!"
-    echo "     If this is an error, remove: $LOCK_FILE"
-    exit 1
-fi
-
-# trap to cleanup lock
-trap 'remove_lock' EXIT
-
-# Guard variable to prevent double cleanup
-CLEANED=false
-
-BUILD_START_DATE=$(date "+%a %d %b %Y")
-BUILD_START_TIME=$(date +%H:%M:%S)
-
-# Populated at the end of script
-BUILD_STOP_DATE=""
-BUILD_STOP_TIME=""
-BUILD_ELAPSED=""
 
 # REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
 REAL_PATH=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
@@ -89,226 +56,86 @@ fi
 SCRIPT_DIR=$(dirname "$REAL_PATH")
 SCRIPT_NAME=$(basename "$REAL_PATH")
 
-# Set up for infinite strings (NEEDED IN `lib/config.sh`)
-NL=$'\n' # leave this alone (used in multiple areas)
 
-# Flags default values (safe defaults)
-DO_CLEAN=false
-DO_UPDATE_FEEDS=false
-DO_VERBOSE=false
-DO_XVERBOSE=false
-DO_SLOW=false
-
-# ====================================================================================
-# TO AVOID FAILURE IN `set -euo pipefail` MODE DEFINE USER VARIABLES WHICH ARE EITHER:
-#  - only user defined in lib/config.sh
-#  - derived from user defined but user overrideable in lib/config.sh
-# Internal/Derived only variables will remain defined inline where used
-# ====================================================================================
-#
-# DO NOT MANUAL EDIT THESE - THEY ARE DEFAULTS. USER EDITS IN `etc/config.sh`.
-#
-# USER CONFIG VARIABLES (DEFAULTS)
-#
-OWRT_REMOTE_ALIAS="catspeed-cc"
-OWRT_FORK_REPO="https://github.com/catspeed-cc/openwrt.git"
-OWRT_VERSION="25.12"
-OWRT_BASE_BRANCH="openwrt-$OWRT_VERSION"
-OWRT_TARGET_BRANCH="trendnet_tew-829dru-$OWRT_VERSION"
-
-DEVICE_SUPPORTED="true"
-ENABLE_SYMLINK_SHORTCUTS="true"
-
-OWRT_MFR="TRENDnet"
-OWRT_MODEL="TEW-829DRU"
-OWRT_SOC="ipq4019"
-OWRT_SOC_CLASS="ipq40xx"
-OWRT_OS_TARGET="linux"
-
-OWRT_MFR_LOWER=""
-OWRT_MODEL_LOWER=""
-OWRT_SOC_LOWER=""
-OWRT_SOC_CLASS_LOWER=""
-OWRT_OS_TARGET_LOWER=""
-
-WORK_DIR="$HOME/work"
-PROJECT_DIR="$HOME/projects"
-OWRT_DEV_DIR="$PROJECT_DIR/openwrt-dev"
-IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ipq40xx/generic"
-
-SUDO_ENABLE="false"
-
-WORK_DTS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/dts"
-WORK_CALDATA_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/caldata"
-WORK_PATCHMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/patchmods"
-WORK_RAWMODS_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/rawmods"
-WORK_IMAGEOUT_DIR="$WORK_DIR/ipq40xx/trendnet/tew-829dru/image-out"
-
-DO_DTS_CPY="false"
-DTS_FNAME=""
-DTS_DEST_DIR="$OWRT_DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
-
-DO_IMGDIR_CPY="true"
-
-DO_WEBSERVER_CPY="false"
-WEBSERVER_USER="www-data"
-WEBSERVER_SHARED_GROUP="openwrt-build"
-WEBSERVER_SHARED_DIR="/srv/openwrt-builds/"
-WEBSERVER_ROOT="/var/www/html/downloads"
-WEBSERVER_RESTART_CMD="sudo systemctl restart nginx"
-
-DO_DRIVERMOD_CPY="false"
-DRIVERMOD_MODE="patchmod"
-PATCHMOD_DEST_DIR="target/linux/ipq40xx/patches-6.12/"
-RAWMOD_LIST=""
-
-DO_CALDATA_CPY="false"
-CALDATA_LIST=""
-
-# ====================================================================================
-
-# Required to start blank/empty
-OWRTDS_BRANCH=""
-SUMMARY_OUT=""
-MAKE_CMD_ADD=""
-
-# Import config
-if ! source "$SCRIPT_DIR/etc/config.sh"; then
-    echo "❌ CRITICAL: Unable to source etc/config.sh - Aborting." >&2
-    exit 1
-fi
-
-# Import dependencies
-if ! source "$SCRIPT_DIR/lib/dependencies.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/dependencies.sh - Aborting." >&2
-    exit 1
-fi
-
-# Import functions
-if ! source "$SCRIPT_DIR/lib/functions.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/functions.sh - Aborting." >&2
+# Import lib/common.sh
+if ! source "$SCRIPT_DIR/lib/common.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
     exit 1
 fi
 
 
-# ===========================================================================================
-# verify config - vars above this point must not use eachother (EXCEPT CRITICAL startup vars)
-# ===========================================================================================
-verify_configuration
-# ===========================================================================================
-# verify config - vars below this point can use each other to autoconfigure
-# ===========================================================================================
-
-# Ensure we go to our script location (owrt-dev-suite repo)
-change_directory "$SCRIPT_DIR"
-
-# Get the git branch for display
-OWRTDS_BRANCH=$(git branch --show-current 2>/dev/null)
-# Fallback for detached HEAD or old git versions
-if [ -z "$OWRTDS_BRANCH" ]; then
-    OWRTDS_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-fi
-
-# Ensure we go back to the original PWD before build
-change_directory "$STARTUP_PWD"
-
-# Show the pretty header
-show_header
-
-# Parse the arguments (overrides config)
-parse_arguments "$@"
-
-# Install dependencies
-install_dependencies
-
-
 
 
 # ==============================================================================
-# Execution Preperation
+# 1. Execution Logic
 # ==============================================================================
 
-# Ensure we go back to the original PWD before build
-change_directory "$STARTUP_PWD"
-
-# Handle Concurrency
-if [ "$DO_SLOW" = false ]; then
-    NUM_PROC=$(nproc)
-    MAKE_CMD_ADD="${MAKE_CMD_ADD}-j${NUM_PROC}"
-else
-    MAKE_CMD_ADD="${MAKE_CMD_ADD}-j1"
-fi
-
-# Handle Verbosity
-if [ "$DO_VERBOSE" = true ]; then
-    MAKE_CMD_ADD="${MAKE_CMD_ADD} V=s"
-elif [ "$DO_XVERBOSE" = true ]; then
-    MAKE_CMD_ADD="${MAKE_CMD_ADD} V=99"
-fi
-
-# Register the trap ONLY for interruption signals (INT, TERM, HUP)
-# Do NOT trap EXIT here; let your wrappers handle normal exits.
-# Define specific handlers for each signal to pass the name correctly
-trap 'exit_with_error "Caught by trap - user pressed CTRL+C (SIGINT). Aborting."' INT
-trap 'exit_with_error "Caught by trap - script terminated (SIGTERM). Aborting."' TERM
-trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."' HUP
-# we skipped my idea of using a trap exit handler - neat!
-
-# ==============================================================================
-# Execution Logic
-# ==============================================================================
-
-echo " >>> Starting Build Process for TEW-829DRU (IPQ4019)"
-echo " >>> Working Directory: $OWRT_DEV_DIR"
+echo " >>> Starting build process for $OWRT_MFR / $OWRT_MODEL_LOWER (${OWRT_SOC_CLASS_LOWER})"
+echo " >>> Working directory: $OWRT_DEV_DIR"
 change_directory "$OWRT_DEV_DIR"
 
 # Handle Clean
-if [ "$DO_CLEAN" = true ]; then
+if [[ "$DO_CLEAN" == "true" ]]; then
     echo " >>> Running 'make clean'..."
-    make clean
-    msg=" >>> ✅ Make clean"
-    echo "$msg"
-    SUMMARY_OUT+="${msg}"${NL}
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
+        rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
+        log_summary " >>> ✅ Make clean"
+    else
+        make clean -s > /dev/null 2>&1
+        rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
+        rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
+    fi
 fi
 
 # Handle Update Feeds (First, to ensure package definitions are fresh)
-if [ "$DO_UPDATE_FEEDS" = true ]; then
+if [[ "$DO_UPDATE_FEEDS" == "true" ]]; then
     echo " >>> Updating and installing feeds..."
-    ./scripts/feeds update -a
-    ./scripts/feeds install -a
-    msg=" >>> ✅ Feeds updated & installed"
-    echo "$msg"
-    SUMMARY_OUT+="${msg}"${NL}
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        log_summary " >>> ✅ Feeds updated & installed"
+    else
+        ./scripts/feeds update -a > /dev/null 2>&1
+        ./scripts/feeds install -a > /dev/null 2>&1
+    fi
 fi
 
-if [ "$DO_CLEAN" = true ]; then
-    echo " >>> 🛠️  Ensuring host tools and toolchain are ready..."
-    make tools/install || exit_with_error "Failed to build host tools"
-    make toolchain/install || exit_with_error "Failed to build toolchain"
+if [[ "$DO_CLEAN" == "true" ]]; then
+    echo " >>> Ensuring host tools and toolchain are ready..."
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        make tools/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build host tools"
+        make toolchain/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build toolchain"
+        log_summary " >>> ✅ Toolchain built"
+    else
+        make tools/install ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Failed to build host tools"
+        make toolchain/install ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Failed to build toolchain"
+    fi
 fi
 
 # Handle Inject DTS (BEFORE prepare)
-if [ "$DO_DTS_CPY" = true ]; then
+if [[ "$OWRT_SUPPORTED" == "false" && "$DO_DTS_CPY" == "true" && "$DO_CLEAN" == "true" ]]; then
     echo " >>> Injecting custom DTS file..."
     copy_file "$WORK_DTS_DIR/$DTS_FNAME" "$DTS_DEST_DIR/$DTS_FNAME"
-fi
-
-# Handle Prepare Kernel Sources
-if [ "$DO_CLEAN" = true ]; then
-    build_kernel_sources
+    # Prepare Kernel Sources
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        build_kernel_sources
+        log_summary " >>> ✅ Kernel source built"
+    else
+        build_kernel_sources
+    fi
 fi
 
 # Handle prepare linux-firmware
-if [ "$DO_CLEAN" = true ]; then
+if [[ "$OWRT_SUPPORTED" == "false" && "$DO_CALDATA_CPY" == "true" && "$DO_CLEAN" == "true" ]]; then
     echo " >>> Running 'make target/linux-firmware/prepare'..."
-    make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare `linux-firmware`"
-    msg=" >>> ✅ Sources prepared (linux-firmware)"
-    echo "$msg"
-    SUMMARY_OUT+="${msg}"${NL}
-fi
-
-# Handle Copy caldata
-if [ "$DO_CALDATA_CPY" = "true" ]; then
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux-firmware'"
+        log_summary " >>> ✅ Sources prepared (linux-firmware)"
+    else
+        make package/linux-firmware/prepare ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Make Prepare 'linux-firmware'"
+    fi
+    # Handle Copy caldata
     echo " >>> Injecting board-2.bin into build_dir..."
     copy_caldata
 fi
@@ -317,11 +144,11 @@ fi
 
 
 # ==============================================
-# COMPILATION & POST-BUILD
+# 2. COMPILATION & POST-BUILD
 # ==============================================
 
 # PAUSE SO HUMAN USER CAN SEE PROGRESS BEFORE COMPILE
-sleep 5
+if [[ "$OWRTDS_INTERACTIVE" == true ]]; then sleep 5; fi
 
 # 1. Temporarily disable 'errexit' to capture make's exit code manually.
 #    NOTE: The SIGINT/SIGTERM trap remains ACTIVE here for CTRL+C safety.
@@ -330,16 +157,24 @@ set +e
 # Now the main build can proceed without host tool interruptions
 MAKE_CMD="make ${MAKE_CMD_ADD}"
 echo " >>> Starting compilation: ${MAKE_CMD}"
-$MAKE_CMD
-BUILD_STATUS=$?
+if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+    $MAKE_CMD
+    BUILD_STATUS=$?
+else
+    $MAKE_CMD > /dev/null 2>&1
+    BUILD_STATUS=$?
+fi
 
 # 2. Re-enable strict error checking immediately.
 #    Any failure in copy/cleanup steps will now trigger the trap & cleanup.
 set -e
 
+# Synchronize final .config state back to work directory (runs unconditionally)
+sync_config_from_dev_dir
+
 # 3. Handle Build Result
 if [ "$BUILD_STATUS" -eq 0 ]; then
-    echo "✅ Build successful. Copying images..."
+    log_summary " >>> ✅ Build successful. Copying images..."
 
     # Run post-build steps (Trap is ACTIVE: failures here will cleanup)
     if [ "$DO_IMGDIR_CPY" = "true" ]; then
@@ -358,7 +193,11 @@ if [ "$BUILD_STATUS" -eq 0 ]; then
     # Calculate time elapsed
     BUILD_STOP_DATE=$(date "+%a %d %b %Y")
     BUILD_STOP_TIME=$(date +%H:%M:%S)
-    BUILD_ELAPSED=$(get_time_diff "$BUILD_START_TIME" "$BUILD_STOP_TIME")
+    result=$(get_time_diff "$BUILD_START_TIME" "$BUILD_STOP_TIME")
+
+    # separate the reply into human readable and machine readable elapsed times
+    BUILD_ELAPSED=$(echo "$result" | awk '{print $1, $2, $3}') # "0h 10m 28s"
+    BUILD_ELAPSED_SECONDS=$(echo "$result" | awk '{print $4}') # "628"
 
     # 4. Success: Disable trap manually to prevent "Cleanup called" message on exit
     trap - INT TERM HUP
