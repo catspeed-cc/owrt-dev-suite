@@ -210,10 +210,13 @@ if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} -s"
 fi
 
-# Register the trap ONLY for interruption signals (INT, TERM, HUP)
-# Do NOT trap EXIT here; let your wrappers handle normal exits.
-# Define specific handlers for each signal to pass the name correctly
-trap 'exit_with_error "Caught by trap - user pressed CTRL+C (SIGINT). Aborting."' INT
-trap 'exit_with_error "Caught by trap - script terminated (SIGTERM). Aborting."' TERM
-trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."' HUP
-# we skipped my idea of using a trap exit handler - neat!
+# Enable trap only for owrt-build-release (not owrt-build-all-releases)
+if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
+    # Register the trap ONLY for interruption signals (INT, TERM, HUP)
+    # Do NOT trap EXIT here; let your wrappers handle normal exits.
+    # Define specific handlers for each signal to pass the name correctly
+    trap 'exit_with_error "Caught by trap - user pressed CTRL+C (SIGINT). Aborting."' INT
+    trap 'exit_with_error "Caught by trap - script terminated (SIGTERM). Aborting."' TERM
+    trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."' HUP
+    # we skipped my idea of using a trap exit handler - neat!
+fi
