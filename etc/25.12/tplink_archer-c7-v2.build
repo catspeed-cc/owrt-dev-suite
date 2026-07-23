@@ -41,7 +41,7 @@ OWRT_BASE_BRANCH="openwrt-$OWRT_VERSION"
 # Target custom port/model branch (your port branch)
 # We added the BASE_BRANCH so we can build multiple openwrt versions
 # provided we add a new branch, backport it, and create configs
-OWRT_TARGET_BRANCH="tplink_archer-c7-v2-$OWRT_VERSION"
+OWRT_TARGET_BRANCH="openwrt-$OWRT_VERSION"
 
 
 # ==================================================================
