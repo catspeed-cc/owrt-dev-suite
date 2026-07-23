@@ -41,7 +41,7 @@ OWRT_BASE_BRANCH="openwrt-$OWRT_VERSION"
 # Target custom port/model branch (your port branch)
 # We added the BASE_BRANCH so we can build multiple openwrt versions
 # provided we add a new branch, backport it, and create configs
-OWRT_TARGET_BRANCH="trendnet_tew-829dru-$OWRT_VERSION"
+OWRT_TARGET_BRANCH="tplink_archer-c7-v2-$OWRT_VERSION"
 
 
 # ==================================================================
@@ -74,8 +74,8 @@ OWRT_TARGET_BRANCH="trendnet_tew-829dru-$OWRT_VERSION"
 #  - work in progress or broken
 #
 
-OWRT_SUPPORTED=false      # True for mainline (supported in OpenWRT)
-OWRT_STABLE=false         # True for completed ports, False for WIP/Broken (not supported in OpenWRT)
+OWRT_SUPPORTED=true      # True for mainline (supported in OpenWRT)
+OWRT_STABLE=true         # True for completed ports, False for WIP/Broken (not supported in OpenWRT)
 
 
 # ==================================================================
@@ -86,7 +86,7 @@ OWRT_STABLE=false         # True for completed ports, False for WIP/Broken (not 
 #
 # Default: false
 # ==================================================================
-OWRTDS_NONINTERACTIVE_BUILD=false
+OWRTDS_NONINTERACTIVE_BUILD=true
 
 
 # ==================================================================
@@ -127,10 +127,10 @@ ENABLE_SYMLINK_SHORTCUTS="true"
 
 # CURRENT PORT INFORMATION (for display only)
 # TODO: multi-port and git support (using infinite string)
-OWRT_MFR="TRENDnet"
-OWRT_MODEL="TEW-829DRU"
-OWRT_SOC="ipq4019"
-OWRT_SOC_CLASS="ipq40xx"
+OWRT_MFR="TP-Link"
+OWRT_MODEL="Archer-C7-v2"
+OWRT_SOC="ath79"
+OWRT_SOC_CLASS="ath79"
 
 
 # ==================================================================
@@ -147,7 +147,7 @@ PROJECT_DIR="$HOME/projects"
 OWRT_DEV_DIR="$PROJECT_DIR/openwrt-dev"
 
 # Needed for both IMGDIR_CPY and WEBSERVER_CPY features
-IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ipq40xx/generic"
+IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ath79/generic"
 
 
 # ==================================================================
@@ -165,24 +165,6 @@ IMGDIR_SRC="$OWRT_DEV_DIR/bin/targets/ipq40xx/generic"
 # WORK_PATCHMODS_DIR="$DEVICE_WORK_DIR/patchmods"
 # WORK_RAWMODS_DIR="$DEVICE_WORK_DIR/rawmods"
 # WORK_IMAGEOUT_DIR="$DEVICE_WORK_DIR/image-out"
-
-
-
-
-# =================================================================
-# COPY DTS TO target/                                   (OPTIONAL)
-#
-# These paths are used by the auto-creator and build steps
-# Users can override any of these by uncommenting and changing them
-# ==================================================================
-
-# DTS_CPY: Enable copy of DTS file
-DO_DTS_CPY=true
-
-# DTS Paths
-# SHARED BETWEEN SRC (WORK_DTS_DIR AND DTS_DEST_DIR)
-DTS_FNAME="qcom-ipq4019-tew-829dru.dts"
-DTS_DEST_DIR="$OWRT_DEV_DIR/target/linux/ipq40xx/files-6.12/arch/arm/boot/dts/qcom"
 
 
 # =================================================================
@@ -242,55 +224,11 @@ WEBSERVER_RESTART_CMD="sudo systemctl restart nginx"
 # WEBSERVER_RESTART_CMD="sudo /etc/init.d/webserver reload"
 
 
-# =================================================================
-# APPLY PATCHES OR RAW DRIVER MOD                       (OPTIONAL)
-#
-# This feature will copy your patch and apply it to the source tree
-# to be built into the image.
-#
-# Users can override any of these by uncommenting and changing them
-# ==================================================================
-
-# DO_DRIVERMOD_CPY: Enable drivermod (patchmod & rawmod)
-DO_DRIVERMOD_CPY=true
-
-# Select either `patchmod` or `drivermod` mode
-DRIVERMOD_MODE=rawmod
-
-# TODO: Update PATCHMOD_DEST_DIR to use full path by using OWRT_DEV_DIR
-
-# Patches destination path (inside OWRT_DEV_DIR)
-PATCHMOD_DEST_DIR="target/linux/ipq40xx/patches-6.12/"
 
 
-# ===================================
-# IPQESS DUAL NETDEV RAWMOD (EXAMPLE)
-# ===================================
-
-# IPQESS Mod Files
-RAWMOD_LIST+="ipqess.h|$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12/rawmods/ipqess/ipqess.h.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.h"$NL
-RAWMOD_LIST+="ipqess.c|$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12/rawmods/ipqess/ipqess.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess.c"$NL
-RAWMOD_LIST+="ipqess_ethtool.c|$WORK_DIR/ipq40xx/trendnet/tew-829dru/25.12/rawmods/ipqess/ipqess_ethtool.c.modified|$OWRT_DEV_DIR/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq40xx_generic/linux-6.12.91/drivers/net/ethernet/qualcomm/ipqess/ipqess_ethtool.c"$NL
-
-
-# =================================================================
-# COPY CALDATA TO IMAGE                                 (OPTIONAL)
-#
-# This feature will copy your caldata to the correct location
-# to be built into the image.
-#
-# Note: You generally only need caldata when just starting DTS
-#       work and can't pull it from ART yet or are debugging.
-#
-# Note: You will need to do a clean build and update feeds.
-#
-# Users can override any of these by uncommenting and changing them
-# ==================================================================
-
-# CALDATA FLAG
+# ====================================
+# DO NOT ENABLE FOR SUPPORTED DEVICES!
+# ====================================
+DO_DTS_CPY=false
+DO_DRIVERMOD_CPY=false
 DO_CALDATA_CPY=false
-
-# Calibration Data Files
-CALDATA_LIST+="qca4019-board-2.bin|$WORK_CALDATA_DIR/QCA4019/qca4019-artcaldata.bin|ath10k/QCA4019/hw1.0/board-2.bin"$NL
-CALDATA_LIST+="qca9984-board-2.bin|$WORK_CALDATA_DIR/QCA9984/qca9984-artcaldata.bin|ath10k/QCA9984/hw1.0/board-2.bin"$NL
-
