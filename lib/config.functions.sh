@@ -56,8 +56,18 @@ verify_configuration() {
     # ===========================
 
     # Validate DEVICE_SUPPORTED flag
-    if [[ "${DEVICE_SUPPORTED}" != "true" && "${DEVICE_SUPPORTED}" != "false" ]]; then
-        exit_with_error "DEVICE_SUPPORTED is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+    if [[ "${OWRT_SUPPORTED}" != "true" && "${OWRT_SUPPORTED}" != "false" ]]; then
+        exit_with_error "OWRT_SUPPORTED is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+    fi
+
+    # Validate DEVICE_STABLE flag
+    if [[ "${OWRT_STABLE}" != "true" && "${OWRT_STABLE}" != "false" ]]; then
+        exit_with_error "OWRT_STABLE is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
+    fi
+
+    # Validate OWRTDS_NONINTERACTIVE_BUILD flag
+    if [[ "${OWRTDS_NONINTERACTIVE_BUILD}" != "true" && "${OWRTDS_NONINTERACTIVE_BUILD}" != "false" ]]; then
+        exit_with_error "OWRTDS_NONINTERACTIVE_BUILD is not set to true/false in 'etc/config.sh' - Aborting." --nocleanup
     fi
 
     # Validate SUDO_ENABLE flag

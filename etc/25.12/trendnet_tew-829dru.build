@@ -79,6 +79,17 @@ OWRT_STABLE=false         # True for completed ports, False for WIP/Broken (not 
 
 
 # ==================================================================
+# PORT SUPPORT - IMPORTANT, PLEASE READ!                 (REQUIRED)
+#
+# This flag controls whether or not `owrt-build-all-releases` builds
+# this specific configuration when it runs manually or via cron.
+#
+# Default: false
+# ==================================================================
+OWRTDS_NONINTERACTIVE_BUILD=false
+
+
+# ==================================================================
 # SUDO ENABLE                                            (OPTIONAL)
 #
 # Enable sudo commands (will ask for password). You can disable this
