@@ -51,10 +51,11 @@ parse_arguments() {
                         exit_with_error "Option $1 requires a path argument." --nocleanup
                     fi
                     CUSTOM_CONFIG_PATH="$2"
-                    shift 2
                 else
                     log_summary " >>> ⚠  WARNING: ignoring --config/-c parameter. owrt-build-all-releases does not support this flag." --silent
+                    CUSTOM_CONFIG_PATH=""
                 fi
+                shift 2
                 ;;
             -uf|--update-feeds)
                 DO_CLEAN=true

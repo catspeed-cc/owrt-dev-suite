@@ -140,3 +140,21 @@ reset_config_variables() {
     CALDATA_LIST=""
 
 }
+
+log_debug() {
+    local level="$1"
+    local message="$2"
+
+    # Ensure OWRTDS_DEBUG is treated as a number (defaults to 0 if unset)
+    local debug_level="${OWRTDS_DEBUG:-0}"
+
+    # Exit immediately if global debug is off
+    if [[ "$debug_level" -eq 0 ]]; then
+        return 0
+    fi
+
+    # Print only if the message level is <= global debug level
+    if [[ "$level" -le "$debug_level" ]]; then
+        echo "[DEBUG L${level}] ${message}" >&2
+    fi
+}
