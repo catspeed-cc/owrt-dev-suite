@@ -9,7 +9,15 @@
 # ============================================
 
 
+# DEBUG FLAG
+OWRTDS_DEBUG=true
+
 # Version Information
+if [[ ! -f "$SCRIPT_DIR/.owrtds.version" ]]; then
+    echo "❌ CRITICAL: .owrtds.version missing" >&2; exit 1
+else
+    if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] $SCRIPT_DIR/.owrtds.version exists" >&2; fi
+fi
 OWRTDS_VERSION=$(cat "$SCRIPT_DIR/.owrtds.version")
 
 # mutex / lock file
@@ -22,11 +30,15 @@ CLEANED=false
 if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/earlyscript.functions.sh - Aborting." >&2
     exit 1
+else
+    if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] sourced lib/earlyscript.functions.sh" >&2; fi
 fi
 
 # Create the mutex lock IF it is build-release script (not build-all-releases)
 if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
     create_lock
+else
+    if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] skipped lock creation" >&2; fi
 fi
 
 # Detect the OWRTDS_BRANCH
