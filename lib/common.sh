@@ -85,7 +85,10 @@ CUSTOM_CONFIG_PATH=""
 OWRTDS_INTERACTIVE=true
 # Auto-detect non-interactive mode (e.g., piped input, cron jobs, CI/CD)
 if [[ ! -t 0 ]]; then
+    log_debug "1" "Non-interactive mode activated"
     OWRTDS_INTERACTIVE=false
+else
+    log_debug "1" "Interactive mode activated"
 fi
 
 # ====================================================================================
@@ -101,6 +104,7 @@ fi
 #
 reset_config_variables
 
+
 # ===========================================================================================
 
 # ===========================================================================================
@@ -109,38 +113,64 @@ reset_config_variables
 if ! source "$SCRIPT_DIR/lib/dependencies.sh"; then
     echo "❌ CRITICAL: Unable to source lib/dependencies.sh - Aborting." >&2
     exit 1
+else
+    log_debug "4" "Sourced lib/dependencies.sh"
 fi
+
 if ! source "$SCRIPT_DIR/lib/utils.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/utils.functions.sh - Aborting." >&2
     exit 1
+else
+    log_debug "4" "Sourced lib/utils.functions.sh"
 fi
+
 if ! source "$SCRIPT_DIR/lib/logging.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/logging.functions.sh - Aborting." >&2
     exit 1
+else
+    log_debug "4" "Sourced lib/logging.functions.sh"
 fi
+
 if ! source "$SCRIPT_DIR/lib/exit.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/exit.functions.sh - Aborting." >&2
     exit 1
+else
+    log_debug "4" "Sourced lib/exit.functions.sh"
 fi
+
 if ! source "$SCRIPT_DIR/lib/cli.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/cli.functions.sh - Aborting." >&2
     exit 1
+else
+    log_debug "4" "Sourced lib/cli.functions.sh"
 fi
+
 if ! source "$SCRIPT_DIR/lib/config.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/config.functions.sh - Aborting." >&2
     exit 1
+else
+    log_debug "4" "Sourced lib/config.functions.sh"
 fi
+
 if ! source "$SCRIPT_DIR/lib/file-io.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/file-io.functions.sh - Aborting." >&2
     exit 1
+else
+    log_debug "4" "Sourced lib/file-io.functions.sh"
 fi
+
 if ! source "$SCRIPT_DIR/lib/setup.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/setup.functions.sh - Aborting." >&2
     exit 1
+else
+    log_debug "4" "Sourced lib/setup.functions.sh"
 fi
+
 if ! source "$SCRIPT_DIR/lib/build.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/build.functions.sh - Aborting." >&2
     exit 1
+else
+    log_debug "4" "Sourced lib/build.functions.sh"
 fi
 
 
@@ -149,22 +179,22 @@ fi
 # 2. PARSE CLI ARGUMENTS (Detects --config/-c override before sourcing config)
 # ===========================================================================================
 parse_arguments "$@"
-if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] parsed cli arguments" >&2; fi
 
 # ===========================================================================================
 # 3. RESOLVE & SOURCE CONFIG (Uses CLI override if present, otherwise default)
 # ===========================================================================================
 
 resolve_configuration_file
-if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] resolved configuration file '$CONFIG_FILE'" >&2; fi
 
 # Source the determined config
 if ! source "$CONFIG_FILE"; then
     echo "❌ CRITICAL: Unable to source $CONFIG_FILE - Aborting." >&2
     exit 1
 else
-    log_summary " >>> ✅ Config file loaded: $CONFIG_FILE" --silent
-    if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] loaded configuration file '$CONFIG_FILE'" >&2; fi
+    if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
+        log_summary " >>> ✅ Config file loaded: $CONFIG_FILE" --silent
+        log_debug "1" "[DEBUG] loaded configuration file '$CONFIG_FILE'"
+    fi
 fi
 
 
@@ -172,14 +202,12 @@ fi
 # 4. INSTALL DEPENDENCIES (Now available since functions.sh is sourced)
 # ===========================================================================================
 install_dependencies
-if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] installed dependencies'" >&2; fi
 
 
 # ===========================================================================================
 # 5. verify config - vars above this point must not use eachother (EXCEPT CRITICAL startup vars)
 # ===========================================================================================
 verify_configuration
-if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] verified user configuration and auto-derived variables" >&2; fi
 # ===========================================================================================
 # 5. verify config - vars below this point can use each other to autoconfigure
 # ===========================================================================================
@@ -189,7 +217,6 @@ if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] verified user configurati
 # 6. Synchronize OpenWRT .config from Work Directory
 # ===========================================================================================
 sync_config_to_dev_dir
-if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] copied .config file from etc/*/*.config to $OWRT_DEV_DIR/.config" >&2; fi
 
 
 # ===========================================================================================
@@ -208,7 +235,7 @@ show_header
 if [[ ! -f "$OWRT_DEV_DIR/.config" ]]; then
     exit_with_error "No .config file found. Ensure the file exists. (run 'make menuconfig' to create one, then copy it to your work directory for the device)"
 else
-    if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] .config landed correctly in $OWRT_DEV_DIR/.config" >&2; fi
+    log_debug "4" "[DEBUG] .config landed correctly in $OWRT_DEV_DIR/.config"
 fi
 
 
