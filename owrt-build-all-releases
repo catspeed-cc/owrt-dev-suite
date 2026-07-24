@@ -75,22 +75,29 @@ for config_file in ./configs/*/*.build; do
 
     # Reset variables, source config, verify...
     reset_config_variables
-    source "$config_file"
+
+    # Attempt to source the config
+    if source "$config_file"; then
+        log_summary " >>> ✅ Loaded config: $(basename "$config_file")"
+    else
+        log_summary " >>> ❌ FAILED to load config: $(basename "$config_file"). Skipping."
+        continue
+    fi
 
     # CHECK FLAG FIRST: Skip if not marked for batch build
     # (Using your current variable name, though OWRTDS_ENABLE_BATCH_BUILD is clearer)
     if [[ "$OWRTDS_ENABLE_BATCH_BUILD" != "true" ]]; then
         # Optional: Add a debug log if you want to see skipped files
-        # echo "⏭️  Skipping $(basename "$config_file"): Not enabled for batch build."
+        log_summary " >>> ⏭️  Skipping $(basename "$config_file"): Not enabled for batch build."
         continue
     fi
 
     # Just verify the config, it is meant to be built. The function handles failure via exit_with_error
     verify_configuration
 
-    echo "🚀 Starting build: $(basename "$config_file")"
+    log_summary "🚀 Starting build: $(basename "$config_file")"
 
-    # Run the main script (non interactive, no make clean or update feeds as it assumes all is ready to compile)
+    # Run the main script (pass in parameters from user, ignoring --config/-c)
     "$SCRIPT_DIR"/owrt-build-release --config "$config_file" "$@"
 
     # 4. The "Escape Hatch" (Interactive Only)
@@ -106,4 +113,4 @@ for config_file in ./configs/*/*.build; do
     fi
 done
 
-echo "✅ Batch process completed."
+exit_with_success " >>> ✅  SUCCESS: BATCH PROCESS COMPLETE!"
