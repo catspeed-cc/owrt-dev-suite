@@ -44,8 +44,8 @@ parse_arguments() {
                 ;;
             -c|--config)
                 # IGNORE if running as wrapper
-                if [[ "$SCRIPT_NAME" == "owrt-build-all-releases" ]]; then
-                    # Check if the NEXT argument ($2) exists. 
+                if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
+                    # Check if the NEXT argument ($2) exists.
                     # We need at least 2 args total: the flag ($1) and the path ($2).
                     if [[ $# -lt 2 ]]; then
                         exit_with_error "Option $1 requires a path argument." --nocleanup
