@@ -70,7 +70,7 @@ fi
 # 1. Execution Logic
 # ==============================================================================
 
-for config_file in ./configs/*/*.build; do
+for config_file in "$SCRIPT_DIR"/etc/*/*.build; do
     [[ -f "$config_file" ]] || continue
 
     # Reset variables, source config, verify...
@@ -97,8 +97,8 @@ for config_file in ./configs/*/*.build; do
 
     log_summary "🚀 Starting build: $(basename "$config_file")"
 
-    # Run the main script (pass in parameters from user, ignoring --config/-c)
-    "$SCRIPT_DIR"/owrt-build-release --config "$config_file" "$@"
+    # Run the main script (pass in parameters from user, force non-interactive, ignoring --config/-c)
+    "$SCRIPT_DIR"/owrt-build-release --config "$config_file" "$@" -ni
 
     # 4. The "Escape Hatch" (Interactive Only)
     if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
