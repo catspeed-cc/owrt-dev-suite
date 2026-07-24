@@ -24,8 +24,10 @@ if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
     exit 1
 fi
 
-# Create the mutex lock
-create_lock
+# Create the mutex lock IF it is build-release script (not build-all-releases)
+if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
+    create_lock
+fi
 
 # Detect the OWRTDS_BRANCH
 OWRTDS_BRANCH=""
