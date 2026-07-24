@@ -9,16 +9,32 @@
 # ============================================
 
 
-# DEBUG FLAG
-OWRTDS_DEBUG=true
+
+
+# Import earlyscript.functions.sh
+if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/earlyscript.functions.sh - Aborting." >&2
+    exit 1
+else
+    if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/earlyscript.functions.sh" >&2; fi
+fi
+
+
+# log_debug now avaialble
+
 
 # Version Information
 if [[ ! -f "$SCRIPT_DIR/.owrtds.version" ]]; then
     echo "❌ CRITICAL: .owrtds.version missing" >&2; exit 1
 else
-    if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] $SCRIPT_DIR/.owrtds.version exists" >&2; fi
+    log_debug "3" "$SCRIPT_DIR/.owrtds.version exists"
 fi
 OWRTDS_VERSION=$(cat "$SCRIPT_DIR/.owrtds.version")
+if [[ -z "$OWRTDS_VERSION" ]]; then
+     log_debug "1" "OWRTDS_VERSION IS BLANK"
+else
+     log_debug "3" "OWRTDS_VERSION='$OWRTDS_VERSION'"
+fi
 
 # mutex / lock file
 LOCK_FILE="$STARTUP_PWD/.owrtds.lock"
@@ -26,19 +42,11 @@ LOCK_FILE="$STARTUP_PWD/.owrtds.lock"
 # Guard variable to prevent double cleanup
 CLEANED=false
 
-# Import earlyscript.functions.sh
-if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/earlyscript.functions.sh - Aborting." >&2
-    exit 1
-else
-    if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] sourced lib/earlyscript.functions.sh" >&2; fi
-fi
-
 # Create the mutex lock IF it is build-release script (not build-all-releases)
 if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
     create_lock
 else
-    if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] skipped lock creation" >&2; fi
+    log_debug "3" "skipped lock creation"
 fi
 
 # Detect the OWRTDS_BRANCH
@@ -141,13 +149,14 @@ fi
 # 2. PARSE CLI ARGUMENTS (Detects --config/-c override before sourcing config)
 # ===========================================================================================
 parse_arguments "$@"
-
+if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] parsed cli arguments" >&2; fi
 
 # ===========================================================================================
 # 3. RESOLVE & SOURCE CONFIG (Uses CLI override if present, otherwise default)
 # ===========================================================================================
 
 resolve_configuration_file
+if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] resolved configuration file '$CONFIG_FILE'" >&2; fi
 
 # Source the determined config
 if ! source "$CONFIG_FILE"; then
@@ -155,6 +164,7 @@ if ! source "$CONFIG_FILE"; then
     exit 1
 else
     log_summary " >>> ✅ Config file loaded: $CONFIG_FILE" --silent
+    if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] loaded configuration file '$CONFIG_FILE'" >&2; fi
 fi
 
 
@@ -162,12 +172,14 @@ fi
 # 4. INSTALL DEPENDENCIES (Now available since functions.sh is sourced)
 # ===========================================================================================
 install_dependencies
+if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] installed dependencies'" >&2; fi
 
 
 # ===========================================================================================
 # 5. verify config - vars above this point must not use eachother (EXCEPT CRITICAL startup vars)
 # ===========================================================================================
 verify_configuration
+if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] verified user configuration and auto-derived variables" >&2; fi
 # ===========================================================================================
 # 5. verify config - vars below this point can use each other to autoconfigure
 # ===========================================================================================
@@ -177,6 +189,7 @@ verify_configuration
 # 6. Synchronize OpenWRT .config from Work Directory
 # ===========================================================================================
 sync_config_to_dev_dir
+if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] copied .config file from etc/*/*.config to $OWRT_DEV_DIR/.config" >&2; fi
 
 
 # ===========================================================================================
@@ -194,6 +207,8 @@ show_header
 # Checks if there is a .config in the OWRT_DEV_DIR after having copied it from sync_config_to_etc_dir above
 if [[ ! -f "$OWRT_DEV_DIR/.config" ]]; then
     exit_with_error "No .config file found. Ensure the file exists. (run 'make menuconfig' to create one, then copy it to your work directory for the device)"
+else
+    if [[ "$OWRTDS_DEBUG" == "true" ]]; then echo "[DEBUG] .config landed correctly in $OWRT_DEV_DIR/.config" >&2; fi
 fi
 
 

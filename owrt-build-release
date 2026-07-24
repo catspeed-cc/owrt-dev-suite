@@ -8,6 +8,8 @@
 # Edit `./etc/config.sh` to configure
 # ============================================
 
+# DEBUG FLAG
+OWRTDS_DEBUG=100
 
 # NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
 #
@@ -31,7 +33,7 @@ if [ -z "$REAL_PATH" ]; then
         DIR="$(dirname "$REAL_PATH")"
         # Check if directory exists before cd-ing
         if [ ! -d "$DIR" ]; then
-            echo "❌ CRITICAL: Directory does not exist: $DIR" >&2
+            echo " >>> ❌ CRITICAL: Directory does not exist: $DIR" >&2
             exit 1
         fi
         DIR=$(cd -P "$DIR" && pwd)
@@ -45,7 +47,7 @@ if [ -z "$REAL_PATH" ]; then
         DIR="$(dirname "$REAL_PATH")"
         # Check if directory exists before cd-ing
         if [ ! -d "$DIR" ]; then
-            echo "❌ CRITICAL: Directory does not exist: $DIR" >&2
+            echo " >>> ❌ CRITICAL: Directory does not exist: $DIR" >&2
             exit 1
         fi
         REAL_PATH=$(cd -P "$DIR" && pwd)/$(basename "$REAL_PATH")
@@ -59,7 +61,7 @@ SCRIPT_NAME=$(basename "$REAL_PATH")
 
 # Import lib/common.sh
 if ! source "$SCRIPT_DIR/lib/common.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
+    echo " >>> ❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
     exit 1
 fi
 

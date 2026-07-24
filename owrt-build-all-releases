@@ -8,6 +8,8 @@
 # Edit `./etc/config.sh` to configure
 # ============================================
 
+# DEBUG FLAG
+OWRTDS_DEBUG=100
 
 # NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
 #
@@ -31,7 +33,7 @@ if [ -z "$REAL_PATH" ]; then
         DIR="$(dirname "$REAL_PATH")"
         # Check if directory exists before cd-ing
         if [ ! -d "$DIR" ]; then
-            echo "❌ CRITICAL: Directory does not exist: $DIR" >&2
+            echo " >>> ❌ CRITICAL: Directory does not exist: $DIR" >&2
             exit 1
         fi
         DIR=$(cd -P "$DIR" && pwd)
@@ -45,7 +47,7 @@ if [ -z "$REAL_PATH" ]; then
         DIR="$(dirname "$REAL_PATH")"
         # Check if directory exists before cd-ing
         if [ ! -d "$DIR" ]; then
-            echo "❌ CRITICAL: Directory does not exist: $DIR" >&2
+            echo " >>> ❌ CRITICAL: Directory does not exist: $DIR" >&2
             exit 1
         fi
         REAL_PATH=$(cd -P "$DIR" && pwd)/$(basename "$REAL_PATH")
@@ -59,7 +61,7 @@ SCRIPT_NAME=$(basename "$REAL_PATH")
 
 # Import lib/common.sh
 if ! source "$SCRIPT_DIR/lib/common.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
+    echo " >>> ❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
     exit 1
 fi
 
@@ -100,7 +102,14 @@ for config_file in "$SCRIPT_DIR"/etc/*/*.build; do
     log_summary "[DEBUG] executing '$SCRIPT_DIR/owrt-build-release --config $config_file $@ -ni'"
 
     # Run the main script (pass in parameters from user, force non-interactive, ignoring --config/-c)
-    exec "$SCRIPT_DIR"/owrt-build-release --config "$config_file" "$@" -ni
+    "$SCRIPT_DIR"/owrt-build-release --config "$config_file" "$@" -ni
+    BUILD_EXIT_CODE=$?
+
+    # Check the result
+    if [[ $BUILD_EXIT_CODE -ne 0 ]]; then
+        log_summary " >>> ❌ Build failed for $(basename "$config_file") (Exit Code: $BUILD_EXIT_CODE)"
+        continue
+    fi
 
     # 4. The "Escape Hatch" (Interactive Only)
     if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
