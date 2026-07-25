@@ -235,7 +235,7 @@ show_header
 if [[ ! -f "$OWRT_DEV_DIR/.config" ]]; then
     exit_with_error "No .config file found. Ensure the file exists. (run 'make menuconfig' to create one, then copy it to your work directory for the device)"
 else
-    log_debug "4" "[DEBUG] .config landed correctly in $OWRT_DEV_DIR/.config"
+    log_debug "1" "[DEBUG] .config landed correctly in $OWRT_DEV_DIR/.config"
 fi
 
 
