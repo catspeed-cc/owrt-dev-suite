@@ -38,10 +38,6 @@ parse_arguments() {
 
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -mc|--make-clean)
-                DO_CLEAN=true
-                shift
-                ;;
             -c|--config)
                 # IGNORE if running as wrapper
                 if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
@@ -56,6 +52,10 @@ parse_arguments() {
                     CUSTOM_CONFIG_PATH=""
                 fi
                 shift 2
+                ;;
+            -mc|--make-clean)
+                DO_CLEAN=true
+                shift
                 ;;
             -uf|--update-feeds)
                 DO_CLEAN=true
