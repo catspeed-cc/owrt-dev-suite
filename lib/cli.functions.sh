@@ -94,30 +94,45 @@ parse_arguments() {
 }
 
 resolve_configuration_file() {
+    log_debug "4" "resolve_configuration_file() is running ..."
     # Check if user provided a custom config via CLI
-    if [[ -n "$CUSTOM_CONFIG_PATH" ]]; then
+    if [[ -n "${CUSTOM_CONFIG_PATH:-}" ]]; then
         # 1. Resolve relative paths against repository root ($SCRIPT_DIR)
         if [[ "$CUSTOM_CONFIG_PATH" != /* ]]; then
             CUSTOM_CONFIG_PATH="$SCRIPT_DIR/$CUSTOM_CONFIG_PATH"
+            log_debug "4" "Resolved to absolute: '$CUSTOM_CONFIG_PATH'"
+        else
+            log_debug "1" "Path is already absolute: '$CUSTOM_CONFIG_PATH'"
         fi
 
         # 2. Validate file exists
         if [[ ! -f "$CUSTOM_CONFIG_PATH" ]]; then
             echo "❌ CRITICAL: Custom config file not found: $CUSTOM_CONFIG_PATH" >&2
             exit 1
+        else
+            log_debug "4" "Config file exists: '$CUSTOM_CONFIG_PATH'"
         fi
 
-        # 3. Interactive mode: Update default config symlink
-        if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        # 3. Interactive mode: Update symlink
+        if [[ "${OWRTDS_INTERACTIVE:-false}" == "true" ]]; then
+
             default_config="$SCRIPT_DIR/etc/config.sh"
-            # Remove existing file/link
-            rm -f "$default_config" 2>/dev/null || true
-            # Create new symlink (use absolute path for reliability or relative if preferred)
-            ln -s "$CUSTOM_CONFIG_PATH" "$default_config" || exit_with_error "Failed to create config symlink" --nocleanup
-            log_summary " >>> ✅ Config override applied. Default config now points to $(cleanup_path "$CUSTOM_CONFIG_PATH")" --silent
+
+            log_debug "1" "Attempting symlink: $CUSTOM_CONFIG_PATH -> $default_config"
+
+            if ln -sfn "$CUSTOM_CONFIG_PATH" "$default_config"; then
+                log_debug "1" "Symlink created successfully."
+                log_summary " >>> ✅ Config override applied. Default config now points to $(cleanup_path "$CUSTOM_CONFIG_PATH")" --silent
+            else
+                exit_with_error "Failed to create config symlink" --nocleanup
+            fi
+
         fi
 
         # 4. Set the final config file to source
         CONFIG_FILE="$CUSTOM_CONFIG_PATH"
+
+    else
+        log_debug "1" "CUSTOM_CONFIG_PATH is unset/blank"
     fi
 }
