@@ -266,7 +266,7 @@ if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} -s"
 fi
 
-# Enable trap only for owrt-build (not owrt-build-all-releases)
+# Enable trap only for owrt-build (not owrt-build-all)
 if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
     # Register the trap ONLY for interruption signals (INT, TERM, HUP)
     # Do NOT trap EXIT here; let your wrappers handle normal exits.
