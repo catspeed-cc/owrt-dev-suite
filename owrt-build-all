@@ -72,7 +72,19 @@ fi
 # 1. Execution Logic
 # ==============================================================================
 
-for config_file in "$SCRIPT_DIR"/etc/*/*.build; do
+shopt -s nullglob
+all_configs=("$SCRIPT_DIR"/etc/*/*.build)
+shopt -u nullglob
+
+BUILD_TOTAL=0
+BUILD_SUCCESS=0
+BUILD_FAILED=0
+BUILD_SKIPPED=0
+
+# total configs to build
+TOTAL_TO_BUILD=${#all_configs[@]}
+
+for config_file in "${all_configs[@]}"; do
     [[ -f "$config_file" ]] || continue
 
     # Reset variables, source config, verify...
@@ -83,6 +95,7 @@ for config_file in "$SCRIPT_DIR"/etc/*/*.build; do
         log_summary " >>> ✅ Loaded config: $(basename "$config_file")"
     else
         log_summary " >>> ❌ FAILED to load config: $(basename "$config_file"). Skipping."
+        ((BUILD_SKIPPED++))
         continue
     fi
 
@@ -91,6 +104,7 @@ for config_file in "$SCRIPT_DIR"/etc/*/*.build; do
     if [[ "$OWRTDS_ENABLE_BATCH_BUILD" != "true" ]]; then
         # Optional: Add a debug log if you want to see skipped files
         log_summary " >>> ⏭️  Skipping $(basename "$config_file"): Not enabled for batch build."
+        ((BUILD_SKIPPED++))
         continue
     fi
 
@@ -99,16 +113,20 @@ for config_file in "$SCRIPT_DIR"/etc/*/*.build; do
 
     log_summary "🚀 Starting build: $(basename "$config_file")"
 
-    log_summary "[DEBUG] executing '$SCRIPT_DIR/owrt-build --config $config_file $@ -mc -uf -ni'"
+    log_debug "4" "executing '$SCRIPT_DIR/owrt-build --config $config_file $@ -mc -uf -ni'"
 
     # Run the main script (pass in parameters from user, force non-interactive, ignoring --config/-c)
     "$SCRIPT_DIR"/owrt-build --config "$config_file" "$@" -mc -uf -ni
     BUILD_EXIT_CODE=$?
 
-    # Check the result
-    if [[ $BUILD_EXIT_CODE -ne 0 ]]; then
-        log_summary " >>> ❌ Build failed for $(basename "$config_file") (Exit Code: $BUILD_EXIT_CODE)"
-        continue
+    ((BUILD_TOTAL++))
+
+    if [[ $BUILD_EXIT_CODE -eq 0 ]]; then
+        ((BUILD_SUCCESS++))
+        log_summary " >>> ✅ Build #$BUILD_TOTAL of $TOTAL_TO_BUILD succeeded: $(basename "$config_file")"
+    else
+        ((BUILD_FAILED++))
+        log_summary " >>> ❌ Build #$BUILD_TOTAL of $TOTAL_TO_BUILD failed: $(basename "$config_file") (Exit Code: $EXIT_CODE)"
     fi
 
     # 4. The "Escape Hatch" (Interactive Only)
@@ -124,4 +142,18 @@ for config_file in "$SCRIPT_DIR"/etc/*/*.build; do
     fi
 done
 
-exit_with_success " >>> ✅  SUCCESS: BATCH PROCESS COMPLETE!"
+echo ""
+echo " =================================================================="
+echo "  🏁  BATCH PROCESS REPORT"
+echo " =================================================================="
+echo "  Total Configs Processed:  $BUILD_TOTAL of $TOTAL_TO_BUILD"
+echo "  ✅ Successful Builds:     $BUILD_SUCCESS"
+echo "  ✅ Successful Builds:     $BUILD_SKIPPED"
+echo "  ❌ Failed Builds:         $BUILD_FAILED"
+echo " =================================================================="
+
+if [[ $BUILD_FAILED -gt 0 ]]; then
+    exit_with_error "Batch processing completed with error(s)"
+else
+    exit_with_success "Batch processing completed without error"
+fi
