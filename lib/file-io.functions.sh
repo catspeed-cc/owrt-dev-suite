@@ -259,7 +259,12 @@ copy_to_webserver() {
 
     [[ -z "$WEBSERVER_SHARED_DIR" ]] && exit_with_error "WEBSERVER_SHARED_DIR is not set"
 
-    local dest="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_version"
+    local dadd=""
+    if [[ "$OWRT_STABLE" == "false" ]]; then
+        dadd="-dev"
+    fi
+
+    local dest="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_version${dadd}"
 
     if [ "$DO_WEBSERVER_CPY" == "true" ]; then
 
