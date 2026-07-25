@@ -45,7 +45,7 @@ show_header() {
     fi
 
     # determine caller for header
-    if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
+    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
         local msg_str="Building release"
     elif [[ "$SCRIPT_NAME" == "owrt-build-all-releases" ]]; then
         local msg_str="Building all releases"
