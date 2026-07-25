@@ -81,7 +81,7 @@ OWRT_STABLE=true         # True for completed ports, False for WIP/Broken (not s
 # ==================================================================
 # PORT SUPPORT - IMPORTANT, PLEASE READ!                 (REQUIRED)
 #
-# This flag controls whether or not `owrt-build-all-releases` builds
+# This flag controls whether or not `owrt-build-all` builds
 # this specific configuration when it runs manually or via cron.
 #
 # Default: false

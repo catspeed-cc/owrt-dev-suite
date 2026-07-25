@@ -52,7 +52,7 @@ parse_arguments() {
                     fi
                     CUSTOM_CONFIG_PATH="$2"
                 else
-                    log_summary " >>> ⚠  WARNING: ignoring --config/-c parameter. owrt-build-all-releases does not support this flag." --silent
+                    log_summary " >>> ⚠  WARNING: ignoring --config/-c parameter. owrt-build-all does not support this flag." --silent
                     CUSTOM_CONFIG_PATH=""
                 fi
                 shift 2
