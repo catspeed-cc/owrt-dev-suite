@@ -92,6 +92,8 @@ parse_arguments() {
                 ;;
             -ni|--non-interactive)
                 OWRTDS_INTERACTIVE=false
+                DO_VERBOSE=false
+                DO_XVERBOSE=false
                 shift
                 ;;
             -h|--help)
