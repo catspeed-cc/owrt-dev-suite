@@ -44,7 +44,7 @@ parse_arguments() {
                 ;;
             -c|--config)
                 # IGNORE if running as wrapper
-                if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
+                if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
                     # Check if the NEXT argument ($2) exists.
                     # We need at least 2 args total: the flag ($1) and the path ($2).
                     if [[ $# -lt 2 ]]; then

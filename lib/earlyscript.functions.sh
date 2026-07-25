@@ -34,7 +34,7 @@ remove_lock() {
 create_lock() {
     # Attempt to create lock directory atomically
     if ! mkdir "$LOCK_FILE" 2>/dev/null; then
-        echo " ❌  CRITICAL: owrt-build-release is already running!"
+        echo " ❌  CRITICAL: owrt-build is already running!"
         echo "     If this is an error, remove: $LOCK_FILE"
         exit 1
     fi

@@ -43,7 +43,7 @@ LOCK_FILE="$STARTUP_PWD/.owrtds.lock"
 CLEANED=false
 
 # Create the mutex lock IF it is build-release script (not build-all-releases)
-if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
+if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
     create_lock
 else
     log_debug "3" "skipped lock creation"
@@ -191,7 +191,7 @@ if ! source "$CONFIG_FILE"; then
     echo "❌ CRITICAL: Unable to source $CONFIG_FILE - Aborting." >&2
     exit 1
 else
-    if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
+    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
         log_summary " >>> ✅ Config file loaded: $CONFIG_FILE" --silent
         log_debug "1" "[DEBUG] loaded configuration file '$CONFIG_FILE'"
     fi
@@ -266,8 +266,8 @@ if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} -s"
 fi
 
-# Enable trap only for owrt-build-release (not owrt-build-all-releases)
-if [[ "$SCRIPT_NAME" == "owrt-build-release" ]]; then
+# Enable trap only for owrt-build (not owrt-build-all-releases)
+if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
     # Register the trap ONLY for interruption signals (INT, TERM, HUP)
     # Do NOT trap EXIT here; let your wrappers handle normal exits.
     # Define specific handlers for each signal to pass the name correctly
