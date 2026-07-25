@@ -11,19 +11,35 @@
 #   show_help
 # =============================================================================
 show_help() {
-    echo ""
-    echo "Usage: ${SCRIPT_NAME} [OPTIONS]"
-    echo ""
-    echo "Options:"
-    echo " -c, --config <path>        Override config file (supports relative/absolute paths)"
-    echo " -mc, --make-clean          Run 'make clean' and prepare host tools/toolchain"
-    echo " -uf, --update-feeds        Update and install feeds"
-    echo " -v, --verbose              Enable verbose output"
-    echo " -vv, --extra-verbose       Enable extra verbose output (V=99)"
-    echo " -s, --slow                 Single-core compilation (default is multi-core)"
-    echo " -ni, --non-interactive     Disable interactive prompts (for cron/CI)"
-    echo " -h, --help                 Show this help message"
-    echo ""
+    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+        echo ""
+        echo "Usage: ${SCRIPT_NAME} [OPTIONS]"
+        echo ""
+        echo "Options:"
+        echo " -c, --config <path>        Override config file (supports relative/absolute paths)"
+        echo " -mc, --make-clean          Run 'make clean' and prepare host tools/toolchain"
+        echo " -uf, --update-feeds        Update and install feeds"
+        echo " -v, --verbose              Enable verbose output"
+        echo " -vv, --extra-verbose       Enable extra verbose output (V=99)"
+        echo " -s, --slow                 Single-core compilation (default is multi-core)"
+        echo " -ni, --non-interactive     Disable interactive prompts (for cron/CI)"
+        echo " -h, --help                 Show this help message"
+        echo ""
+    elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
+        echo ""
+        echo "Usage: ${SCRIPT_NAME} [OPTIONS]"
+        echo ""
+        echo "Options:"
+        echo " -v, --verbose              Enable verbose output"
+        echo " -vv, --extra-verbose       Enable extra verbose output (V=99)"
+        echo " -s, --slow                 Single-core compilation (default is multi-core)"
+        echo " -ni, --non-interactive     Disable interactive prompts (for cron/CI)"
+        echo " -h, --help                 Show this help message"
+        echo ""
+    else
+        echo "❌ Critical error. Unable to determine which script is running. Aborting." >&2
+        exit 1
+    fi
 }
 
 # =============================================================================
