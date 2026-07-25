@@ -18,7 +18,8 @@ exit_with_success() {
     set +e
 
     # Perform cleanup ONLY if the --nocleanup flag is NOT provided
-    if [[ "$no_cleanup_flag" != "--nocleanup" ]]; then
+    # Also disabled entirely for 'owrt-build-all' script
+    if [[ "$no_cleanup_flag" != "--nocleanup" && "$SCRIPT_NAME" != "owrt-build-all" ]]; then
         cleanup_build_environment
     fi
 
@@ -59,8 +60,8 @@ exit_with_error() {
     set +e
 
     # Perform cleanup ONLY if the --nocleanup flag is NOT provided
-    # (Usually you want cleanup on error, but this allows overriding if needed)
-    if [[ "$no_cleanup_flag" != "--nocleanup" ]]; then
+    # Also disabled entirely for 'owrt-build-all' script
+    if [[ "$no_cleanup_flag" != "--nocleanup" && "$SCRIPT_NAME" != "owrt-build-all" ]]; then
         cleanup_build_environment
     fi
 
