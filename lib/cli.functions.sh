@@ -100,9 +100,9 @@ resolve_configuration_file() {
         # 1. Resolve relative paths against repository root ($SCRIPT_DIR)
         if [[ "$CUSTOM_CONFIG_PATH" != /* ]]; then
             CUSTOM_CONFIG_PATH="$SCRIPT_DIR/$CUSTOM_CONFIG_PATH"
-            log_debug "4" "Resolved to absolute: '$CUSTOM_CONFIG_PATH'"
+            log_debug "1" "Resolved to absolute: '$CUSTOM_CONFIG_PATH'"
         else
-            log_debug "1" "Path is already absolute: '$CUSTOM_CONFIG_PATH'"
+            log_debug "4" "Path is already absolute: '$CUSTOM_CONFIG_PATH'"
         fi
 
         # 2. Validate file exists
