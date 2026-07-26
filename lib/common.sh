@@ -36,13 +36,18 @@ else
      log_debug "3" "OWRTDS_VERSION='$OWRTDS_VERSION'"
 fi
 
-# mutex / lock file
-LOCK_FILE="$STARTUP_PWD/.owrtds.lock"
-
 # Guard variable to prevent double cleanup
 CLEANED=false
 
-# Create the mutex lock IF it is build-release script (not build-all-releases)
+# Generate unique repository key from OWRT_DEV_DIR for state isolation
+REPO_KEY=$(echo "$OWRT_DEV_DIR" | tr '/' '_' | md5sum | cut -c1-12)
+
+# Create centralized state directory structure within owrt-dev-suite repo
+mkdir -p "$SCRIPT_DIR/.owrtds/state/{locks,configs}" 2>/dev/null || true
+
+# Define new paths for locks and config tracking
+LOCK_FILE="$SCRIPT_DIR/.owrtds/state/locks/${REPO_KEY}.lock"
+CONFIG_STATE_FILE="$SCRIPT_DIR/.owrtds/state/configs/${REPO_KEY}.cfghome"
 if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
     create_lock
 else

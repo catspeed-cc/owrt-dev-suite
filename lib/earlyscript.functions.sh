@@ -26,25 +26,34 @@
 # Ensure all functions are self contained, and do not rely on existing helpers.
 #
 
-# Function to remove lock file
-remove_lock() {
-    if [[ -d "$LOCK_FILE" ]]; then
-        log_debug "1" "removed lock - LOCK_FILE: '$LOCK_FILE'"
-        rmdir "$LOCK_FILE" 2>/dev/null
-    fi
-}
-
+# =============================================================================
+# create_lock
+# Description: Creates a per-repository mutex lock in the centralized state dir.
+# =============================================================================
 create_lock() {
-    # Attempt to create lock directory atomically
+    local lock_dir="$SCRIPT_DIR/.owrtds/state/locks"
+    mkdir -p "$lock_dir" 2>/dev/null || true
+    LOCK_FILE="${lock_dir}/${REPO_KEY}.lock"
+
     if ! mkdir "$LOCK_FILE" 2>/dev/null; then
         log_debug "1" "unable to obtain lock file - LOCK_FILE: '$LOCK_FILE'"
-        echo " ❌  CRITICAL: owrt-build is already running!"
+        echo " ❌  CRITICAL: owrt-build is already running for this repository!"
         echo "     If this is an error, remove: $LOCK_FILE"
         exit 1
     fi
 
-    # trap to cleanup lock
     trap 'remove_lock' EXIT || log_debug "1" "trap cleanup failed (EXIT)"
+}
+
+# =============================================================================
+# remove_lock
+# Description: Safely removes the per-repository lock file/directory.
+# =============================================================================
+remove_lock() {
+    if [[ -n "${LOCK_FILE:-}" && -d "$LOCK_FILE" ]]; then
+        log_debug "1" "removed lock - LOCK_FILE: '$LOCK_FILE'"
+        rmdir "$LOCK_FILE" 2>/dev/null || true
+    fi
 }
 
 owrtds_branch_detect() {
