@@ -27,6 +27,7 @@
 # Function to remove lock file
 remove_lock() {
     if [[ -d "$LOCK_FILE" ]]; then
+        log_debug "1" "removed lock - LOCK_FILE: '$LOCK_FILE'"
         rmdir "$LOCK_FILE" 2>/dev/null
     fi
 }
@@ -34,19 +35,21 @@ remove_lock() {
 create_lock() {
     # Attempt to create lock directory atomically
     if ! mkdir "$LOCK_FILE" 2>/dev/null; then
+        log_debug "1" "unable to obtain lock file - LOCK_FILE: '$LOCK_FILE'"
         echo " ❌  CRITICAL: owrt-build is already running!"
         echo "     If this is an error, remove: $LOCK_FILE"
         exit 1
     fi
 
     # trap to cleanup lock
-    trap 'remove_lock' EXIT
+    trap 'remove_lock' EXIT || log_debug "1" "trap cleanup failed (EXIT)"
 }
 
 owrtds_branch_detect() {
     # Ensure we go to our script location (owrt-dev-suite repo)
     if ! cd "$SCRIPT_DIR" 2>/dev/null; then
         echo "Error: Unable to change directory to '$SCRIPT_DIR'. Script location invalid." >&2
+        log_debug "1" "'cd $SCRIPT_DIR failed'"
         exit 1
     fi
 
@@ -56,10 +59,12 @@ owrtds_branch_detect() {
     if [ -z "$OWRTDS_BRANCH" ]; then
         OWRTDS_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     fi
+    log_debug "1" "OWRTDS_BRANCH: '$OWRTDS_BRANCH'"
 
     # Ensure we go back to the original PWD before build
     if ! cd "$STARTUP_PWD" 2>/dev/null; then
         echo "Warning: Unable to return to '$STARTUP_PWD'. Continuing in current directory." >&2
+        log_debug "1" "'cd $STARTUP_DIR failed'"
         # We don't exit here as the build might still proceed, but log the issue
     fi
 }
@@ -67,6 +72,7 @@ owrtds_branch_detect() {
 # TODO: comments explaining function in same format as others
 reset_config_variables() {
 
+    log_debug "1" "reset config vars"
     # ====================================================================================
     # TO AVOID FAILURE IN `set -euo pipefail` MODE DEFINE USER VARIABLES WHICH ARE EITHER:
     #  - only user defined in lib/config.sh
@@ -138,7 +144,7 @@ reset_config_variables() {
 
     DO_CALDATA_CPY="false"
     CALDATA_LIST=""
-
+    
 }
 
 log_debug() {
