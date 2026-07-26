@@ -3,6 +3,8 @@
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
 #
+# ⚠ PRECEDENCE WARNING ⚠
+#
 # EARLY FUNCTIONS FILE - THIS FILE IS UNIQUE, PLEASE PAY ATTENTION!
 #
 # These functions are required early in the program to be able to startup.
