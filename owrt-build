@@ -5,10 +5,10 @@
 
 # ============================================
 # NOTE: DO NOT CONFIGURE ANYTHING IN THIS FILE
-# Edit `./etc/config.sh` to configure
+# Edit `./etc/*/*.build` to configure
 # ============================================
 
-# DEBUG FLAG
+# DEBUG FLAG (0 = off, 1+ = more verbose)
 OWRTDS_DEBUG=100
 
 # NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
@@ -19,7 +19,7 @@ OWRTDS_DEBUG=100
 # - I need to see and know when something is unbound and fix it
 set -Eeuo pipefail
 
-# Ensure STARTUP_PWD does not have a trailing slash for consistent matching
+# Obtain STARTUP_PWD & ensure STARTUP_PWD does not have a trailing slash for consistent matching
 STARTUP_PWD=$(pwd)
 STARTUP_PWD="${STARTUP_PWD%/}"
 
@@ -59,7 +59,7 @@ SCRIPT_DIR=$(dirname "$REAL_PATH")
 SCRIPT_NAME=$(basename "$REAL_PATH")
 
 
-# Import lib/common.sh
+# Import lib/common.sh (bootstrap)
 if ! source "$SCRIPT_DIR/lib/common.sh"; then
     echo " >>> ❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
     exit 1
@@ -79,15 +79,17 @@ change_directory "$OWRT_DEV_DIR"
 # Handle Clean
 if [[ "$DO_CLEAN" == "true" ]]; then
     echo " >>> Running 'make clean'..."
+    make clean -s > /dev/null 2>&1
+    rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
+    rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
     if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-        rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
-        rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
         log_summary " >>> ✅ Make clean"
+        log_debug "1" "make clean ran (interactive)"
     else
-        make clean -s > /dev/null 2>&1
-        rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
-        rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
+        log_debug "1" "make clean ran (non-interactive)"
     fi
+else
+    log_debug "1" "DO_CLEAN: '$DO_CLEAN'"
 fi
 
 # Handle Update Feeds (First, to ensure package definitions are fresh)
@@ -97,22 +99,34 @@ if [[ "$DO_UPDATE_FEEDS" == "true" ]]; then
         ./scripts/feeds update -a
         ./scripts/feeds install -a
         log_summary " >>> ✅ Feeds updated & installed"
+        log_debug "1" "update/install feeds ran (interactive)"
     else
+        # non-interactive
         ./scripts/feeds update -a > /dev/null 2>&1
         ./scripts/feeds install -a > /dev/null 2>&1
+        log_debug "1" "update/install feeds ran (non-interactive)"
     fi
+else
+    log_debug "1" "DO_UPDATE_FEEDS: '$DO_UPDATE_FEEDS'"
 fi
 
+# Only compile tools/toolchain on a make-clean
 if [[ "$DO_CLEAN" == "true" ]]; then
     echo " >>> Ensuring host tools and toolchain are ready..."
     if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        # interactive and verbose/xverbose
         make tools/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build host tools"
         make toolchain/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build toolchain"
         log_summary " >>> ✅ Toolchain built"
+        log_debug "1" "tools/toolchain compiled - DO_CLEAN: '$DO_CLEAN' (interactive)"
     else
+        # non-interactive
         make tools/install ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Failed to build host tools"
         make toolchain/install ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Failed to build toolchain"
+        log_debug "1" "tools/toolchain compiled - DO_CLEAN: '$DO_CLEAN' (non-interactive)"
     fi
+else
+    log_debug "1" "Not compiling tools/toolchain - DO_CLEAN: '$DO_CLEAN'"
 fi
 
 # Handle Inject DTS (BEFORE prepare)
@@ -123,9 +137,13 @@ if [[ "$OWRT_SUPPORTED" == "false" && "$DO_DTS_CPY" == "true" && "$DO_CLEAN" == 
     if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
         build_kernel_sources
         log_summary " >>> ✅ Kernel source built"
+        log_debug "1" "Kernel sources built - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_DTS_CPY: '$DO_DTS_CPY' , DO_CLEAN: '$DO_CLEAN' (interactive)"
     else
         build_kernel_sources
+        log_debug "1" "Kernel sources built - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_DTS_CPY: '$DO_DTS_CPY' , DO_CLEAN: '$DO_CLEAN' (non-interactive)"
     fi
+else
+    log_debug "1" "Not building kernel sources - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_DTS_CPY: '$DO_DTS_CPY' , DO_CLEAN: '$DO_CLEAN'"
 fi
 
 # Handle prepare linux-firmware
@@ -134,8 +152,10 @@ if [[ "$OWRT_SUPPORTED" == "false" && "$DO_CALDATA_CPY" == "true" && "$DO_CLEAN"
     if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
         make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux-firmware'"
         log_summary " >>> ✅ Sources prepared (linux-firmware)"
+        log_debug "1" "linux-firmware built - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_CALDATA_CPY: '$DO_CALDATA_CPY' , DO_CLEAN: '$DO_CLEAN' (interactive)"
     else
         make package/linux-firmware/prepare ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Make Prepare 'linux-firmware'"
+        log_debug "1" "linux-firmware built - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_CALDATA_CPY: '$DO_CALDATA_CPY' , DO_CLEAN: '$DO_CLEAN' (non-interactive)"
     fi
     # Handle Copy caldata
     echo " >>> Injecting board-2.bin into build_dir..."
@@ -152,8 +172,8 @@ fi
 # PAUSE SO HUMAN USER CAN SEE PROGRESS BEFORE COMPILE
 if [[ "$OWRTDS_INTERACTIVE" == true ]]; then sleep 5; fi
 
-# 1. Temporarily disable 'errexit' to capture make's exit code manually.
-#    NOTE: The SIGINT/SIGTERM trap remains ACTIVE here for CTRL+C safety.
+# Temporarily disable 'errexit' to capture make's exit code manually.
+# NOTE: The SIGINT/SIGTERM trap remains ACTIVE here for CTRL+C safety.
 set +e
 
 # Now the main build can proceed without host tool interruptions
@@ -167,29 +187,37 @@ else
     BUILD_STATUS=$?
 fi
 
-# 2. Re-enable strict error checking immediately.
-#    Any failure in copy/cleanup steps will now trigger the trap & cleanup.
+# Re-enable strict error checking
 set -e
 
 # Synchronize final .config state back to work directory (runs unconditionally)
 sync_config_from_dev_dir
 
-# 3. Handle Build Result
+# Handle Build Result
 if [ "$BUILD_STATUS" -eq 0 ]; then
     log_summary " >>> ✅ Build successful. Copying images..."
 
     # Run post-build steps (Trap is ACTIVE: failures here will cleanup)
     if [ "$DO_IMGDIR_CPY" = "true" ]; then
         copy_to_imgdir
+        log_debug "1" "Copying image to workdir - DO_IMGDIR_CPY: '$DO_IMGDIR_CPY'"
+    else
+        log_debug "1" "Not copying image to workdir - DO_IMGDIR_CPY: '$DO_IMGDIR_CPY'"
     fi
 
     if [ "$DO_WEBSERVER_CPY" = "true" ]; then
         copy_to_webserver
+        log_debug "1" "Copying image to webserver shareddir - DO_WEBSERVER_CPY: '$DO_WEBSERVER_CPY'"
+    else
+        log_debug "1" "Not copying image to webserver shareddir - DO_WEBSERVER_CPY: '$DO_WEBSERVER_CPY'"
     fi
 
     # Gated final manual cleanup on success
     if [ "$CLEANED" == false ]; then
         cleanup_build_environment
+        log_debug "1" "Performing cleanup"
+    else
+        log_debug "1" "Already cleaned, skipping cleanup."
     fi
 
     # Calculate time elapsed
