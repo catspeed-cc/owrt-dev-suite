@@ -85,6 +85,8 @@ BUILD_SKIPPED=0
 TOTAL_TO_BUILD=${#all_configs[@]}
 
 for config_file in "${all_configs[@]}"; do
+    log_debug "1" "Attempting source of config file: $config_file."
+    # Config file gate - either it exists or we continue to next iteration of loop
     [[ -f "$config_file" ]] || continue
 
     # Reset variables, source config, verify...
@@ -93,17 +95,18 @@ for config_file in "${all_configs[@]}"; do
     # Attempt to source the config
     if source "$config_file"; then
         log_summary " >>> ✅ Loaded config: $(basename "$config_file")"
+        log_debug "1" "Sourced config file: $config_file."
     else
         log_summary " >>> ❌ FAILED to load config: $(basename "$config_file"). Skipping."
+        log_debug "1" "Failed to source config file: $config_file. Skipping."
         ((BUILD_SKIPPED++))
         continue
     fi
 
     # CHECK FLAG FIRST: Skip if not marked for batch build
-    # (Using your current variable name, though OWRTDS_ENABLE_BATCH_BUILD is clearer)
     if [[ "$OWRTDS_ENABLE_BATCH_BUILD" != "true" ]]; then
-        # Optional: Add a debug log if you want to see skipped files
         log_summary " >>> ⏭️  Skipping $(basename "$config_file"): Not enabled for batch build."
+        log_debug "1" "Skipped config: '$config_file' - OWRTDS_ENABLE_BATCH_BUILD: '$OWRTDS_ENABLE_BATCH_BUILD'"
         ((BUILD_SKIPPED++))
         continue
     fi
@@ -112,8 +115,7 @@ for config_file in "${all_configs[@]}"; do
     verify_configuration
 
     log_summary "🚀 Starting build: $(basename "$config_file")"
-
-    log_debug "4" "executing '$SCRIPT_DIR/owrt-build --config $config_file $@ -mc -uf -ni'"
+    log_debug "1" "executing '$SCRIPT_DIR/owrt-build --config $config_file $@ -mc -uf -ni'"
 
     # Run the main script (pass in parameters from user, force non-interactive, ignoring --config/-c)
     "$SCRIPT_DIR"/owrt-build --config "$config_file" "$@" -mc -uf -ni
@@ -124,9 +126,11 @@ for config_file in "${all_configs[@]}"; do
     if [[ $BUILD_EXIT_CODE -eq 0 ]]; then
         ((BUILD_SUCCESS++))
         log_summary " >>> ✅ Build #$BUILD_TOTAL of $TOTAL_TO_BUILD succeeded: $(basename "$config_file")"
+        log_debug "1" "$BUILD_TOTAL of $TOTAL_TO_BUILD succeeded: '$config_file'"
     else
         ((BUILD_FAILED++))
         log_summary " >>> ❌ Build #$BUILD_TOTAL of $TOTAL_TO_BUILD failed: $(basename "$config_file") (Exit Code: $EXIT_CODE)"
+        log_debug "1" "$BUILD_TOTAL of $TOTAL_TO_BUILD failed: '$config_file'"
     fi
 
     # 4. The "Escape Hatch" (Interactive Only)
