@@ -5,10 +5,10 @@
 
 # ============================================
 # NOTE: DO NOT CONFIGURE ANYTHING IN THIS FILE
-# Edit `./etc/config.sh` to configure
+# Edit `./etc/*/*.build` to configure
 # ============================================
 
-# DEBUG FLAG
+# DEBUG FLAG (0 = off, 1+ = more verbose)
 OWRTDS_DEBUG=100
 
 # NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
@@ -19,7 +19,7 @@ OWRTDS_DEBUG=100
 # - I need to see and know when something is unbound and fix it
 set -Eeuo pipefail
 
-# Ensure STARTUP_PWD does not have a trailing slash for consistent matching
+# Obtain STARTUP_PWD & ensure STARTUP_PWD does not have a trailing slash for consistent matching
 STARTUP_PWD=$(pwd)
 STARTUP_PWD="${STARTUP_PWD%/}"
 
@@ -59,7 +59,7 @@ SCRIPT_DIR=$(dirname "$REAL_PATH")
 SCRIPT_NAME=$(basename "$REAL_PATH")
 
 
-# Import lib/common.sh
+# Import lib/common.sh (bootstrap)
 if ! source "$SCRIPT_DIR/lib/common.sh"; then
     echo " >>> ❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
     exit 1
