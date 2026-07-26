@@ -193,7 +193,7 @@ if ! source "$CONFIG_FILE"; then
 else
     if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
         log_summary " >>> ✅ Config file loaded: $CONFIG_FILE" --silent
-        log_debug "1" "[DEBUG] loaded configuration file '$CONFIG_FILE'"
+        log_debug "1" "loaded configuration file '$CONFIG_FILE'"
     fi
 fi
 
@@ -233,9 +233,9 @@ show_header
 
 # Checks if there is a .config in the OWRT_DEV_DIR after having copied it from sync_config_to_etc_dir above
 if [[ ! -f "$OWRT_DEV_DIR/.config" ]]; then
-    exit_with_error "No .config file found. Ensure the file exists. (run 'make menuconfig' to create one, then copy it to your work directory for the device)"
+    exit_with_error "No '.config' file found. Ensure the file exists. (run 'make menuconfig' to create one, then copy it to your work directory for the device)"
 else
-    log_debug "1" "[DEBUG] .config landed correctly in $OWRT_DEV_DIR/.config"
+    log_debug "1" "'.config' landed correctly in $OWRT_DEV_DIR/.config"
 fi
 
 
@@ -250,24 +250,33 @@ change_directory "$STARTUP_PWD"
 if [ "$DO_SLOW" = false ]; then
     NUM_PROC=$(nproc)
     MAKE_CMD_ADD="${MAKE_CMD_ADD}-j${NUM_PROC}"
+    log_debug "3" "DO_SLOW: '$DO_SLOW', NUM_PROC: '$NUM_PROC', MAKE_CMD_ADD: '$MAKE_CMD_ADD'"
 else
     MAKE_CMD_ADD="${MAKE_CMD_ADD}-j1"
+    log_debug "3" "DO_SLOW: '$DO_SLOW', MAKE_CMD_ADD: '$MAKE_CMD_ADD'"
+    
 fi
 
 # Handle Verbosity
 if [ "$DO_VERBOSE" = true ]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} V=s"
+    log_debug "3" "DO_XVERBOSE: '$DO_XVERBOSE', MAKE_CMD_ADD: '$MAKE_CMD_ADD'"    
 elif [ "$DO_XVERBOSE" = true ]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} V=99"
+    log_debug "3" "DO_XVERBOSE: '$DO_XVERBOSE', MAKE_CMD_ADD: '$MAKE_CMD_ADD'"
 fi
 
 # Handle silent make in non-interactive mode
 if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} -s"
+    log_debug "3" "OWRTDS_INTERACTIVE: '$OWRTDS_INTERACTIVE', MAKE_CMD_ADD: '$MAKE_CMD_ADD'"
 fi
+
+log_debug "1" "MAKE_CMD_ADD: '$MAKE_CMD_ADD'"
 
 # Enable trap only for owrt-build (not owrt-build-all)
 if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+    log_debug "1" "script is 'owrt-build': setting INT TERM HUP traps"
     # Register the trap ONLY for interruption signals (INT, TERM, HUP)
     # Do NOT trap EXIT here; let your wrappers handle normal exits.
     # Define specific handlers for each signal to pass the name correctly
