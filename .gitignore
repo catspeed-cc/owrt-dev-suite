@@ -5,8 +5,12 @@
 # ignore dotfiles
 .owrtds.*
 
+# ignore var/state directory
+var/state/
+
 # ignore the config.sh symlink
 etc/config.sh
 
 # aider
 .aider*
+
