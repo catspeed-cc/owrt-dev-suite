@@ -193,11 +193,11 @@ fi
 REPO_KEY=$(echo "$OWRT_DEV_DIR" | tr '/' '_' | md5sum | cut -c1-12)
 
 # Create centralized state directory structure within owrt-dev-suite repo
-mkdir -p "$SCRIPT_DIR/.owrtds/state/{locks,configs}" 2>/dev/null || true
+mkdir -p "$SCRIPT_DIR/var/state" 2>/dev/null || true
 
 # Define paths for locks and config tracking (moved out of OWRT_DEV_DIR)
-LOCK_FILE="$SCRIPT_DIR/.owrtds/state/locks/${REPO_KEY}.lock"
-CONFIG_STATE_FILE="$SCRIPT_DIR/.owrtds/state/configs/${REPO_KEY}.cfghome"
+LOCK_FILE="$SCRIPT_DIR/var/state/${REPO_KEY}.lock"
+CONFIG_STATE_FILE="$SCRIPT_DIR/var/state/${REPO_KEY}.cfghome"
 
 # ===========================================================================================
 # 4. INSTALL DEPENDENCIES (Now available since functions.sh is sourced)
@@ -255,13 +255,12 @@ if [ "$DO_SLOW" = false ]; then
 else
     MAKE_CMD_ADD="${MAKE_CMD_ADD}-j1"
     log_debug "3" "DO_SLOW: '$DO_SLOW', MAKE_CMD_ADD: '$MAKE_CMD_ADD'"
-    
 fi
 
 # Handle Verbosity
 if [ "$DO_VERBOSE" = true ]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} V=s"
-    log_debug "3" "DO_XVERBOSE: '$DO_XVERBOSE', MAKE_CMD_ADD: '$MAKE_CMD_ADD'"    
+    log_debug "3" "DO_XVERBOSE: '$DO_XVERBOSE', MAKE_CMD_ADD: '$MAKE_CMD_ADD'"
 elif [ "$DO_XVERBOSE" = true ]; then
     MAKE_CMD_ADD="${MAKE_CMD_ADD} V=99"
     log_debug "3" "DO_XVERBOSE: '$DO_XVERBOSE', MAKE_CMD_ADD: '$MAKE_CMD_ADD'"

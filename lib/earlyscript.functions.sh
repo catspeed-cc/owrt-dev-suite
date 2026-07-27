@@ -31,7 +31,7 @@
 # Description: Creates a per-repository mutex lock in the centralized state dir.
 # =============================================================================
 create_lock() {
-    local lock_dir="$SCRIPT_DIR/.owrtds/state/locks"
+    local lock_dir="$SCRIPT_DIR/var/state"
     mkdir -p "$lock_dir" 2>/dev/null || true
     LOCK_FILE="${lock_dir}/${REPO_KEY}.lock"
 
