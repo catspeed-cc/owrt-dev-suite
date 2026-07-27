@@ -39,20 +39,6 @@ fi
 # Guard variable to prevent double cleanup
 CLEANED=false
 
-# Generate unique repository key from OWRT_DEV_DIR for state isolation
-REPO_KEY=$(echo "$OWRT_DEV_DIR" | tr '/' '_' | md5sum | cut -c1-12)
-
-# Create centralized state directory structure within owrt-dev-suite repo
-mkdir -p "$SCRIPT_DIR/.owrtds/state/{locks,configs}" 2>/dev/null || true
-
-# Define new paths for locks and config tracking
-LOCK_FILE="$SCRIPT_DIR/.owrtds/state/locks/${REPO_KEY}.lock"
-CONFIG_STATE_FILE="$SCRIPT_DIR/.owrtds/state/configs/${REPO_KEY}.cfghome"
-if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
-    create_lock
-else
-    log_debug "3" "skipped lock creation"
-fi
 
 # Detect the OWRTDS_BRANCH
 OWRTDS_BRANCH=""
@@ -202,6 +188,16 @@ else
     fi
 fi
 
+# Generate unique repository key from OWRT_DEV_DIR for state isolation
+# Placed here to ensure OWRT_DEV_DIR is populated, but before verify_configuration()
+REPO_KEY=$(echo "$OWRT_DEV_DIR" | tr '/' '_' | md5sum | cut -c1-12)
+
+# Create centralized state directory structure within owrt-dev-suite repo
+mkdir -p "$SCRIPT_DIR/.owrtds/state/{locks,configs}" 2>/dev/null || true
+
+# Define paths for locks and config tracking (moved out of OWRT_DEV_DIR)
+LOCK_FILE="$SCRIPT_DIR/.owrtds/state/locks/${REPO_KEY}.lock"
+CONFIG_STATE_FILE="$SCRIPT_DIR/.owrtds/state/configs/${REPO_KEY}.cfghome"
 
 # ===========================================================================================
 # 4. INSTALL DEPENDENCIES (Now available since functions.sh is sourced)

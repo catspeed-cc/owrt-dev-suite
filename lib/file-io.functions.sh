@@ -299,7 +299,7 @@ function sync_config_to_dev_dir() {
 
     if [[ -f "$owrt_config_src" ]]; then
         if cp "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
-            printf '%s\n' "$owrt_config_src" > "$OWRT_DEV_DIR/.owrtds.cfghome"
+            printf '%s\n' "$owrt_config_src" > "$CONFIG_STATE_FILE"
             set +e
             if ! make -s defconfig > /dev/null 2>&1; then
                 exit_with_error "make defconfig failed. Check your .config file." --nocleanup
@@ -327,7 +327,7 @@ function sync_config_to_dev_dir() {
 #   sync_config_from_etc_dir
 # =============================================================================
 function sync_config_from_dev_dir() {
-    local cfg_home_file="$OWRT_DEV_DIR/.owrtds.cfghome"
+    local cfg_home_file="$CONFIG_STATE_FILE"
     local config_src="$OWRT_DEV_DIR/.config"
 
     # Guard: no longer skip, we try and copy .config for user based on CONFIG_FILE (cli flag)
