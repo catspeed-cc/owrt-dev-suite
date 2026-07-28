@@ -482,7 +482,6 @@ generate_metadata() {
         exit_with_error "[generate_metadata()]: generated metadata file does not exist: '$info_file'"
     fi
 
-    # TODO: symbolic link for metadata into lower directory for ease of access
     local dest="${webserver_shared_dir}/${owrt_mfr}/${owrt_model}_${owrt_version}_${dadd-alt}_BUILD_NOTICE.md"
 
     if [[ "$ENABLE_SYMLINK_SHORTCUTS" == "true" ]]; then
