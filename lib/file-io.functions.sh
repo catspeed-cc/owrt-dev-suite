@@ -223,6 +223,7 @@ copy_caldata() {
 copy_to_imgdir() {
 
     [[ -z "$WORK_IMAGEOUT_DIR" ]] && exit_with_error "WORK_IMAGEOUT_DIR is not set"
+    [[ -d "$WORK_IMAGEOUT_DIR" ]] || exit_with_error "WORK_IMAGEOUT_DIR directory does not exist: '$WORK_IMAGEOUT_DIR'"
 
     local dest_dir="$WORK_IMAGEOUT_DIR"
 
@@ -257,16 +258,27 @@ copy_to_webserver() {
     local webserver_shared_dir="$WEBSERVER_SHARED_DIR"
     local imgdir_src="$IMGDIR_SRC"
 
-    [[ -z "$WEBSERVER_SHARED_DIR" ]] && exit_with_error "WEBSERVER_SHARED_DIR is not set"
-
-    local dadd=""
-    if [[ "$OWRT_STABLE" == "false" ]]; then
-        dadd="-dev"
-    fi
-
-    local dest="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_version${dadd}"
-
     if [ "$DO_WEBSERVER_CPY" == "true" ]; then
+
+        [[ -z "$WEBSERVER_SHARED_DIR" ]] && exit_with_error "WEBSERVER_SHARED_DIR is not set"
+        [[ -d "$WEBSERVER_SHARED_DIR" ]] || exit_with_error "WEBSERVER_SHARED_DIR directory does not exist: '$WEBSERVER_SHARED_DIR'"
+
+        local dadd=""
+        if [[ "$OWRT_STABLE" == "false" ]]; then
+            dadd="-dev"
+            log_debug "4" "[copy_to_webserver()]: unstable build - OWRT_STABLE: '$OWRT_STABLE'"
+        else
+            log_debug "4" "[copy_to_webserver()]: stable build - OWRT_STABLE: '$OWRT_STABLE'"
+        fi
+
+        local dest="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_version${dadd}"
+
+        if [[ -d "$dest" ]]; then
+            log_debug "4" "[copy_to_webserver()]: local var dest directory exists: '$dest'"
+        else
+            log_debug "1" "[copy_to_webserver()]: creating local var dest directory: '$dest'"
+            mkdir -p "$dest"
+        fi
 
         echo " >>> Copying images to webserver..."
 
@@ -280,6 +292,9 @@ copy_to_webserver() {
         " || exit_with_error "Failed to copy images to webserver"
 
         log_summary " >>> ✅ Images copied to webserver: $(cleanup_path "$dest")"
+
+        # hook to generate metadata - no summary out or log debug requred (handled within function)
+        generate_metadata
 
     fi
 }
@@ -389,4 +404,106 @@ function sync_config_from_dev_dir() {
     else
         exit_with_error "Failed to copy .config to $owrt_config_dest" --nocleanup
     fi
+}
+
+generate_metadata() {
+    local owrt_fork_repo="$OWRT_FORK_REPO"
+    local owrt_version="$OWRT_VERSION"
+    local owrt_soc="$OWRT_SOC_LOWER"
+    local owrt_mfr="$OWRT_MFR_LOWER"
+    local owrt_model="$OWRT_MODEL_LOWER"
+    local owrt_base_branch="$OWRT_BASE_BRANCH"
+    local owrt_target_branch="${OWRT_TARGET_BRANCH}"
+    local build_date="$BUILD_START_DATE"
+    local webserver_shared_dir="$WEBSERVER_SHARED_DIR"
+
+    [[ -z "$WEBSERVER_SHARED_DIR" ]] && exit_with_error "WEBSERVER_SHARED_DIR is not set"
+    [[ -d "$WEBSERVER_SHARED_DIR" ]] || exit_with_error "WEBSERVER_SHARED_DIR directory does not exist: '$WEBSERVER_SHARED_DIR'"
+
+    local dadd=""
+    if [[ "$OWRT_STABLE" == "false" ]]; then
+        local dadd="-dev"
+        local dadd-alt="dev"
+        log_debug "4" "[generate_metadata()]: unstable build - OWRT_STABLE: '$OWRT_STABLE'"
+    else
+        log_debug "4" "[generate_metadata()]: stable build - OWRT_STABLE: '$OWRT_STABLE'"
+    fi
+
+    local info_file="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_version${dadd}/BUILD_NOTICE.md"
+    local device_name="$owrt_mfr / $owrt_model (${owrt_soc})"
+
+    if [[ -d "$info_file" ]]; then
+        log_debug "4" "[generate_metadata()]: local var info_file directory exists: '$info_file'"
+    else
+        exit_with_error "[generate_metadata()]: local var info_file directory does not exist: '$info_file'"
+    fi
+
+    # Header
+    cat > "${info_file}" <<EOF
+    # OpenWrt Build Information
+
+    - **Device**: ${device_name}
+    - **Build Date**: ${build_date}
+    - **OpenWrt Version**: ${owrt_version}
+    - **OpenWrt Repository**: ${owrt_fork_repo}
+    - **OpenWrt Base Branch**: ${owrt_base_branch}
+    - **OpenWrt Target/Port Branch**: ${owrt_target_branch}
+    EOF
+
+    # Logic for Status Section
+    if [ "$OWRT_SUPPORTED" = true ]; then
+        cat >> "${info_file}" <<EOF
+        - **Status**: ✅ **Officially Supported**
+        - **Description**: This image is built from the mainline OpenWrt repository.
+        - **Support**: Issues can be reported to the official OpenWrt forums or bug tracker.
+        - **Repository**: https://git.openwrt.org/openwrt/openwrt.git
+        EOF
+    elif [ "$OWRT_STABLE" = true ]; then
+        cat >> "${info_file}" <<EOF
+        - **Status**: ⚠️ **Community Port (Stable)**
+        - **Description**: This port is functionally complete and considered stable by the maintainer, but is **not** part of the official OpenWrt release.
+        - **Support**: Do **not** report issues to the official OpenWrt project. Contact the maintainer via the repository below.
+        - **Maintainer Repository**: ${OWRT_FORK_REPO}
+        - **Note**: Suitable for daily use, but updates depend on the maintainer.
+        EOF
+    else
+        cat >> "${info_file}" <<EOF
+        - **Status**: 🛑 **Experimental / Work-in-Progress (dev-build)**
+        - **Description**: This build is actively under development. Features may be broken, unstable, or incomplete.
+        - **Support**: Do **not** report issues to the official OpenWrt project. Only for developers and testers.
+        - **Maintainer Repository**: ${OWRT_FORK_REPO}
+        - **Warning**: Use at your own risk. Not suitable for production environments.
+        EOF
+    fi
+
+    if [[ -f "$info_file" ]]; then
+        log_debug "1" "[generate_metadata()]: created metadata file: '$info_file'"
+    else
+        exit_with_error "[generate_metadata()]: generated metadata file does not exist: '$info_file'"
+    fi
+
+    # TODO: symbolic link for metadata into lower directory for ease of access
+    local dest="${webserver_shared_dir}/${owrt_mfr}/${owrt_model}_${owrt_version}_${dadd-alt}_BUILD_NOTICE.md"
+
+    if [[ "$ENABLE_SYMLINK_SHORTCUTS" == "true" ]]; then
+
+        # Use sg to ensure we have write access to the SetGID directory
+        # regardless of whether the user has run 'newgrp' in this session.
+        local link-created="true"
+        sg "$WEBSERVER_SHARED_GROUP" -c "
+            rm -rf \"$dest/\"* &&
+            ln -s "$info_file" "$dest" &&
+            chmod -R g+rw \"$dest\"
+        " || link-created="false"
+
+        if [[ "$link-created" == "true" ]]; then
+            log_debug "1" "[generate_metadata()]: created link to metadata"
+        else
+            log_debug "1" "[generate_metadata()]: failed to create link to metadata file: from '$info_file' to '$dest'"
+        fi
+
+    else
+        log_debug "1" "[generate_metadata()]: skipping create metadata link: '$dest'"
+    fi
+
 }
