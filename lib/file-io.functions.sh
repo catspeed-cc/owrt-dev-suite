@@ -448,7 +448,7 @@ generate_metadata() {
     - **OpenWrt Repository**: ${owrt_fork_repo}
     - **OpenWrt Base Branch**: ${owrt_base_branch}
     - **OpenWrt Target/Port Branch**: ${owrt_target_branch}
-    EOF
+EOF
 
     # Logic for Status Section
     if [ "$OWRT_SUPPORTED" = true ]; then
@@ -457,7 +457,7 @@ generate_metadata() {
         - **Description**: This image is built from the mainline OpenWrt repository.
         - **Support**: Issues can be reported to the official OpenWrt forums or bug tracker.
         - **Repository**: https://git.openwrt.org/openwrt/openwrt.git
-        EOF
+EOF
     elif [ "$OWRT_STABLE" = true ]; then
         cat >> "${info_file}" <<EOF
         - **Status**: ⚠️ **Community Port (Stable)**
@@ -465,7 +465,7 @@ generate_metadata() {
         - **Support**: Do **not** report issues to the official OpenWrt project. Contact the maintainer via the repository below.
         - **Maintainer Repository**: ${OWRT_FORK_REPO}
         - **Note**: Suitable for daily use, but updates depend on the maintainer.
-        EOF
+EOF
     else
         cat >> "${info_file}" <<EOF
         - **Status**: 🛑 **Experimental / Work-in-Progress (dev-build)**
@@ -473,7 +473,7 @@ generate_metadata() {
         - **Support**: Do **not** report issues to the official OpenWrt project. Only for developers and testers.
         - **Maintainer Repository**: ${OWRT_FORK_REPO}
         - **Warning**: Use at your own risk. Not suitable for production environments.
-        EOF
+EOF
     fi
 
     if [[ -f "$info_file" ]]; then
