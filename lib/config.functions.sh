@@ -320,6 +320,29 @@ verify_configuration() {
         SETUP_MODE=true
     fi
 
+    # Create the shortcut symlink from DEVICE_WORK_DIR to "$WORK_DIR/$OWRT_SOC_CLASS_LOWER/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}-openwrt-${OWRT_VERSION}"
+    # Check if the symlink (or directory) doesn't exist yet
+    if [[ "$ENABLE_SYMLINK_SHORTCUTS" == "true" ]]; then
+        if [[ ! -e "$DEVICE_WORK_DIR" ]]; then
+            log_summary " >>> ⏳ Creating symlink: $DEVICE_WORK_DIR -> $SYMLINK_TARGET"
+
+            local symlink_name="$WORK_DIR/$OWRT_SOC_CLASS_LOWER/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}-openwrt-${OWRT_VERSION}"
+    
+            # Remove existing file/link if it exists to avoid errors
+            if [[ -L "$symlink_name" || -e "$symlink_name" ]]; then
+                log_debug "4" "Removing symlink - local symlink_name: '$symlink_name'"
+                rm -f "$symlink_name"
+            fi
+    
+            # Create the symlink: ln -s [TARGET] [LINK_NAME]
+            # This creates a link AT DEVICE_WORK_DIR pointing TO SYMLINK_TARGET
+            ln -s "$DEVICE_WORK_DIR" "$symlink_target"
+    
+            SETUP_MODE=true
+        fi
+        log_debug "1" "Skipping symlink creation - ENABLE_SYMLINK_SHORTCUTS: '$ENABLE_SYMLINK_SHORTCUTS'"
+    fi
+
     # Create the required structure if not already exists
     if [[ ! -d "$PROJECT_DIR" ]]; then
         log_summary " >>> ⏳ Creating $PROJECT_DIR ..."
