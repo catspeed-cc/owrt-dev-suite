@@ -421,6 +421,7 @@ generate_metadata() {
     [[ -d "$WEBSERVER_SHARED_DIR" ]] || exit_with_error "WEBSERVER_SHARED_DIR directory does not exist: '$WEBSERVER_SHARED_DIR'"
 
     local dadd=""
+    local dadd-alt=""
     if [[ "$OWRT_STABLE" == "false" ]]; then
         local dadd="-dev"
         local dadd-alt="dev"
