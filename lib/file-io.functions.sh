@@ -433,7 +433,7 @@ generate_metadata() {
     local info_file="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_version${dadd}/BUILD_NOTICE.md"
     local device_name="$owrt_mfr / $owrt_model (${owrt_soc})"
 
-    if [[ -d "$info_file" ]]; then
+    if [[ -d "$(dirname "$info_file")" ]]; then
         log_debug "4" "[generate_metadata()]: local var info_file directory exists: '$info_file'"
     else
         exit_with_error "[generate_metadata()]: local var info_file directory does not exist: '$info_file'"
