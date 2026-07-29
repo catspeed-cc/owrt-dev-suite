@@ -421,10 +421,10 @@ generate_metadata() {
     [[ -d "$WEBSERVER_SHARED_DIR" ]] || exit_with_error "WEBSERVER_SHARED_DIR directory does not exist: '$WEBSERVER_SHARED_DIR'"
 
     local dadd=""
-    local dadd-alt=""
+    local dadd_alt=""
     if [[ "$OWRT_STABLE" == "false" ]]; then
         local dadd="-dev"
-        local dadd-alt="dev"
+        local dadd_alt="dev"
         log_debug "4" "[generate_metadata()]: unstable build - OWRT_STABLE: '$OWRT_STABLE'"
     else
         log_debug "4" "[generate_metadata()]: stable build - OWRT_STABLE: '$OWRT_STABLE'"
@@ -483,7 +483,7 @@ EOF
         exit_with_error "[generate_metadata()]: generated metadata file does not exist: '$info_file'"
     fi
 
-    local dest="${webserver_shared_dir}/${owrt_mfr}/${owrt_model}_${owrt_version}_${dadd-alt}_BUILD_NOTICE.md"
+    local dest="${webserver_shared_dir}/${owrt_mfr}/${owrt_model}_${owrt_version}_${dadd_alt}_BUILD_NOTICE.md"
 
     if [[ "$ENABLE_SYMLINK_SHORTCUTS" == "true" ]]; then
 
