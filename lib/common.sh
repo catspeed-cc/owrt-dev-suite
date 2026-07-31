@@ -72,6 +72,10 @@ SUMMARY_OUT=""
 MAKE_CMD_ADD=""
 CUSTOM_CONFIG_PATH=""
 
+# Arrays
+declare -A RAWMOD_LIST
+declare -A CALDATA_LIST
+
 # Interactive Mode Control
 OWRTDS_INTERACTIVE=true
 # Auto-detect non-interactive mode (e.g., piped input, cron jobs, CI/CD)

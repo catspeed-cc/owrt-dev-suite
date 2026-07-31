@@ -156,9 +156,6 @@ reset_config_variables() {
     DO_CALDATA_CPY="false"
     CALDATA_LIST=""
 
-    declare -A RAWMOD_LIST
-    declare -A CALDATA_LIST
-
 }
 
 log_debug() {
