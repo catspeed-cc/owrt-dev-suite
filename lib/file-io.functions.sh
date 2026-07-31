@@ -177,6 +177,7 @@ copy_patches_dir() {
 #   copy_caldata
 # =============================================================================
 copy_caldata() {
+
     # Find the firmware build directory once
     FIRMWARE_BUILD_DIR=$(find "$OWRT_DEV_DIR/build_dir" -type d -name "linux-firmware-*" | head -n 1)
 
@@ -184,32 +185,29 @@ copy_caldata() {
         exit_with_error "Could not find linux-firmware build directory after prepare."
     fi
 
-    # Loop over each line in CALDATA_LIST
-    # We use a here-string <<< to feed the variable into the loop
-    while IFS= read -r line; do
-        # 1. Discard empty lines (handles the trailing newline in the list)
-        [ -z "$line" ] && continue
+    # Loop over each key in the associative array
+    for CALDATA_BOARDNAME in "${!CALDATA_LIST[@]}"; do
+        # Get the combined "Source|Dest" value
+        cal_line="${CALDATA_LIST[$CALDATA_BOARDNAME]}"
 
-        # 2. Split the line by pipe '|' into local variables
-        # CALDATA_BOARDNAME (Group 1), CALDATA_SRC (Group 2), CALDATA_DEST (Group 3)
-        IFS='|' read -r CALDATA_BOARDNAME CALDATA_SRC CALDATA_DEST <<< "$line"
+        # Split the value by pipe '|'
+        IFS='|' read -r CALDATA_SRC CALDATA_REL_DEST <<< "$cal_line"
 
-        # 3. Construct the full paths (Build Dir + Relative Path from Config)
-        CALDATA_FINAL_DEST="$FIRMWARE_BUILD_DIR/$CALDATA_DEST"
+        # Construct the full destination path
+        CALDATA_FINAL_DEST="$FIRMWARE_BUILD_DIR/$CALDATA_REL_DEST"
 
-        # 4. Extract the directory path by removing the filename
-        #    $(dirname ".../hw1.0/board-2.bin") returns ".../hw1.0"
+        # Create directory structure
         mkdir -p "$(dirname "$CALDATA_FINAL_DEST")" || exit_with_error "Failed to create caldata directory structure"
 
-        # 5. Now perform the copy safely
+        # Perform the copy
         copy_file "$CALDATA_SRC" "$CALDATA_FINAL_DEST" || exit_with_error "Copy Caldata"
 
-        # 6. Generate success message and update summary
-        local msg=" >>> ✅ ${CALDATA_BOARDNAME} caldata copied to: $(cleanup_path "$CALDATA_DEST")"
+        # Generate success message
+        local msg=" >>> ✅ ${CALDATA_BOARDNAME} caldata copied to: $(cleanup_path "$CALDATA_REL_DEST")"
         echo "$msg"
         SUMMARY_OUT+="${msg}"${NL}
+    done
 
-    done <<< "$CALDATA_LIST"
 }
 
 # =============================================================================

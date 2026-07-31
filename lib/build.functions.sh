@@ -39,21 +39,20 @@ build_kernel_sources() {
 
         else
 
-            # Loop over each line in RAWMOD_LIST
-            while IFS= read -r line; do
-                # Discard empty lines
-                [ -z "$line" ] && continue
+            # Loop over each key in the associative array
+            for RAWMOD_ENTRYNAME in "${!RAWMOD_LIST[@]}"; do
+                # Get the combined "Source|Dest" value using the key
+                raw_line="${RAWMOD_LIST[$RAWMOD_ENTRYNAME]}"
 
-                # Split the line by pipe '|' into local variables
-                # RAWMOD_FILENAME (Group 1), RAWMOD_SRC (Group 2), RAWMOD_DEST (Group 3)
-                IFS='|' read -r RAWMOD_ENTRYNAME RAWMOD_SRC RAWMOD_DEST <<< "$line"
+                # Split the value by pipe '|'
+                IFS='|' read -r RAWMOD_SRC RAWMOD_DEST <<< "$raw_line"
 
                 # Perform the copy
                 copy_file "$RAWMOD_SRC" "$RAWMOD_DEST" || exit_with_error "Copying Driver Mod ($RAWMOD_ENTRYNAME)"
 
-                # Single summary message for the whole RAWMOD operation
+                # Summary message
                 log_summary " >>> ✅ IPQESS RAW DRIVER MOD ($RAWMOD_ENTRYNAME) copied to source tree: $(cleanup_path "$(dirname "$RAWMOD_SRC")")"
-            done <<< "$RAWMOD_LIST"
+            done
 
         fi
 
