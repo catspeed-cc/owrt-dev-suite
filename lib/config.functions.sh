@@ -200,17 +200,18 @@ verify_configuration() {
         fi
     fi
 
-    # Validate RAWMOD_LIST is not empty IF enabled (sane defaults already set, validate either patchmod or rawmod, and not empty)
+    # Validate RAWMOD_LIST is not empty IF enabled
     if [[ "${DO_DRIVERMOD_CPY}" == "true" ]]; then
-        if [[ -z "$RAWMOD_LIST" || ("$DRIVERMOD_MODE" != "patchmod" && "$DRIVERMOD_MODE" != "rawmod") ]]; then
-            exit_with_error "RAWMOD_LIST is not set in 'etc/config.sh' - Aborting." --nocleanup
+        # Check if array length is 0 OR mode is invalid
+        if [[ ${#RAWMOD_LIST[@]} -eq 0 || ("$DRIVERMOD_MODE" != "patchmod" && "$DRIVERMOD_MODE" != "rawmod") ]]; then
+            exit_with_error "RAWMOD_LIST is not set or empty in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
     # Validate CALDATA_LIST is not empty IF enabled
     if [[ "${DO_CALDATA_CPY}" == "true" ]]; then
-        if [[ -z "$CALDATA_LIST" ]]; then
-            exit_with_error "CALDATA_LIST is not set in 'etc/config.sh' - Aborting." --nocleanup
+        if [[ ${#CALDATA_LIST[@]} -eq 0 ]]; then
+            exit_with_error "CALDATA_LIST is not set or empty in 'etc/config.sh' - Aborting." --nocleanup
         fi
     fi
 
