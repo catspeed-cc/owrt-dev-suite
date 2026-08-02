@@ -215,7 +215,7 @@ run_command() {
     if [[ $status -eq 0 ]]; then
         log_debug "4" "[run_command()]: Success - $description"
     else
-        log_summary ">>> ⚠ ERROR in $description (exit code: $status)"
+        log_summary " >>> ⚠ ERROR in $description (exit code: $status)"
     fi
     
     return $status
