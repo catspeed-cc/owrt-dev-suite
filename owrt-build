@@ -9,7 +9,7 @@
 # ============================================
 
 # DEBUG FLAG (0 = off, 1+ = more verbose)
-OWRTDS_DEBUG=100
+OWRTDS_DEBUG=0
 
 # NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
 #
