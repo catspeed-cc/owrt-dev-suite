@@ -55,15 +55,19 @@ verify_md5() {
     local file_src_md5=$(md5sum "$file_src" | awk '{print $1}')
     local file_dest_md5=$(md5sum "$file_dest" | awk '{print $1}')
 
-    if [ "$file_src_md5" == "$file_dest_md5" ]; then
-        return 0
+    if [[ "$DO_DRYRUN" == "false" ]]; then
+        if [ "$file_src_md5" == "$file_dest_md5" ]; then
+            return 0
+        else
+            echo " >>>"
+            echo " >>> ❌ FAILURE: $desc - MISMATCH!"
+            echo " >>>      Source:      '$file_src' -> '$file_src_md5'"
+            echo " >>>      Destination: '"$(cleanup_path "$file_dest")"' -> '$file_dest_md5'"
+            echo " >>>"
+            return 1
+        fi
     else
-        echo " >>>"
-        echo " >>> ❌ FAILURE: $desc - MISMATCH!"
-        echo " >>>      Source:      '$file_src' -> '$file_src_md5'"
-        echo " >>>      Destination: '"$(cleanup_path "$file_dest")"' -> '$file_dest_md5'"
-        echo " >>>"
-        return 1
+        log_debug "4" "[verify_md5()]: DRY-RUN - would verify MD5 hashes"
     fi
 }
 
