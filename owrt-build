@@ -78,18 +78,20 @@ change_directory "$OWRT_DEV_DIR"
 
 # Handle Clean
 if [[ "$DO_CLEAN" == "true" ]]; then
-    echo " >>> Running 'make clean'..."
-    make clean -s > /dev/null 2>&1
-    rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
-    rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
-    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-        log_summary " >>> ✅ Make clean"
-        log_debug "1" "make clean ran (interactive)"
+    if [[ "$DO_DRYRUN" == "false" ]]; then
+        echo " >>> Running 'make clean'..."
+        make clean -s > /dev/null 2>&1
+        rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
+        rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
+        if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+            log_summary " >>> ✅ Make clean"
+        fi
+        log_debug "1" "make clean ran"
     else
-        log_debug "1" "make clean ran (non-interactive)"
+        log_debug "4" "[make clean]: DRY-RUN - would execute: make clean + rm -rf build_dir staging_dir"
     fi
 else
-    log_debug "1" "DO_CLEAN: '$DO_CLEAN'"
+    log_debug "1" "DO_CLEAN: '$DO_CLEAN' - skipping"
 fi
 
 # Handle Update Feeds (First, to ensure package definitions are fresh)
