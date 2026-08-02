@@ -115,8 +115,12 @@ if [[ "$DO_CLEAN" == "true" ]]; then
     echo " >>> Ensuring host tools and toolchain are ready..."
     if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
         # interactive and verbose/xverbose
-        make tools/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build host tools"
-        make toolchain/install ${MAKE_CMD_ADD} || exit_with_error "Failed to build toolchain"
+        if ! run_command "make tools/install \"$MAKE_CMD_ADD\""; then
+            exit_with_error "Failed to build host tools"
+        fi
+        if ! run_command "make toolchain/install \"$MAKE_CMD_ADD\""; then
+            exit_with_error "Failed to build toolchain"
+        fi
         log_summary " >>> ✅ Toolchain built"
         log_debug "1" "tools/toolchain compiled - DO_CLEAN: '$DO_CLEAN' (interactive)"
     else
@@ -150,7 +154,9 @@ fi
 if [[ "$OWRT_SUPPORTED" == "false" && "$DO_CALDATA_CPY" == "true" && "$DO_CLEAN" == "true" ]]; then
     echo " >>> Running 'make target/linux-firmware/prepare'..."
     if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-        make package/linux-firmware/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux-firmware'"
+        if ! run_command "make package/linux-firmware/prepare \"$MAKE_CMD_ADD\""; then
+            exit_with_error "Make Prepare 'linux-firmware'"
+        fi
         log_summary " >>> ✅ Sources prepared (linux-firmware)"
         log_debug "1" "linux-firmware built - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_CALDATA_CPY: '$DO_CALDATA_CPY' , DO_CLEAN: '$DO_CLEAN' (interactive)"
     else
