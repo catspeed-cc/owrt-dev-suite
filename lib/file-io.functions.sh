@@ -322,7 +322,7 @@ function sync_config_to_dev_dir() {
     local owrt_config_src="${SCRIPT_DIR}/etc/${OWRT_VERSION}/owrt/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}.config"
 
     if [[ -f "$owrt_config_src" ]]; then
-        if copy_file "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
+        if cp "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
             printf '%s\n' "$owrt_config_src" > "$CONFIG_STATE_FILE"
             set +e
             if ! run_command "make -s defconfig" > /dev/null 2>&1; then
