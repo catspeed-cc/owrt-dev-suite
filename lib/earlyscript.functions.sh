@@ -175,3 +175,47 @@ log_debug() {
         echo "[DEBUG L${level}] ${message}" >&2
     fi
 }
+
+# Usage: run_command "<command>" "<type>" [optional_custom_description]
+# Format: type: command (unless custom description provided)
+# Examples:
+#   run_command "make" "command"
+#   run_command "make prepare blablabla" "command"
+#   run_command "cp $from $to" "operation: 'cp $from $to'"
+#   run_command "make" "command" "Building OpenWRT kernel"
+run_command() {
+    local cmd="$1"
+    local cmd_type="${2:-command}"  # "command" or "operation" for logging
+    local description="${3:-}"      # optional: override auto-description
+    
+    # Auto-derive description if not provided
+    if [[ -z "$description" ]]; then
+        description="$cmd_type: $cmd"
+    fi
+    
+    # Dry-run gate
+    if [[ "$DO_DRYRUN" == "true" ]]; then
+        log_debug "4" "[run_command()]: DRY-RUN - would execute: $description"
+        return 0
+    fi
+    
+    # Non-interactive gate
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        log_debug "3" "[run_command()]: Executing: $description"
+        eval "$cmd"
+        local status=$?
+    else
+        log_debug "3" "[run_command()]: Executing (silent): $description"
+        eval "$cmd" > /dev/null 2>&1
+        local status=$?
+    fi
+    
+    # Log result
+    if [[ $status -eq 0 ]]; then
+        log_debug "4" "[run_command()]: Success - $description"
+    else
+        log_summary ">>> ⚠ ERROR in $description (exit code: $status)"
+    fi
+    
+    return $status
+}
