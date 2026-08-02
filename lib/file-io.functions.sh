@@ -51,11 +51,10 @@ verify_md5() {
     # Local vars
     local desc="Checking MD5"
 
-    # Calculate and sanitize hashes
-    local file_src_md5=$(md5sum "$file_src" | awk '{print $1}')
-    local file_dest_md5=$(md5sum "$file_dest" | awk '{print $1}')
-
     if [[ "$DO_DRYRUN" == "false" ]]; then
+        # Calculate and sanitize hashes
+        local file_src_md5=$(md5sum "$file_src" | awk '{print $1}')
+        local file_dest_md5=$(md5sum "$file_dest" | awk '{print $1}')    
         if [ "$file_src_md5" == "$file_dest_md5" ]; then
             return 0
         else
