@@ -88,6 +88,12 @@ copy_file() {
     local desc="Copying File"
     local dest_dir
 
+    # Gate: gate copy_file right out the gate :)
+    if [[ "$DO_DRYRUN" == "true" ]]; then
+        log_debug "1" "[copy_file()]: DRY-RUN - would execute: cp $file_src $file_dest'"
+        return 0
+    fi
+
     # Ensure source file exists or exit_with_error
     if [ ! -f "$file_src" ]; then
         exit_with_error "$desc failed: ${file_src} doesn't exist"
