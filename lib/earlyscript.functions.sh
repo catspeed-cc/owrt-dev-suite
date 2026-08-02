@@ -72,7 +72,7 @@ owrtds_branch_detect() {
     fi
     log_debug "1" "OWRTDS_BRANCH: '$OWRTDS_BRANCH'"
 
-    # Ensure we go back to the original PWD before build
+    # Guard: Return to startup directory (custom error handling, not wrapped in run_command)
     if ! cd "$STARTUP_PWD" 2>/dev/null; then
         echo "Warning: Unable to return to '$STARTUP_PWD'. Continuing in current directory." >&2
         log_debug "1" "'cd $STARTUP_DIR failed'"
