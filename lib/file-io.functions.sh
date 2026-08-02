@@ -505,7 +505,8 @@ EOF
 
         # Use sg to ensure we have write access to the SetGID directory
         # regardless of whether the user has run 'newgrp' in this session.
-        local link-created="true"
+        local link-created
+        link-created="true"
         sg "$WEBSERVER_SHARED_GROUP" -c "
             rm -rf \"$dest/\"* &&
             ln -s "$info_file" "$dest" &&
