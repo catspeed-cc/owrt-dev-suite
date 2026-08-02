@@ -24,7 +24,7 @@ show_help() {
         echo " -s, --slow                 Single-core compilation (default is multi-core)"
         echo " -ni, --non-interactive     Disable interactive prompts (for cron/CI)"
         echo " -d, --dry-run              Disable any file copy or make commands"
-        echo " --debug [0-100]            Set debug verbosity"
+        echo " --debug [0-4]            Set debug verbosity"
         echo " -h, --help                 Show this help message"
         echo ""
     elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
@@ -37,7 +37,7 @@ show_help() {
         echo " -s, --slow                 Single-core compilation (default is multi-core)"
         echo " -ni, --non-interactive     Disable interactive prompts (for cron/CI)"
         echo " -d, --dry-run              Disable any file copy or make commands"
-        echo " --debug [0-100]            Set debug verbosity"
+        echo " --debug [0-4]            Set debug verbosity"
         echo " -h, --help                 Show this help message"
         echo ""
     else
