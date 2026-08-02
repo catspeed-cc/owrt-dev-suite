@@ -95,16 +95,16 @@ copy_file() {
 
     # Create directory if it doesn't exist (including parents)
     if [ ! -d "$dest_dir" ]; then
-        run_command "mkdir -p $dest_dir"
+        run_command "mkdir -p \"$dest_dir\""
     fi
 
     # Remove destination file if it already exists
     if [ -f "$file_dest" ]; then
-        run_command "rm $file_dest"
+        run_command "rm \"$file_dest\""
     fi
 
     # Copy file
-    if ! run_command "cp $file_src $file_dest"; then
+    if ! run_command "cp \"$file_src\" \"$file_dest\""; then
         exit_with_error "$desc failed: "$(cleanup_path "$file_dest")
     fi
 
@@ -331,8 +331,8 @@ function sync_config_to_dev_dir() {
         fi
     else
         # remove cfghome and .config file (there is no config, this must be old from previous run)
-        run_command "rm -f $OWRT_DEV_DIR/.config"
-        run_command "rm -f $OWRT_DEV_DIR/.owrtds.cfghome"
+        run_command "rm -f \"$OWRT_DEV_DIR/.config\""
+        run_command "rm -f \"$OWRT_DEV_DIR/.owrtds.cfghome\""
         log_summary " >>> ⏭️  No custom .config found at '$owrt_config_src'. Skipping sync." --silent
     fi
 }
