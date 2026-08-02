@@ -95,17 +95,9 @@ fi
 # Handle Update Feeds (First, to ensure package definitions are fresh)
 if [[ "$DO_UPDATE_FEEDS" == "true" ]]; then
     echo " >>> Updating and installing feeds..."
-    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
-        log_summary " >>> ✅ Feeds updated & installed"
-        log_debug "1" "update/install feeds ran (interactive)"
-    else
-        # non-interactive
-        ./scripts/feeds update -a > /dev/null 2>&1
-        ./scripts/feeds install -a > /dev/null 2>&1
-        log_debug "1" "update/install feeds ran (non-interactive)"
-    fi
+    run_command "./scripts/feeds update -a"
+    run_command "./scripts/feeds install -a"
+    log_debug "1" "updated & installed feeds"
 else
     log_debug "1" "DO_UPDATE_FEEDS: '$DO_UPDATE_FEEDS'"
 fi
