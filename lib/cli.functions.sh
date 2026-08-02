@@ -23,6 +23,7 @@ show_help() {
         echo " -vv, --extra-verbose       Enable extra verbose output (V=99)"
         echo " -s, --slow                 Single-core compilation (default is multi-core)"
         echo " -ni, --non-interactive     Disable interactive prompts (for cron/CI)"
+        echo " -d, --dry-run              Disable any file copy or make commands"
         echo " -h, --help                 Show this help message"
         echo ""
     elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
@@ -34,6 +35,7 @@ show_help() {
         echo " -vv, --extra-verbose       Enable extra verbose output (V=99)"
         echo " -s, --slow                 Single-core compilation (default is multi-core)"
         echo " -ni, --non-interactive     Disable interactive prompts (for cron/CI)"
+        echo " -d, --dry-run              Disable any file copy or make commands"
         echo " -h, --help                 Show this help message"
         echo ""
     else
@@ -94,6 +96,18 @@ parse_arguments() {
                 OWRTDS_INTERACTIVE=false
                 DO_VERBOSE=false
                 DO_XVERBOSE=false
+                shift
+                ;;
+            -d|--dry-run)
+                # IGNORE if running as wrapper - heavy lifting done by owrt-build - owrt-build-all does not need the dry-run flag.
+                if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+                    DO_DRYRUN=true
+                    log_debug "4" "[parse_arguments()]: DRY-RUN is ENABLED - SCRIPT_NAME: '$SCRIPT_NAME'"
+                else
+                    log_summary " >>> ⚠  WARNING: ignoring --dry-run/-d parameter. owrt-build-all only passes this flag to the owrt-build script." --silent
+                    log_debug "1" "[parse_arguments()]: DRY-RUN is DISABLED - SCRIPT_NAME: '$SCRIPT_NAME'"
+                    DO_DRYRUN=false
+                fi
                 shift
                 ;;
             -h|--help)
