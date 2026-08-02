@@ -172,23 +172,20 @@ fi
 # PAUSE SO HUMAN USER CAN SEE PROGRESS BEFORE COMPILE
 if [[ "$OWRTDS_INTERACTIVE" == true ]]; then sleep 5; fi
 
+# Now the main build can proceed without host tool interruptions
+MAKE_CMD="make ${MAKE_CMD_ADD}"
+echo " >>> Starting compilation: ${MAKE_CMD}"
+
 # Temporarily disable 'errexit' to capture make's exit code manually.
 # NOTE: The SIGINT/SIGTERM trap remains ACTIVE here for CTRL+C safety.
 set +e
 
-# Now the main build can proceed without host tool interruptions
-MAKE_CMD="make ${MAKE_CMD_ADD}"
-echo " >>> Starting compilation: ${MAKE_CMD}"
-if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-    $MAKE_CMD
-    BUILD_STATUS=$?
-else
-    $MAKE_CMD > /dev/null 2>&1
-    BUILD_STATUS=$?
-fi
+run_command "$MAKE_CMD"
+BUILD_STATUS=$?
 
 # Re-enable strict error checking
 set -e
+
 
 # Synchronize final .config state back to work directory (runs unconditionally)
 sync_config_from_dev_dir
