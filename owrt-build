@@ -107,22 +107,14 @@ fi
 # Only compile tools/toolchain on a make-clean
 if [[ "$DO_CLEAN" == "true" ]]; then
     echo " >>> Ensuring host tools and toolchain are ready..."
-    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-        # interactive and verbose/xverbose
-        if ! run_command "make tools/install \"$MAKE_CMD_ADD\""; then
-            exit_with_error "Failed to build host tools"
-        fi
-        if ! run_command "make toolchain/install \"$MAKE_CMD_ADD\""; then
-            exit_with_error "Failed to build toolchain"
-        fi
-        log_summary " >>> ✅ Toolchain built"
-        log_debug "1" "tools/toolchain compiled - DO_CLEAN: '$DO_CLEAN' (interactive)"
-    else
-        # non-interactive
-        make tools/install ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Failed to build host tools"
-        make toolchain/install ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Failed to build toolchain"
-        log_debug "1" "tools/toolchain compiled - DO_CLEAN: '$DO_CLEAN' (non-interactive)"
+    if ! run_command "make tools/install \"$MAKE_CMD_ADD\""; then
+        exit_with_error "Failed to build host tools"
     fi
+    if ! run_command "make toolchain/install \"$MAKE_CMD_ADD\""; then
+        exit_with_error "Failed to build toolchain"
+    fi
+    log_summary " >>> ✅ Toolchain built"
+    log_debug "1" "tools/toolchain compiled"
 else
     log_debug "1" "Not compiling tools/toolchain - DO_CLEAN: '$DO_CLEAN'"
 fi
