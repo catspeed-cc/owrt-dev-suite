@@ -107,10 +107,10 @@ fi
 # Only compile tools/toolchain on a make-clean
 if [[ "$DO_CLEAN" == "true" ]]; then
     echo " >>> Ensuring host tools and toolchain are ready..."
-    if ! run_command "make tools/install \"$MAKE_CMD_ADD\""; then
+    if ! run_command "make tools/install $MAKE_CMD_ADD"; then
         exit_with_error "Failed to build host tools"
     fi
-    if ! run_command "make toolchain/install \"$MAKE_CMD_ADD\""; then
+    if ! run_command "make toolchain/install $MAKE_CMD_ADD"; then
         exit_with_error "Failed to build toolchain"
     fi
     log_summary " >>> ✅ Toolchain built"
