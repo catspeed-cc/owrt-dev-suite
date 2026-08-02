@@ -104,7 +104,7 @@ copy_file() {
     fi
 
     # Copy file
-    if ! cp "$file_src" "$file_dest"; then
+    if ! run_command "cp $file_src $file_dest" "operation"; then
         exit_with_error "$desc failed: "$(cleanup_path "$file_dest")
     fi
 
