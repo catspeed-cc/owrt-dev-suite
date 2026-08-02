@@ -181,7 +181,8 @@ log_debug() {
 # Examples:
 #   run_command "make" "command"
 #   run_command "make prepare blablabla" "command"
-#   run_command "cp $from $to" "operation: 'cp $from $to'"
+#   run_command "cp $from $to" "operation"
+#   run_command "cp $from $to" "" "operation: 'cp $from $to'"
 #   run_command "make" "command" "Building OpenWRT kernel"
 run_command() {
     local cmd="$1"
