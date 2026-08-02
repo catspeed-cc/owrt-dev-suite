@@ -16,11 +16,11 @@ build_kernel_sources() {
 
     # Download sources (Prerequisite)
     echo " >>> Running 'make download'..."
-    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-        make download ${MAKE_CMD_ADD} || exit_with_error "Make Download"
-    else
-        make download ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Make Download"
+    
+    if ! run_command "make download \"$MAKE_CMD_ADD\""; then
+        exit_with_error "Make Download"
     fi
+
     log_summary " >>> ✅ Sources downloaded"
 
     if [ "$DO_DRIVERMOD_CPY" = true ]; then
@@ -60,21 +60,16 @@ build_kernel_sources() {
 
     # Prepare (Extract + Apply Patches)
     echo " >>> Running 'make target/linux/prepare'..."
-    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-        make target/linux/prepare ${MAKE_CMD_ADD} || exit_with_error "Make Prepare 'linux'"
-    else
-        make target/linux/prepare ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Make Prepare 'linux'"
+    if ! run_command "make target/linux/prepare \"$MAKE_CMD_ADD\""; then
+        exit_with_error "Make Prepare 'linux'"
     fi
 
     log_summary " >>> ✅ Sources prepared (linux)"
 
     # Compile
     echo " >>> Running 'make target/linux/compile'..."
-
-    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
-        make target/linux/compile ${MAKE_CMD_ADD} || exit_with_error "Make Compile 'linux'"
-    else
-        make target/linux/compile ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Make Compile 'linux'"
+    if ! run_command "make target/linux/compile \"$MAKE_CMD_ADD\""; then
+        exit_with_error "Make Compile 'linux'"
     fi
 
     log_summary " >>> ✅ Sources compiled (linux) with custom patches applied"
