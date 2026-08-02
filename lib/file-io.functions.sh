@@ -95,24 +95,22 @@ copy_file() {
 
     # Create directory if it doesn't exist (including parents)
     if [ ! -d "$dest_dir" ]; then
-        mkdir -p "$dest_dir"
+        run_command "mkdir -p $dest_dir"
     fi
 
     # Remove destination file if it already exists
     if [ -f "$file_dest" ]; then
-        rm "$file_dest"
+        run_command "rm $file_dest"
     fi
 
     # Copy file
-    if ! run_command "cp $file_src $file_dest" "operation"; then
+    if ! run_command "cp $file_src $file_dest"; then
         exit_with_error "$desc failed: "$(cleanup_path "$file_dest")
     fi
 
     # Verify md5 & output messages
     if verify_md5 "$file_src" "$file_dest"; then
-        local msg=" >>> ✅ $desc "$(cleanup_path "$file_dest")" (MATCH)"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ✅ $desc "$(cleanup_path "$file_dest")" (MATCH)"
         return 0
     else
         exit_with_error "$desc failed (MD5 mismatch)"
@@ -162,9 +160,7 @@ copy_patches_dir() {
 
     done
 
-    local msg=" >>> ✅ Patches Directory Copied "$(cleanup_path "$dir_dest")
-    echo "$msg"
-    SUMMARY_OUT+="${msg}"${NL}
+    log_summary " >>> ✅ Patches Directory Copied "$(cleanup_path "$dir_dest")
 
 }
 
@@ -197,15 +193,15 @@ copy_caldata() {
         CALDATA_FINAL_DEST="$FIRMWARE_BUILD_DIR/$CALDATA_REL_DEST"
 
         # Create directory structure
-        mkdir -p "$(dirname "$CALDATA_FINAL_DEST")" || exit_with_error "Failed to create caldata directory structure"
+        if ! run_command "mkdir -p \"$(dirname "$CALDATA_FINAL_DEST")\"" "operation" "Creating caldata directory structure"; then
+            exit_with_error "Failed to create caldata directory structure"
+        fi
 
         # Perform the copy
         copy_file "$CALDATA_SRC" "$CALDATA_FINAL_DEST" || exit_with_error "Copy Caldata"
 
         # Generate success message
-        local msg=" >>> ✅ ${CALDATA_BOARDNAME} caldata copied to: $(cleanup_path "$CALDATA_REL_DEST")"
-        echo "$msg"
-        SUMMARY_OUT+="${msg}"${NL}
+        log_summary " >>> ✅ ${CALDATA_BOARDNAME} caldata copied to: $(cleanup_path "$CALDATA_REL_DEST")"
     done
 
 }
@@ -226,17 +222,21 @@ copy_to_imgdir() {
     local dest_dir="$WORK_IMAGEOUT_DIR"
 
     # clobber the image out old files
-    rm -rf "${dest_dir:?}/"* || exit_with_error "Clobber image-out dir"
+    if ! run_command "rm -rf \"${dest_dir:?}/\"*"; then
+        exit_with_error "Clobber image-out dir"
+    fi
 
     # missing piece :)
-    mkdir -p "$dest_dir"
+    if ! run_command "mkdir -p \"$dest_dir\""; then
+        exit_with_error "Failed to create image-out directory"
+    fi
 
     # copy the new files (use OWRT_BASE_BRANCH as subdir)
-    cp -r "$IMGDIR_SRC/"* "$dest_dir/" || exit_with_error "Copy images to image-out"
+    if ! run_command "cp -r \"$IMGDIR_SRC/\"* \"$dest_dir/\""; then
+        exit_with_error "Copy images to image-out"
+    fi
 
-    local msg=" >>> ✅ IMAGES COPIED TO WORK DIR: $(cleanup_path "$dest_dir")"
-    echo "$msg"
-    SUMMARY_OUT+="${msg}"${NL}
+    log_summary " >>> ✅ IMAGES COPIED TO WORK DIR: $(cleanup_path "$dest_dir")"
 
 }
 
@@ -275,24 +275,31 @@ copy_to_webserver() {
             log_debug "4" "[copy_to_webserver()]: local var dest directory exists: '$dest'"
         else
             log_debug "1" "[copy_to_webserver()]: creating local var dest directory: '$dest'"
-            mkdir -p "$dest"
+            run_command "mkdir -p $dest"
         fi
 
         echo " >>> Copying images to webserver..."
 
         # Use sg to ensure we have write access to the SetGID directory
         # regardless of whether the user has run 'newgrp' in this session.
-        sg "$WEBSERVER_SHARED_GROUP" -c "
-            mkdir -p \"$dest\" &&
-            rm -rf \"$dest/\"* &&
-            cp -r \"$imgdir_src/\"* \"$dest/\" &&
-            chmod -R g+rw \"$dest\"
-        " || exit_with_error "Failed to copy images to webserver"
+
+        # Build the command
+        local sg_cmd="sg \"$WEBSERVER_SHARED_GROUP\" -c \"
+            mkdir -p '$dest' &&
+            rm -rf '${dest}/'* &&
+            cp -r '${imgdir_src}/'* '$dest/' &&
+            chmod -R g+rw '$dest'
+        \""
+
+        # Run the command
+        if ! run_command "$sg_cmd" "operation" "Copying images to webserver with group permissions"; then
+            exit_with_error "Failed to copy images to webserver"
+        fi
 
         log_summary " >>> ✅ Images copied to webserver: $(cleanup_path "$dest")"
 
         # hook to generate metadata - no summary out or log debug requred (handled within function)
-        generate_metadata
+        run_command "generate_metadata"
 
     fi
 }
@@ -311,10 +318,10 @@ function sync_config_to_dev_dir() {
     local owrt_config_src="${SCRIPT_DIR}/etc/${OWRT_VERSION}/owrt/${OWRT_MFR_LOWER}_${OWRT_MODEL_LOWER}.config"
 
     if [[ -f "$owrt_config_src" ]]; then
-        if cp "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
+        if copy_file "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
             printf '%s\n' "$owrt_config_src" > "$CONFIG_STATE_FILE"
             set +e
-            if ! make -s defconfig > /dev/null 2>&1; then
+            if ! run_command "make -s defconfig" > /dev/null 2>&1; then
                 exit_with_error "make defconfig failed. Check your .config file." --nocleanup
             fi
             set -e
@@ -324,8 +331,8 @@ function sync_config_to_dev_dir() {
         fi
     else
         # remove cfghome and .config file (there is no config, this must be old from previous run)
-        rm -f "$OWRT_DEV_DIR/.config"
-        rm -f "$OWRT_DEV_DIR/.owrtds.cfghome"
+        run_command "rm -f $OWRT_DEV_DIR/.config"
+        run_command "rm -f $OWRT_DEV_DIR/.owrtds.cfghome"
         log_summary " >>> ⏭️  No custom .config found at '$owrt_config_src'. Skipping sync." --silent
     fi
 }
@@ -354,9 +361,9 @@ function sync_config_from_dev_dir() {
             local config_dest="${SCRIPT_DIR}/etc/${OWRT_VERSION}/owrt/${CONFIG_FILE%.build}.config"
 
             # Ensure the target directory exists (in case it's the first run)
-            mkdir -p "$(dirname "$config_dest")"
+            run_command "mkdir -p $(dirname "$config_dest")"
 
-            if cp "$OWRT_DEV_DIR/.config" "$config_dest"; then
+            if copy_file "$OWRT_DEV_DIR/.config" "$config_dest"; then
                 log_summary " >>> ✅ Initial .config saved to: $config_dest"
                 # Track it immediately so next run uses this path
                 printf '%s\n' "$config_dest" > "$cfg_home_file"
@@ -383,7 +390,9 @@ function sync_config_from_dev_dir() {
     local dest_dir
     dest_dir=$(dirname "$owrt_config_dest")
     if [[ ! -d "$dest_dir" ]]; then
-        mkdir -p "$dest_dir" || exit_with_error "Failed to create .config destination dir" --nocleanup
+        if ! run_command "mkdir -p \"$dest_dir\""; then
+            exit_with_error "Failed to create .config destination dir" --nocleanup
+        fi
     fi
 
     # Guard: skip if build didn't produce a .config
@@ -397,7 +406,7 @@ function sync_config_from_dev_dir() {
         echo " >>> Synchronizing .config back to work directory..."
     fi
 
-    if cp -f "$config_src" "$owrt_config_dest"; then
+    if copy_file "$config_src" "$owrt_config_dest"; then
         log_summary " >>> ✅ .config synchronized to $(cleanup_path "$owrt_config_dest")" --silent
     else
         exit_with_error "Failed to copy .config to $owrt_config_dest" --nocleanup
