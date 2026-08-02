@@ -17,7 +17,7 @@ build_kernel_sources() {
     # Download sources (Prerequisite)
     echo " >>> Running 'make download'..."
     
-    if ! run_command "make download \"$MAKE_CMD_ADD\""; then
+    if ! run_command "make download $MAKE_CMD_ADD"; then
         exit_with_error "Make Download"
     fi
 
@@ -60,7 +60,7 @@ build_kernel_sources() {
 
     # Prepare (Extract + Apply Patches)
     echo " >>> Running 'make target/linux/prepare'..."
-    if ! run_command "make target/linux/prepare \"$MAKE_CMD_ADD\""; then
+    if ! run_command "make target/linux/prepare $MAKE_CMD_ADD"; then
         exit_with_error "Make Prepare 'linux'"
     fi
 
@@ -68,7 +68,7 @@ build_kernel_sources() {
 
     # Compile
     echo " >>> Running 'make target/linux/compile'..."
-    if ! run_command "make target/linux/compile \"$MAKE_CMD_ADD\""; then
+    if ! run_command "make target/linux/compile $MAKE_CMD_ADD"; then
         exit_with_error "Make Compile 'linux'"
     fi
 
