@@ -24,6 +24,9 @@ fi
 
 
 # Version Information
+# TOD: Refactor to compare to master branch .version file and give debug "current running version greater than master (v0.2.0 > v0.1.0)" or 
+#                                                                        "current running version less than master (v0.1.0 < v1.0.0)" or
+#                                                                        "current running version equals master version (v0.1.0 = v0.1.0)
 if [[ ! -f "$SCRIPT_DIR/.owrtds.version" ]]; then
     echo "❌ CRITICAL: .owrtds.version missing" >&2; exit 1
 else
@@ -81,10 +84,10 @@ declare -A CALDATA_LIST
 OWRTDS_INTERACTIVE=true
 # Auto-detect non-interactive mode (e.g., piped input, cron jobs, CI/CD)
 if [[ ! -t 0 ]]; then
-    log_debug "1" "Non-interactive mode activated"
+    log_debug "1" "Non-interactive mode detected & activated"
     OWRTDS_INTERACTIVE=false
 else
-    log_debug "1" "Interactive mode activated"
+    log_debug "1" "Interactive mode detected & activated"
 fi
 
 # ====================================================================================
@@ -102,6 +105,7 @@ reset_config_variables
 
 
 # ===========================================================================================
+
 
 # ===========================================================================================
 # 1. SOURCE LIBRARIES FIRST (Defines functions like parse_arguments, install_dependencies)
@@ -176,10 +180,10 @@ fi
 # ===========================================================================================
 parse_arguments "$@"
 
+
 # ===========================================================================================
 # 3. RESOLVE & SOURCE CONFIG (Uses CLI override if present, otherwise default)
 # ===========================================================================================
-
 resolve_configuration_file
 
 # Source the determined config
@@ -236,7 +240,6 @@ show_header
 # ===========================================================================================
 # 8. Check if there is a .config file , if not exit_with_error
 # ===========================================================================================
-
 # Checks if there is a .config in the OWRT_DEV_DIR after having copied it from sync_config_to_etc_dir above
 if [[ ! -f "$OWRT_DEV_DIR/.config" ]]; then
     exit_with_error "No '.config' file found. Ensure the file exists. (run 'make menuconfig' to create one, then copy it to your work directory for the device)"
@@ -248,7 +251,6 @@ fi
 # ==============================================================================
 # 9. Execution Preperation
 # ==============================================================================
-
 # Ensure we go back to the original PWD before build
 change_directory "$STARTUP_PWD"
 
