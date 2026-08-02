@@ -505,15 +505,15 @@ EOF
 
         # Use sg to ensure we have write access to the SetGID directory
         # regardless of whether the user has run 'newgrp' in this session.
-        local link-created
-        link-created="true"
+        local link_created
+        link_created="true"
         sg "$WEBSERVER_SHARED_GROUP" -c "
             rm -rf \"$dest/\"* &&
             ln -s "$info_file" "$dest" &&
             chmod -R g+rw \"$dest\"
-        " || link-created="false"
+        " || link_created="false"
 
-        if [[ "$link-created" == "true" ]]; then
+        if [[ "$link_created" == "true" ]]; then
             log_debug "1" "[generate_metadata()]: created link to metadata"
         else
             log_debug "1" "[generate_metadata()]: failed to create link to metadata file: from '$info_file' to '$dest'"
