@@ -113,6 +113,11 @@ parse_arguments() {
                 shift
                 ;;
             --debug)
+                # Check if the NEXT argument ($2) exists.
+                # We need at least 2 args total: the flag ($1) and the path ($2).
+                if [[ $# -lt 2 ]]; then
+                    exit_with_error "Option $1 requires an integer (number) argument." --nocleanup
+                fi
                 OWRTDS_DEBUG="$2"
                 shift 2
                 ;;
