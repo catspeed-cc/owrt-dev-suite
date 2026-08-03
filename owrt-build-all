@@ -118,7 +118,7 @@ for config_file in "${all_configs[@]}"; do
     log_debug "1" "executing '$SCRIPT_DIR/owrt-build --config $config_file $@ -mc -uf -ni'"
 
     # Run the main script (pass in parameters from user, force non-interactive, ignoring --config/-c)
-    ( "$SCRIPT_DIR"/owrt-build --config "$config_file" "$@" -mc -uf -ni )
+    $( "$SCRIPT_DIR"/owrt-build --config "$config_file" "$@" -mc -uf -ni )
     BUILD_EXIT_CODE=$?
 
     ((BUILD_TOTAL++))
