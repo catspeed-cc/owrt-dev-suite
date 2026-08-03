@@ -53,10 +53,19 @@ show_header() {
         local msg_str="unknown"
     fi
 
+    # determine device string
+    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+        local device_str="- ${OWRT_MFR} ${OWRT_MODEL} / ${OWRT_SOC_CLASS} "
+    elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
+        local device_str=""
+    else
+        local device_str="unknown "
+    fi
+
     if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
         # Non-Interactive Mode: Compact, log-friendly header
         echo ""
-        echo "=== OWRTDS ${OWRTDS_VERSION} - ${msg_str} - ${OWRT_MFR} ${OWRT_MODEL} / ${OWRT_SOC_CLASS} ($(date '+%Y-%m-%d %H:%M')) ==="
+        echo "=== OWRTDS ${OWRTDS_VERSION} - ${msg_str} ${device_str}($(date '+%Y-%m-%d %H:%M')) ==="
 
         if [[ "$build_finished" == "true" ]]; then
             echo "=== Elapsed: ${BUILD_ELAPSED} (${BUILD_ELAPSED_SECONDS}s) ==="
