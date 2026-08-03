@@ -99,7 +99,7 @@ for config_file in "${all_configs[@]}"; do
     else
         log_summary " >>> ❌ FAILED to load config: $(basename "$config_file"). Skipping."
         log_debug "1" "Failed to source config file: $config_file. Skipping."
-        ((BUILD_SKIPPED++))
+        ((BUILD_SKIPPED++)) || true
         continue
     fi
 
@@ -107,7 +107,7 @@ for config_file in "${all_configs[@]}"; do
     if [[ "$OWRTDS_ENABLE_BATCH_BUILD" != "true" ]]; then
         log_summary " >>> ⏭️  Skipping $(basename "$config_file"): Not enabled for batch build."
         log_debug "1" "Skipped config: '$config_file' - OWRTDS_ENABLE_BATCH_BUILD: '$OWRTDS_ENABLE_BATCH_BUILD'"
-        ((BUILD_SKIPPED++))
+        ((BUILD_SKIPPED++)) || true
         continue
     fi
 
@@ -118,19 +118,17 @@ for config_file in "${all_configs[@]}"; do
     log_debug "1" "executing '$SCRIPT_DIR/owrt-build --config $config_file $@ -mc -uf -ni'"
 
     # Run the main script (pass in parameters from user, force non-interactive, ignoring --config/-c)
-    set +e
     ( "$SCRIPT_DIR"/owrt-build --config "$config_file" "$@" -mc -uf -ni )
     BUILD_EXIT_CODE=$?
-    set -e
 
-    ((BUILD_TOTAL++))
+    ((BUILD_TOTAL++)) || true
 
     if [[ $BUILD_EXIT_CODE -eq 0 ]]; then
-        ((BUILD_SUCCESS++))
+        ((BUILD_SUCCESS++)) || true
         log_summary " >>> ✅ Build #$BUILD_TOTAL of $TOTAL_TO_BUILD succeeded: $(basename "$config_file")"
         log_debug "1" "$BUILD_TOTAL of $TOTAL_TO_BUILD succeeded: '$config_file'"
     else
-        ((BUILD_FAILED++))
+        ((BUILD_FAILED++)) || true
         log_summary " >>> ❌ Build #$BUILD_TOTAL of $TOTAL_TO_BUILD failed: $(basename "$config_file") (Exit Code: $EXIT_CODE)"
         log_debug "1" "$BUILD_TOTAL of $TOTAL_TO_BUILD failed: '$config_file'"
     fi
