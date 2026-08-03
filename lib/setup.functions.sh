@@ -512,3 +512,18 @@ install_dependencies() {
         pacman) sudo pacman -S --needed "${filtered_pkgs[@]}" ;;
     esac
 }
+
+build_all_custom_trap_func() {
+
+    # no cleanup, this is trap for `owrt-build-all` script, only traps INT.
+    # needs to check PID file for current batch build iteration. If PID exists,
+    # sent -INT, sleep 1 second then send -TERM. Cleanup the child PID in the trap.
+
+    # step 1: create PID file management logic in the child `owrt-build`
+    # step 2: in the parent `owrt-build-all` check if the PID file exists, check if
+    #         process exists, if it does send sigint, 1 second, then sigterm. If it
+    #         does not exist, then the parent (batch build) will `exit_with_error`.
+    # step 3: retain the pause at the end of the loop to provide ctrl+c message, as
+    #         well as cancellation message at beginning of loop.
+
+}

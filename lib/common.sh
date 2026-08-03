@@ -291,4 +291,12 @@ if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
     trap 'exit_with_error "Caught by trap - script terminated (SIGTERM). Aborting."' TERM
     trap 'exit_with_error "Caught by trap - connection hung up (SIGHUP). Aborting."' HUP
     # we skipped my idea of using a trap exit handler - neat!
+elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
+    # owrt-build-all trap enable
+    # only need to trap INT because build script does all the work and traps for child cleanup :)
+    trap 'build_all_custom_trap_func' INT
+else
+    # shouldn't arrive here, let's at least log this
+    # traps not being set is not fatal
+    log_debug "1" "[lib/common.sh]: SCRIPT_NAME: '$SCRIPT_NAME'"
 fi
