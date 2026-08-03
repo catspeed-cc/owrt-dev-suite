@@ -119,7 +119,9 @@ copy_file() {
 
     # Verify md5 & output messages
     if verify_md5 "$file_src" "$file_dest"; then
-        log_summary " >>> ✅ $desc "$(cleanup_path "$file_dest")" (MATCH)"
+        if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
+            log_summary " >>> ✅ $desc "$(cleanup_path "$file_dest")" (MATCH)"
+        fi
         return 0
     else
         exit_with_error "$desc failed (MD5 mismatch)"
