@@ -59,7 +59,7 @@ show_header() {
     elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
         local device_str=""
     else
-        local device_str="unknown "
+        local device_str="- unknown "
     fi
 
     if [[ "$OWRTDS_INTERACTIVE" == "false" ]]; then
