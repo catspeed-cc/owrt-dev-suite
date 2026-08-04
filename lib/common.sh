@@ -19,6 +19,11 @@ else
     if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/earlyscript.functions.sh" >&2; fi
 fi
 
+# create pidfile if it is owrt-build
+if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+    create_pidfile
+fi
+
 
 # log_debug now avaialble
 
