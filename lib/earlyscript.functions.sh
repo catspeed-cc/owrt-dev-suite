@@ -33,9 +33,9 @@
 #              Checks for stale PIDs and prevents concurrent execution.
 # =============================================================================
 create_pidfile() {
-    local pid_dir="$PID_DIR"
+    local pid_dir="$TMP_DIR"
     local pid_file="$PID_FILE"
-    local pid_fpath="${PID_DIR}/${PID_FILE}"
+    local pid_fpath="${TMP_DIR}/${PID_FILE}"
     local current_pid=$$
 
     mkdir -p "$pid_dir" || {
@@ -76,9 +76,9 @@ create_pidfile() {
 #              doesn't exist. Typically called from EXIT functions or trap.
 # =============================================================================
 remove_pidfile() {
-    local pid_dir="$PID_DIR"
+    local pid_dir="$TMP_DIR"
     local pid_file="$PID_FILE"
-    local pid_fpath="${PID_DIR}/${PID_FILE}"
+    local pid_fpath="${TMP_DIR}/${PID_FILE}"
 
     if [[ -f "$pid_fpath" ]]; then
         local old_pid

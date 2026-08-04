@@ -12,7 +12,7 @@
 OWRTDS_DEBUG=0
 
 # PID directory & filename
-PID_DIR="/tmp/owrt-dev-suite"
+TMP_DIR="/tmp/owrt-dev-suite"
 PID_FILE="owrt-build.pid"
 
 # NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
