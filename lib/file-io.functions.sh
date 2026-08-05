@@ -448,7 +448,7 @@ generate_metadata() {
         log_debug "4" "[generate_metadata()]: stable build - OWRT_STABLE: '$OWRT_STABLE'"
     fi
 
-    local info_file="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_version${dadd}/BUILD_NOTICE.md"
+    local info_file="$webserver_shared_dir/$owrt_mfr/$owrt_model/$owrt_version${dadd}/BUILD_NOTICE.txt"
     local device_name="$owrt_mfr / $owrt_model (${owrt_soc})"
 
     if [[ -d "$(dirname "$info_file")" ]]; then
@@ -500,6 +500,12 @@ EOF
     else
         exit_with_error "[generate_metadata()]: generated metadata file does not exist: '$info_file'"
     fi
+
+
+    # RETURN 0 CODE BELOW DEPRECATED BUT KEPT FOR FUTURE REFERENCE
+    # STILL DECIDING DO WE NEED LINKS - PROBABLY NOT FOR THIS FILE
+    return 0
+
 
     local dest="${webserver_shared_dir}/${owrt_mfr}/${owrt_model}_${owrt_version}_${dadd_alt}_BUILD_NOTICE.md"
 
