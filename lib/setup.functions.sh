@@ -514,16 +514,67 @@ install_dependencies() {
 }
 
 build_all_custom_trap_func() {
+    # We might not want to exit_with_error at ALL here, we want to send our SIGINT and return 0 so we return execution to the batch build script loop
+    # Just log, do not exit_with_error except if there is no PID file at all, then we assume the user is quitting the main batch build script loop
 
-    # no cleanup, this is trap for `owrt-build-all` script, only traps INT.
-    # needs to check PID file for current batch build iteration. If PID exists,
-    # sent -INT, sleep 1 second then send -TERM. Cleanup the child PID in the trap.
+    # First press: send sigint, check if it received and closes, then send sigkill if not, then return 0
+    # Second/subsequent presses: exit_with_error because user wants to exit the batch build script
 
-    # step 1: create PID file management logic in the child `owrt-build`
-    # step 2: in the parent `owrt-build-all` check if the PID file exists, check if
-    #         process exists, if it does send sigint, 1 second, then sigterm. If it
-    #         does not exist, then the parent (batch build) will `exit_with_error`.
-    # step 3: retain the pause at the end of the loop to provide ctrl+c message, as
-    #         well as cancellation message at beginning of loop.
+    # We actually do it in reverse, exit the second press early, the remaining function deals with the first press then returns execution
+    
+    # Derive the PID file path for 'owrt-build' child script
+    local pid_fpath="${TMP_DIR}/${OWRT_BUILD_PID_FILE}"
+    local child_pid=""
 
+    # Step 1: Check if PID file exists (exit early if no PID file - no child)
+    if [[ ! -f "$pid_fpath" ]]; then
+        log_debug "1" "[lib/setup.functions.sh:build_all_custom_trap_func()]: PID file does not exist - nothing to kill"
+        # There is no current build, we are in between loop iterations, at the sleep waiting for user to cancel or continue
+        # (user wants to exit here)
+        exit_with_error "Batch build cancelled by user (ctrl + c)"
+    fi
+
+    # From here on we have handled the exit_with_error to exit the batch build. We just have to handle the child process.
+    # If the PID file exists, we assume the PID is running (but check anyways) and send it SIGINT and then SIGKILL
+
+    # Read the child PID
+    child_pid=$(cat "$pid_fpath")
+
+    # Validate that it's a number
+    if ! [[ "$child_pid" =~ ^[0-9]+$ ]]; then
+        log_debug "1" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Invalid PID in file: $child_pid"
+    fi
+
+    log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Caught INT, child PID: $child_pid"
+
+    # Step 2: Check if process is still running (if not, remove pid file, continue execution)
+    if ! kill -0 "$child_pid" 2>/dev/null; then
+        log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Child process $child_pid no longer running. Removing pid file."
+        rm -f "$pid_fpath"
+        # If there is no running PID we want to return 0 because there is no running child process
+        return 0
+    fi
+
+    # Step 3: Send SIGINT to child (because the child is still running)
+    log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Sending SIGINT to child PID $child_pid"
+    kill -INT "$child_pid" 2>/dev/null
+
+    # Wait 2 seconds for graceful shutdown - no cleanup here, when child trap receives INT it will clean itself up.
+    sleep 2
+
+    # Step 4: Check again if process is gone
+    if kill -0 "$child_pid" 2>/dev/null; then
+        log_debug "1" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Child PID $child_pid still running, sending SIGKILL"
+        kill -KILL "$child_pid" 2>/dev/null
+        sleep 1  # Brief pause to allow kernel to reap
+    else
+        log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Child process terminated gracefully"
+    fi
+
+    # Step 5: Clean up PID file (we had to KILL so we need to cleanup ourselves)
+    rm -f "$pid_fpath"
+    log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: PID file removed"
+
+    # Step 6: Return execution to caller
+    return 0
 }
