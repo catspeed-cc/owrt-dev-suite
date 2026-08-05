@@ -15,7 +15,7 @@
 # - Script is heavy in file operations
 # - One unbound variable within a derived path can mangle an undesired location
 # - I need to see and know when something is unbound and fix it
-set -Eeuo pipefail
+set -Eemuo pipefail
 
 # Obtain STARTUP_PWD & ensure STARTUP_PWD does not have a trailing slash for consistent matching
 STARTUP_PWD=$(pwd)
