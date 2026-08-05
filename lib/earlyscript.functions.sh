@@ -44,7 +44,8 @@ create_pidfile() {
         local pid_fpath="${TMP_DIR}/${OWRT_BUILD_ALL_PID_FILE}"
     else
         log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: unable to determin running script - SCRIPT_NAME: '${SCRIPT_NAME}'"
-        exit_with_error "Unable to determine running script."
+        echo "Critical: Unable to determine running script."
+        exit 1
     fi
     log_debug "4" "[lib/earlyscript.functions.sh:create_pidfile()]: determined pidfile - SCRIPT_NAME: '${SCRIPT_NAME}', PID_FILE: '${pid_fpath}'"
 
@@ -96,7 +97,7 @@ remove_pidfile() {
         local pid_fpath="${TMP_DIR}/${OWRT_BUILD_ALL_PID_FILE}"
     else
         log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: unable to determin running script - SCRIPT_NAME: '${SCRIPT_NAME}'"
-        exit_with_error "Unable to determine running script."
+        echo "Critical: Unable to determine running script."
     fi
     log_debug "4" "[lib/earlyscript.functions.sh:create_pidfile()]: determined pidfile - SCRIPT_NAME: '${SCRIPT_NAME}', PID_FILE: '${pid_fpath}'"
 
