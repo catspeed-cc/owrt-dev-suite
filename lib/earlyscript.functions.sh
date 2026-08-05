@@ -34,13 +34,14 @@
 # =============================================================================
 create_pidfile() {
     local pid_dir="$TMP_DIR"
-    local pid_file="$PID_FILE"
     local current_pid=$$
 
     # Determine which PID file based on the current SCRIPT_NAME
     if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+        local pid_file="$OWRT_BUILD_PID_FILE"
         local pid_fpath="${TMP_DIR}/${OWRT_BUILD_PID_FILE}"
     elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
+        local pid_file="$OWRT_BUILD_ALL_PID_FILE"
         local pid_fpath="${TMP_DIR}/${OWRT_BUILD_ALL_PID_FILE}"
     else
         log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: unable to determin running script - SCRIPT_NAME: '${SCRIPT_NAME}'"
@@ -88,12 +89,13 @@ create_pidfile() {
 # =============================================================================
 remove_pidfile() {
     local pid_dir="$TMP_DIR"
-    local pid_file="$PID_FILE"
 
     # Determine which PID file based on the current SCRIPT_NAME
     if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+        local pid_file="$OWRT_BUILD_PID_FILE"
         local pid_fpath="${TMP_DIR}/${OWRT_BUILD_PID_FILE}"
     elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
+        local pid_file="$OWRT_BUILD_ALL_PID_FILE"
         local pid_fpath="${TMP_DIR}/${OWRT_BUILD_ALL_PID_FILE}"
     else
         log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: unable to determin running script - SCRIPT_NAME: '${SCRIPT_NAME}'"
@@ -103,7 +105,7 @@ remove_pidfile() {
 
     if [[ -f "$pid_fpath" ]]; then
         local old_pid
-        old_pid=$(cat "$pid_file")
+        old_pid=$(cat "$pid_fpath")
         rm -f "$pid_fpath"
 
         if [[ ! -f "$pid_fpath" ]]; then

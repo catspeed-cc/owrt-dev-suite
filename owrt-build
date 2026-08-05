@@ -58,7 +58,6 @@ SCRIPT_NAME=$(basename "$REAL_PATH")
 
 
 # Import lib/common.sh (bootstrap)
-log_debug "4" "[${SCRIPT_NAME}]: Sourcing 'lib/common.sh'"
 if ! source "$SCRIPT_DIR/lib/common.sh"; then
     echo " >>> ❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
     exit 1
