@@ -8,12 +8,6 @@
 # Edit `./etc/*/*.build` to configure
 # ============================================
 
-# DEBUG FLAG (0 = off, 1+ = more verbose)
-OWRTDS_DEBUG=0
-
-# PID directory & filename
-TMP_DIR="/tmp/owrt-dev-suite"
-PID_FILE="owrt-build-all.pid"
 
 # NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
 #

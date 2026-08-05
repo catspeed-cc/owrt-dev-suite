@@ -41,9 +41,7 @@ exit_with_success() {
         echo " >>> ✅ SUCCESS: ${err_msg}!"
         show_header
     fi
-    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
-        remove_pidfile
-    fi
+    remove_pidfile
     exit 0
 }
 
@@ -85,8 +83,6 @@ exit_with_error() {
         echo " >>> ❌ CRITICAL: ${err_msg}!"
         show_header
     fi
-    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
-        remove_pidfile
-    fi
+    remove_pidfile
     exit 1
 }

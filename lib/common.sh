@@ -8,8 +8,15 @@
 # Edit `./etc/config.sh` to configure
 # ============================================
 
+# DEBUG FLAG (0 = off, 1+ = more verbose)
+OWRTDS_DEBUG=0
 
+# Temporary Directory
+TMP_DIR="/tmp/owrt-dev-suite"
 
+# PID files
+OWRT_BUILD_PID_FILE="owrt-build.pid"
+OWRT_BUILD_ALL_PID_FILE="owrt-build-all.pid"
 
 # Import earlyscript.functions.sh
 if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
@@ -19,10 +26,8 @@ else
     if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/earlyscript.functions.sh" >&2; fi
 fi
 
-# create pidfile if it is owrt-build
-if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
-    create_pidfile
-fi
+# call to create_pidfile regardless (both scripts will create PID files)
+create_pidfile
 
 
 # log_debug now avaialble

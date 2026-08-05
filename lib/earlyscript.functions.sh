@@ -35,12 +35,22 @@
 create_pidfile() {
     local pid_dir="$TMP_DIR"
     local pid_file="$PID_FILE"
-    local pid_fpath="${TMP_DIR}/${PID_FILE}"
     local current_pid=$$
+
+    # Determine which PID file based on the current SCRIPT_NAME
+    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+        local pid_fpath="${TMP_DIR}/${OWRT_BUILD_PID_FILE}"
+    elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
+        local pid_fpath="${TMP_DIR}/${OWRT_BUILD_ALL_PID_FILE}"
+    else
+        log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: unable to determin running script - SCRIPT_NAME: '${SCRIPT_NAME}'"
+        exit_with_error "Unable to determine running script."
+    fi
+    log_debug "4" "[lib/earlyscript.functions.sh:create_pidfile()]: determined pidfile - SCRIPT_NAME: '${SCRIPT_NAME}', PID_FILE: '${pid_fpath}'"
 
     mkdir -p "$pid_dir" || {
         echo "ERROR: Failed to create PID directory: $pid_dir" >&2
-        log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: mkdir failed for '$pid_dir'"
+        log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: mkdir failed for '${pid_dir}'"
         exit 1
     }
 
@@ -78,7 +88,17 @@ create_pidfile() {
 remove_pidfile() {
     local pid_dir="$TMP_DIR"
     local pid_file="$PID_FILE"
-    local pid_fpath="${TMP_DIR}/${PID_FILE}"
+
+    # Determine which PID file based on the current SCRIPT_NAME
+    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+        local pid_fpath="${TMP_DIR}/${OWRT_BUILD_PID_FILE}"
+    elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
+        local pid_fpath="${TMP_DIR}/${OWRT_BUILD_ALL_PID_FILE}"
+    else
+        log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: unable to determin running script - SCRIPT_NAME: '${SCRIPT_NAME}'"
+        exit_with_error "Unable to determine running script."
+    fi
+    log_debug "4" "[lib/earlyscript.functions.sh:create_pidfile()]: determined pidfile - SCRIPT_NAME: '${SCRIPT_NAME}', PID_FILE: '${pid_fpath}'"
 
     if [[ -f "$pid_fpath" ]]; then
         local old_pid
