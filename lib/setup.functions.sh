@@ -538,11 +538,20 @@ build_all_custom_trap_func() {
     # If the PID file exists, we assume the PID is running (but check anyways) and send it SIGINT and then SIGKILL
 
     # Read the child PID
-    child_pid=$(cat "$pid_fpath")
+    child_pid=$(cat "$pid_fpath" 2>/dev/null)
+
+    # Added check for empty file
+    if [[ -z "$child_pid" ]]; then
+        log_debug "1" "[build_all_custom_trap_func]: PID file is empty or unreadable"
+        rm -f "$pid_fpath"
+        return 0
+    fi
 
     # Validate that it's a number
     if ! [[ "$child_pid" =~ ^[0-9]+$ ]]; then
         log_debug "1" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Invalid PID in file: $child_pid"
+        rm -f "$pid_fpath"
+        return 0
     fi
 
     log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Caught INT, child PID: $child_pid"
@@ -557,15 +566,15 @@ build_all_custom_trap_func() {
 
     # Step 3: Send SIGINT to child (because the child is still running)
     log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Sending SIGINT to child PID $child_pid"
-    kill -INT "$child_pid" 2>/dev/null
+    kill -INT "-${child_pid}" 2>/dev/null
 
     # Wait 2 seconds for graceful shutdown - no cleanup here, when child trap receives INT it will clean itself up.
-    sleep 2
+    sleep 1
 
     # Step 4: Check again if process is gone
     if kill -0 "$child_pid" 2>/dev/null; then
         log_debug "1" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Child PID $child_pid still running, sending SIGKILL"
-        kill -KILL "$child_pid" 2>/dev/null
+        kill -KILL "-${child_pid}" 2>/dev/null
         sleep 1  # Brief pause to allow kernel to reap
     else
         log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Child process terminated gracefully"
