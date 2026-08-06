@@ -24,7 +24,7 @@ exit_with_success() {
     fi
 
     # remove lock - only remaining is output and exit
-    remove_lock
+    remove_project_dir_lock
 
     if [[ "$OWRTDS_INTERACTIVE" == true ]]; then
         show_header
@@ -41,6 +41,7 @@ exit_with_success() {
         echo " >>> ✅ SUCCESS: ${err_msg}!"
         show_header
     fi
+    remove_pidfile
     exit 0
 }
 
@@ -66,7 +67,7 @@ exit_with_error() {
     fi
 
     # remove lock - only remaining is output and exit
-    remove_lock
+    remove_project_dir_lock
 
     if [[ "$OWRTDS_INTERACTIVE" == true ]]; then
         show_header
@@ -82,5 +83,6 @@ exit_with_error() {
         echo " >>> ❌ CRITICAL: ${err_msg}!"
         show_header
     fi
+    remove_pidfile
     exit 1
 }

@@ -26,11 +26,104 @@
 # Ensure all functions are self contained, and do not rely on existing helpers.
 #
 
+
 # =============================================================================
-# create_lock
+# create_pidfile
+# Description: Creates a script-wide PID file for locking and signals.
+#              Checks for stale PIDs and prevents concurrent execution.
+# =============================================================================
+create_pidfile() {
+    local pid_dir="$TMP_DIR"
+    local current_pid=$$
+
+    # Determine which PID file based on the current SCRIPT_NAME
+    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+        local pid_file="$OWRT_BUILD_PID_FILE"
+        local pid_fpath="${TMP_DIR}/${OWRT_BUILD_PID_FILE}"
+    elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
+        local pid_file="$OWRT_BUILD_ALL_PID_FILE"
+        local pid_fpath="${TMP_DIR}/${OWRT_BUILD_ALL_PID_FILE}"
+    else
+        log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: unable to determin running script - SCRIPT_NAME: '${SCRIPT_NAME}'"
+        echo "Critical: Unable to determine running script."
+        exit 1
+    fi
+    log_debug "4" "[lib/earlyscript.functions.sh:create_pidfile()]: determined pidfile - SCRIPT_NAME: '${SCRIPT_NAME}', PID_FILE: '${pid_fpath}'"
+
+    mkdir -p "$pid_dir" || {
+        echo "ERROR: Failed to create PID directory: $pid_dir" >&2
+        log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: mkdir failed for '${pid_dir}'"
+        exit 1
+    }
+
+    # Check if PID file exists and contains an active process
+    if [[ -f "${pid_fpath}" ]]; then
+        local old_pid
+        old_pid=$(cat "$pid_fpath")
+
+        if kill -0 "$old_pid" 2>/dev/null; then
+            echo "ERROR: '${SCRIPT_NAME}' already running (PID: ${old_pid} PID_FILE: ${pid_fpath})" >&2
+            log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: Active process found - SCRIPT_NAME: '${SCRIPT_NAME}', old_pid: '${old_pid}'"
+            exit 1
+        else
+            log_debug "2" "[lib/earlyscript.functions.sh:create_pidfile()]: Stale PID file cleaned - old_pid: '${old_pid}', PID_FILE: '${pid_fpath}'"
+            rm -f "$pid_fpath"
+        fi
+    fi
+
+    # Write current PID to file
+    if echo "$current_pid" > "$pid_fpath"; then
+        log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: PID file created - PID_FILE: '${pid_fpath}', pid: '${current_pid}'"
+    else
+        echo "ERROR: Failed to write PID file: $pid_fpath" >&2
+        log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: Failed to write PID - PID_FILE: '${pid_fpath}', pid: '${current_pid}'"
+        exit 1
+    fi
+}
+
+
+# =============================================================================
+# remove_pidfile
+# Description: Removes the script-wide PID file. Safe to call even if file
+#              doesn't exist. Typically called from EXIT functions or trap.
+# =============================================================================
+remove_pidfile() {
+    local pid_dir="$TMP_DIR"
+
+    # Determine which PID file based on the current SCRIPT_NAME
+    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+        local pid_file="$OWRT_BUILD_PID_FILE"
+        local pid_fpath="${TMP_DIR}/${OWRT_BUILD_PID_FILE}"
+    elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
+        local pid_file="$OWRT_BUILD_ALL_PID_FILE"
+        local pid_fpath="${TMP_DIR}/${OWRT_BUILD_ALL_PID_FILE}"
+    else
+        log_debug "1" "[lib/earlyscript.functions.sh:create_pidfile()]: unable to determin running script - SCRIPT_NAME: '${SCRIPT_NAME}'"
+        echo "Critical: Unable to determine running script."
+    fi
+    log_debug "4" "[lib/earlyscript.functions.sh:create_pidfile()]: determined pidfile - SCRIPT_NAME: '${SCRIPT_NAME}', PID_FILE: '${pid_fpath}'"
+
+    if [[ -f "$pid_fpath" ]]; then
+        local old_pid
+        old_pid=$(cat "$pid_fpath")
+        rm -f "$pid_fpath"
+
+        if [[ ! -f "$pid_fpath" ]]; then
+            log_debug "2" "[lib/earlyscript.functions.sh:remove_pidfile()]: PID file removed - PID_FILE: '${pid_fpath}', pid: '${old_pid}'"
+        else
+            log_debug "1" "[lib/earlyscript.functions.sh:remove_pidfile()]: WARNING - PID file still exists after rm - PID_FILE: '${pid_fpath}'"
+        fi
+    else
+        log_debug "3" "[lib/earlyscript.functions.sh:remove_pidfile()]: PID file does not exist - PID_FILE: '${pid_fpath}'"
+    fi
+}
+
+
+# =============================================================================
+# create_project_dir_lock
 # Description: Creates a per-repository mutex lock in the centralized state dir.
 # =============================================================================
-create_lock() {
+create_project_dir_lock() {
     local lock_dir="$SCRIPT_DIR/var/state"
     mkdir -p "$lock_dir" 2>/dev/null || true
     LOCK_FILE="${lock_dir}/${REPO_KEY}.lock"
@@ -42,14 +135,14 @@ create_lock() {
         exit 1
     fi
 
-    trap 'remove_lock' EXIT || log_debug "1" "trap cleanup failed (EXIT)"
+    trap 'remove_project_dir_lock' EXIT || log_debug "1" "trap cleanup failed (EXIT)"
 }
 
 # =============================================================================
-# remove_lock
+# remove_project_dir_lock
 # Description: Safely removes the per-repository lock file/directory.
 # =============================================================================
-remove_lock() {
+remove_project_dir_lock() {
     if [[ -n "${LOCK_FILE:-}" && -d "$LOCK_FILE" ]]; then
         log_debug "1" "removed lock - LOCK_FILE: '$LOCK_FILE'"
         rmdir "$LOCK_FILE" 2>/dev/null || true

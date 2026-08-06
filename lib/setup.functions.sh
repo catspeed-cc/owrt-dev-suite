@@ -512,3 +512,78 @@ install_dependencies() {
         pacman) sudo pacman -S --needed "${filtered_pkgs[@]}" ;;
     esac
 }
+
+build_all_custom_trap_func() {
+    # We might not want to exit_with_error at ALL here, we want to send our SIGINT and return 0 so we return execution to the batch build script loop
+    # Just log, do not exit_with_error except if there is no PID file at all, then we assume the user is quitting the main batch build script loop
+
+    # First press: send sigint, check if it received and closes, then send sigkill if not, then return 0
+    # Second/subsequent presses: exit_with_error because user wants to exit the batch build script
+
+    # We actually do it in reverse, exit the second press early, the remaining function deals with the first press then returns execution
+    
+    # Derive the PID file path for 'owrt-build' child script
+    local pid_fpath="${TMP_DIR}/${OWRT_BUILD_PID_FILE}"
+    local child_pid=""
+
+    # Step 1: Check if PID file exists (exit early if no PID file - no child)
+    if [[ ! -f "$pid_fpath" ]]; then
+        log_debug "1" "[lib/setup.functions.sh:build_all_custom_trap_func()]: PID file does not exist - nothing to kill"
+        # There is no current build, we are in between loop iterations, at the sleep waiting for user to cancel or continue
+        # (user wants to exit here)
+        exit_with_error "Batch build cancelled by user (ctrl + c)"
+    fi
+
+    # From here on we have handled the exit_with_error to exit the batch build. We just have to handle the child process.
+    # If the PID file exists, we assume the PID is running (but check anyways) and send it SIGINT and then SIGKILL
+
+    # Read the child PID
+    child_pid=$(cat "$pid_fpath" 2>/dev/null)
+
+    # Added check for empty file
+    if [[ -z "$child_pid" ]]; then
+        log_debug "1" "[build_all_custom_trap_func]: PID file is empty or unreadable"
+        rm -f "$pid_fpath"
+        return 0
+    fi
+
+    # Validate that it's a number
+    if ! [[ "$child_pid" =~ ^[0-9]+$ ]]; then
+        log_debug "1" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Invalid PID in file: $child_pid"
+        rm -f "$pid_fpath"
+        return 0
+    fi
+
+    log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Caught INT, child PID: $child_pid"
+
+    # Step 2: Check if process is still running (if not, remove pid file, continue execution)
+    if ! kill -0 "$child_pid" 2>/dev/null; then
+        log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Child process $child_pid no longer running. Removing pid file."
+        rm -f "$pid_fpath"
+        # If there is no running PID we want to return 0 because there is no running child process
+        return 0
+    fi
+
+    # Step 3: Send SIGINT to child (because the child is still running)
+    log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Sending SIGINT to child PID $child_pid"
+    kill -INT "-${child_pid}" 2>/dev/null
+
+    # Wait 2 seconds for graceful shutdown - no cleanup here, when child trap receives INT it will clean itself up.
+    sleep 1
+
+    # Step 4: Check again if process is gone
+    if kill -0 "$child_pid" 2>/dev/null; then
+        log_debug "1" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Child PID $child_pid still running, sending SIGKILL"
+        kill -KILL "-${child_pid}" 2>/dev/null
+        sleep 1  # Brief pause to allow kernel to reap
+    else
+        log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: Child process terminated gracefully"
+    fi
+
+    # Step 5: Clean up PID file (we had to KILL so we need to cleanup ourselves)
+    rm -f "$pid_fpath"
+    log_debug "2" "[lib/setup.functions.sh:build_all_custom_trap_func()]: PID file removed"
+
+    # Step 6: Return execution to caller
+    return 0
+}
