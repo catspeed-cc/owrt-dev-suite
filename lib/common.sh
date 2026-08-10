@@ -18,6 +18,79 @@ TMP_DIR="/tmp/owrt-dev-suite"
 OWRT_BUILD_PID_FILE="owrt-build.pid"
 OWRT_BUILD_ALL_PID_FILE="owrt-build-all.pid"
 
+# NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
+#
+# REASONS:
+# - Script is heavy in file operations
+# - One unbound variable within a derived path can mangle an undesired location
+# - I need to see and know when something is unbound and fix it
+set -Eemuo pipefail
+
+# Obtain STARTUP_PWD & ensure STARTUP_PWD does not have a trailing slash for consistent matching
+STARTUP_PWD=$(pwd)
+STARTUP_PWD="${STARTUP_PWD%/}"
+
+# REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
+REAL_PATH=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
+
+# Fallback for macOS (BSD readlink doesn't support -f)
+if [ -z "$REAL_PATH" ]; then
+    REAL_PATH="${BASH_SOURCE[0]}"
+    while [ -h "$REAL_PATH" ]; do
+        DIR="$(dirname "$REAL_PATH")"
+        # Check if directory exists before cd-ing
+        if [ ! -d "$DIR" ]; then
+            echo " >>> ❌ CRITICAL: Directory does not exist: $DIR" >&2
+            exit 1
+        fi
+        DIR=$(cd -P "$DIR" && pwd)
+
+        REAL_PATH=$(readlink "$REAL_PATH")
+        [[ $REAL_PATH != /* ]] && REAL_PATH="$DIR/$REAL_PATH"
+    done
+
+    # Final resolve of the last step if it wasn't a symlink loop
+    if [ -e "$REAL_PATH" ]; then
+        DIR="$(dirname "$REAL_PATH")"
+        # Check if directory exists before cd-ing
+        if [ ! -d "$DIR" ]; then
+            echo " >>> ❌ CRITICAL: Directory does not exist: $DIR" >&2
+            exit 1
+        fi
+        REAL_PATH=$(cd -P "$DIR" && pwd)/$(basename "$REAL_PATH")
+    fi
+fi
+
+# REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
+SCRIPT_DIR=$(dirname "$REAL_PATH")
+SCRIPT_NAME=$(basename "$REAL_PATH")
+
+# ===========================================================================================
+# 2. PARSE CLI ARGUMENTS (Detects --config/-c override before sourcing config)
+# ===========================================================================================
+# Import cli.bootstrap.sh
+if ! source "$SCRIPT_DIR/lib/cli.bootstrap.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/cli.bootstrap.sh - Aborting." >&2
+    exit 1
+else
+    if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/cli.bootstrap.sh" >&2; fi
+fi
+
+parse_arguments "$@"
+
+# probably want to resolve configuration next because header will need that too
+
+
+# Import logging.bootstrap.sh
+if ! source "$SCRIPT_DIR/lib/logging.bootstrap.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/logging.bootstrap.sh - Aborting." >&2
+    exit 1
+else
+    if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/logging.bootstrap.sh" >&2; fi
+fi
+
+log_debug "4" "Debug function loaded and working"
+
 # Import earlyscript.functions.sh
 if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/earlyscript.functions.sh - Aborting." >&2
@@ -134,25 +207,11 @@ else
     log_debug "4" "Sourced lib/utils.functions.sh"
 fi
 
-if ! source "$SCRIPT_DIR/lib/logging.functions.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/logging.functions.sh - Aborting." >&2
-    exit 1
-else
-    log_debug "4" "Sourced lib/logging.functions.sh"
-fi
-
 if ! source "$SCRIPT_DIR/lib/exit.functions.sh"; then
     echo "❌ CRITICAL: Unable to source lib/exit.functions.sh - Aborting." >&2
     exit 1
 else
     log_debug "4" "Sourced lib/exit.functions.sh"
-fi
-
-if ! source "$SCRIPT_DIR/lib/cli.functions.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/cli.functions.sh - Aborting." >&2
-    exit 1
-else
-    log_debug "4" "Sourced lib/cli.functions.sh"
 fi
 
 if ! source "$SCRIPT_DIR/lib/config.functions.sh"; then
@@ -184,11 +243,6 @@ else
 fi
 
 
-
-# ===========================================================================================
-# 2. PARSE CLI ARGUMENTS (Detects --config/-c override before sourcing config)
-# ===========================================================================================
-parse_arguments "$@"
 
 
 # ===========================================================================================

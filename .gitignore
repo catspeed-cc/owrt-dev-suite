@@ -1,4 +1,7 @@
 
+# bluefish temp files
+*~
+
 # allow version file
 !.owrtds.version
 

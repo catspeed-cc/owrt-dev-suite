@@ -2,6 +2,25 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
 
+
+log_debug() {
+    local level="$1"
+    local message="$2"
+
+    # Ensure OWRTDS_DEBUG is treated as a number (defaults to 0 if unset)
+    local debug_level="${OWRTDS_DEBUG:-0}"
+
+    # Exit immediately if global debug is off
+    if [[ "$debug_level" -eq 0 ]]; then
+        return 0
+    fi
+
+    # Print only if the message level is <= global debug level
+    if [[ "$level" -le "$debug_level" ]]; then
+        echo "[DEBUG L${level}] ${message}" >&2
+    fi
+}
+
 # =============================================================================
 # log_summary
 # Description: Appends a message to the global SUMMARY_OUT buffer and optionally echoes it to stderr.
@@ -108,4 +127,48 @@ show_header() {
     echo " ========================================================================================================================"
     echo ""
 
+}
+
+# =============================================================================
+# show_help
+# Description: Prints usage information and available command-line options to stdout.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 0 after printing help
+# Usage Example:
+#   show_help
+# =============================================================================
+show_help() {
+    if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+        echo ""
+        echo "Usage: ${SCRIPT_NAME} [OPTIONS]"
+        echo ""
+        echo "Options:"
+        echo " -c, --config <path>        Override config file (supports relative/absolute paths)"
+        echo " -mc, --make-clean          Run 'make clean' and prepare host tools/toolchain"
+        echo " -uf, --update-feeds        Update and install feeds"
+        echo " -v, --verbose              Enable verbose output"
+        echo " -vv, --extra-verbose       Enable extra verbose output (V=99)"
+        echo " -s, --slow                 Single-core compilation (default is multi-core)"
+        echo " -ni, --non-interactive     Disable interactive prompts (for cron/CI)"
+        echo " -d, --dry-run              Disable any file copy or make commands"
+        echo " --debug [0-4]            Set debug verbosity"
+        echo " -h, --help                 Show this help message"
+        echo ""
+    elif [[ "$SCRIPT_NAME" == "owrt-build-all" ]]; then
+        echo ""
+        echo "Usage: ${SCRIPT_NAME} [OPTIONS]"
+        echo ""
+        echo "Options:"
+        echo " -v, --verbose              Enable verbose output"
+        echo " -vv, --extra-verbose       Enable extra verbose output (V=99)"
+        echo " -s, --slow                 Single-core compilation (default is multi-core)"
+        echo " -ni, --non-interactive     Disable interactive prompts (for cron/CI)"
+        echo " -d, --dry-run              Disable any file copy or make commands"
+        echo " --debug [0-4]            Set debug verbosity"
+        echo " -h, --help                 Show this help message"
+        echo ""
+    else
+        echo "❌ Critical error. Unable to determine which script is running. Aborting." >&2
+        exit 1
+    fi
 }
