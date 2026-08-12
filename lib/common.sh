@@ -18,22 +18,6 @@ TMP_DIR="/tmp/owrt-dev-suite"
 OWRT_BUILD_PID_FILE="owrt-build.pid"
 OWRT_BUILD_ALL_PID_FILE="owrt-build-all.pid"
 
-# Version Information
-# TOD: Refactor to compare to master branch .version file and give debug "current running version greater than master (v0.2.0 > v0.1.0)" or 
-#                                                                        "current running version less than master (v0.1.0 < v1.0.0)" or
-#                                                                        "current running version equals master version (v0.1.0 = v0.1.0)
-if [[ ! -f "$SCRIPT_DIR/.owrtds.version" ]]; then
-    echo "❌ CRITICAL: .owrtds.version missing" >&2; exit 1
-else
-    log_debug "3" "$SCRIPT_DIR/.owrtds.version exists"
-fi
-OWRTDS_VERSION=$(cat "$SCRIPT_DIR/.owrtds.version")
-if [[ -z "$OWRTDS_VERSION" ]]; then
-     log_debug "1" "OWRTDS_VERSION IS BLANK"
-else
-     log_debug "3" "OWRTDS_VERSION='$OWRTDS_VERSION'"
-fi
-
 # Guard variable to prevent double cleanup
 CLEANED=false
 
@@ -72,16 +56,6 @@ CUSTOM_CONFIG_PATH=""
 declare -A RAWMOD_LIST
 declare -A CALDATA_LIST
 
-# Interactive Mode Control
-OWRTDS_INTERACTIVE=true
-# Auto-detect non-interactive mode (e.g., piped input, cron jobs, CI/CD)
-if [[ ! -t 0 ]]; then
-    log_debug "1" "Non-interactive mode detected & activated"
-    OWRTDS_INTERACTIVE=false
-else
-    log_debug "1" "Interactive mode detected & activated"
-fi
-
 # ===========================================================================================
 # 2. PARSE CLI ARGUMENTS (Detects --config/-c override before sourcing config)
 # ===========================================================================================
@@ -115,6 +89,35 @@ if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
 else
     if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/earlyscript.functions.sh" >&2; fi
 fi
+
+
+# Version Information
+# TOD: Refactor to compare to master branch .version file and give debug "current running version greater than master (v0.2.0 > v0.1.0)" or 
+#                                                                        "current running version less than master (v0.1.0 < v1.0.0)" or
+#                                                                        "current running version equals master version (v0.1.0 = v0.1.0)
+if [[ ! -f "$SCRIPT_DIR/.owrtds.version" ]]; then
+    echo "❌ CRITICAL: .owrtds.version missing" >&2; exit 1
+else
+    log_debug "3" "$SCRIPT_DIR/.owrtds.version exists"
+fi
+OWRTDS_VERSION=$(cat "$SCRIPT_DIR/.owrtds.version")
+if [[ -z "$OWRTDS_VERSION" ]]; then
+     log_debug "1" "OWRTDS_VERSION IS BLANK"
+else
+     log_debug "3" "OWRTDS_VERSION='$OWRTDS_VERSION'"
+fi
+
+
+# Interactive Mode Control
+OWRTDS_INTERACTIVE=true
+# Auto-detect non-interactive mode (e.g., piped input, cron jobs, CI/CD)
+if [[ ! -t 0 ]]; then
+    log_debug "1" "Non-interactive mode detected & activated"
+    OWRTDS_INTERACTIVE=false
+else
+    log_debug "1" "Interactive mode detected & activated"
+fi
+
 
 # call to create_pidfile regardless (both scripts will create PID files)
 create_pidfile
