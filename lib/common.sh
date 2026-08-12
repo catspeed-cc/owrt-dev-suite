@@ -56,6 +56,34 @@ CUSTOM_CONFIG_PATH=""
 declare -A RAWMOD_LIST
 declare -A CALDATA_LIST
 
+# Version Information
+# TOD: Refactor to compare to master branch .version file and give debug "current running version greater than master (v0.2.0 > v0.1.0)" or 
+#                                                                        "current running version less than master (v0.1.0 < v1.0.0)" or
+#                                                                        "current running version equals master version (v0.1.0 = v0.1.0)
+if [[ ! -f "$SCRIPT_DIR/.owrtds.version" ]]; then
+    echo "❌ CRITICAL: .owrtds.version missing" >&2
+    exit 1
+else
+    if [[ "$OWRTDS_DEBUG" -ge "3" ]]; then echo "$SCRIPT_DIR/.owrtds.version exists" >&2; fi
+fi
+OWRTDS_VERSION=$(cat "$SCRIPT_DIR/.owrtds.version")
+if [[ -z "$OWRTDS_VERSION" ]]; then
+    if [[ "$OWRTDS_DEBUG" -ge "1" ]]; then echo "OWRTDS_VERSION IS BLANK" >&2; fi
+else
+    if [[ "$OWRTDS_DEBUG" -ge "3" ]]; then echo "OWRTDS_VERSION='$OWRTDS_VERSION'" >&2; fi
+fi
+
+
+# Interactive Mode Control
+OWRTDS_INTERACTIVE=true
+# Auto-detect non-interactive mode (e.g., piped input, cron jobs, CI/CD)
+if [[ ! -t 0 ]]; then
+    if [[ "$OWRTDS_DEBUG" -ge "1" ]]; then echo "Non-interactive mode detected & activated" >&2; fi
+    OWRTDS_INTERACTIVE=false
+else
+    if [[ "$OWRTDS_DEBUG" -ge "1" ]]; then echo "Interactive mode detected & activated" >&2; fi
+fi
+
 # ===========================================================================================
 # 2. PARSE CLI ARGUMENTS (Detects --config/-c override before sourcing config)
 # ===========================================================================================
@@ -88,34 +116,6 @@ if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
     exit 1
 else
     if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/earlyscript.functions.sh" >&2; fi
-fi
-
-
-# Version Information
-# TOD: Refactor to compare to master branch .version file and give debug "current running version greater than master (v0.2.0 > v0.1.0)" or 
-#                                                                        "current running version less than master (v0.1.0 < v1.0.0)" or
-#                                                                        "current running version equals master version (v0.1.0 = v0.1.0)
-if [[ ! -f "$SCRIPT_DIR/.owrtds.version" ]]; then
-    echo "❌ CRITICAL: .owrtds.version missing" >&2; exit 1
-else
-    log_debug "3" "$SCRIPT_DIR/.owrtds.version exists"
-fi
-OWRTDS_VERSION=$(cat "$SCRIPT_DIR/.owrtds.version")
-if [[ -z "$OWRTDS_VERSION" ]]; then
-     log_debug "1" "OWRTDS_VERSION IS BLANK"
-else
-     log_debug "3" "OWRTDS_VERSION='$OWRTDS_VERSION'"
-fi
-
-
-# Interactive Mode Control
-OWRTDS_INTERACTIVE=true
-# Auto-detect non-interactive mode (e.g., piped input, cron jobs, CI/CD)
-if [[ ! -t 0 ]]; then
-    log_debug "1" "Non-interactive mode detected & activated"
-    OWRTDS_INTERACTIVE=false
-else
-    log_debug "1" "Interactive mode detected & activated"
 fi
 
 
