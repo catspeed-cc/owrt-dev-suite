@@ -18,48 +18,6 @@ TMP_DIR="/tmp/owrt-dev-suite"
 OWRT_BUILD_PID_FILE="owrt-build.pid"
 OWRT_BUILD_ALL_PID_FILE="owrt-build-all.pid"
 
-
-# ===========================================================================================
-# 2. PARSE CLI ARGUMENTS (Detects --config/-c override before sourcing config)
-# ===========================================================================================
-# Import cli.bootstrap.sh
-if ! source "$SCRIPT_DIR/lib/cli.bootstrap.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/cli.bootstrap.sh - Aborting." >&2
-    exit 1
-else
-    if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/cli.bootstrap.sh" >&2; fi
-fi
-
-parse_arguments "$@"
-
-# probably want to resolve configuration next because header will need that too
-
-
-# Import logging.bootstrap.sh
-if ! source "$SCRIPT_DIR/lib/logging.bootstrap.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/logging.bootstrap.sh - Aborting." >&2
-    exit 1
-else
-    if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/logging.bootstrap.sh" >&2; fi
-fi
-
-log_debug "4" "Debug function loaded and working"
-
-# Import earlyscript.functions.sh
-if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
-    echo "❌ CRITICAL: Unable to source lib/earlyscript.functions.sh - Aborting." >&2
-    exit 1
-else
-    if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/earlyscript.functions.sh" >&2; fi
-fi
-
-# call to create_pidfile regardless (both scripts will create PID files)
-create_pidfile
-
-
-# log_debug now avaialble
-
-
 # Version Information
 # TOD: Refactor to compare to master branch .version file and give debug "current running version greater than master (v0.2.0 > v0.1.0)" or 
 #                                                                        "current running version less than master (v0.1.0 < v1.0.0)" or
@@ -79,10 +37,7 @@ fi
 # Guard variable to prevent double cleanup
 CLEANED=false
 
-
-# Detect the OWRTDS_BRANCH
 OWRTDS_BRANCH=""
-owrtds_branch_detect
 
 # Set up for infinite strings (NEEDED IN `lib/config.sh`)
 NL=$'\n' # leave this alone (used in multiple areas)
@@ -126,6 +81,50 @@ if [[ ! -t 0 ]]; then
 else
     log_debug "1" "Interactive mode detected & activated"
 fi
+
+# ===========================================================================================
+# 2. PARSE CLI ARGUMENTS (Detects --config/-c override before sourcing config)
+# ===========================================================================================
+# Import cli.bootstrap.sh
+if ! source "$SCRIPT_DIR/lib/cli.bootstrap.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/cli.bootstrap.sh - Aborting." >&2
+    exit 1
+else
+    if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/cli.bootstrap.sh" >&2; fi
+fi
+
+parse_arguments "$@"
+
+# probably want to resolve configuration next because header will need that too
+
+
+# Import logging.bootstrap.sh
+if ! source "$SCRIPT_DIR/lib/logging.bootstrap.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/logging.bootstrap.sh - Aborting." >&2
+    exit 1
+else
+    if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/logging.bootstrap.sh" >&2; fi
+fi
+
+log_debug "4" "Debug function loaded and working"
+
+# Import earlyscript.functions.sh
+if ! source "$SCRIPT_DIR/lib/earlyscript.functions.sh"; then
+    echo "❌ CRITICAL: Unable to source lib/earlyscript.functions.sh - Aborting." >&2
+    exit 1
+else
+    if [[ "$OWRTDS_DEBUG" -gt "0" ]]; then echo "[DEBUG] sourced lib/earlyscript.functions.sh" >&2; fi
+fi
+
+# call to create_pidfile regardless (both scripts will create PID files)
+create_pidfile
+
+# Detect the OWRTDS_BRANCH
+owrtds_branch_detect
+
+
+# log_debug / show_header now avaialble
+
 
 # ====================================================================================
 # TO AVOID FAILURE IN `set -euo pipefail` MODE DEFINE USER VARIABLES WHICH ARE EITHER:
