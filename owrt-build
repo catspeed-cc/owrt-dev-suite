@@ -1,0 +1,222 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
+
+
+# ============================================
+# NOTE: DO NOT CONFIGURE ANYTHING IN THIS FILE
+# Edit `./etc/*/*.build` to configure
+# ============================================
+
+
+# NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
+#
+# REASONS:
+# - Script is heavy in file operations
+# - One unbound variable within a derived path can mangle an undesired location
+# - I need to see and know when something is unbound and fix it
+set -Eemuo pipefail
+
+# Obtain STARTUP_PWD & ensure STARTUP_PWD does not have a trailing slash for consistent matching
+STARTUP_PWD=$(pwd)
+STARTUP_PWD="${STARTUP_PWD%/}"
+
+# REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
+REAL_PATH=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
+
+# Fallback for macOS (BSD readlink doesn't support -f)
+if [ -z "$REAL_PATH" ]; then
+    REAL_PATH="${BASH_SOURCE[0]}"
+    while [ -h "$REAL_PATH" ]; do
+        DIR="$(dirname "$REAL_PATH")"
+        # Check if directory exists before cd-ing
+        if [ ! -d "$DIR" ]; then
+            echo " >>> ❌ CRITICAL: Directory does not exist: $DIR" >&2
+            exit 1
+        fi
+        DIR=$(cd -P "$DIR" && pwd)
+
+        REAL_PATH=$(readlink "$REAL_PATH")
+        [[ $REAL_PATH != /* ]] && REAL_PATH="$DIR/$REAL_PATH"
+    done
+
+    # Final resolve of the last step if it wasn't a symlink loop
+    if [ -e "$REAL_PATH" ]; then
+        DIR="$(dirname "$REAL_PATH")"
+        # Check if directory exists before cd-ing
+        if [ ! -d "$DIR" ]; then
+            echo " >>> ❌ CRITICAL: Directory does not exist: $DIR" >&2
+            exit 1
+        fi
+        REAL_PATH=$(cd -P "$DIR" && pwd)/$(basename "$REAL_PATH")
+    fi
+fi
+
+# REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
+SCRIPT_DIR=$(dirname "$REAL_PATH")
+SCRIPT_NAME=$(basename "$REAL_PATH")
+
+# Import lib/common.sh (bootstrap)
+if ! source "$SCRIPT_DIR/lib/common.sh"; then
+    echo " >>> ❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
+    exit 1
+fi
+
+
+# ==============================================================================
+# 1. Execution Logic
+# ==============================================================================
+
+echo " >>> Starting build process for $OWRT_MFR / $OWRT_MODEL_LOWER (${OWRT_SOC_CLASS_LOWER})"
+echo " >>> Working directory: $OWRT_DEV_DIR"
+change_directory "$OWRT_DEV_DIR"
+
+# Handle Clean
+if [[ "$DO_CLEAN" == "true" ]]; then
+    if [[ "$DO_DRYRUN" == "false" ]]; then
+        echo " >>> Running 'make clean'..."
+        make clean -s > /dev/null 2>&1
+        rm -rf "$OWRT_DEV_DIR/build_dir" 2>&1
+        rm -rf "$OWRT_DEV_DIR/staging_dir" 2>&1
+        if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+            log_summary " >>> ✅ Make clean"
+        fi
+        log_debug "1" "make clean ran"
+    else
+        log_debug "4" "[make clean]: DRY-RUN - would execute: make clean + rm -rf build_dir staging_dir"
+    fi
+else
+    log_debug "1" "DO_CLEAN: '$DO_CLEAN' - skipping"
+fi
+
+# Handle Update Feeds (First, to ensure package definitions are fresh)
+if [[ "$DO_UPDATE_FEEDS" == "true" ]]; then
+    echo " >>> Updating and installing feeds..."
+    run_command "./scripts/feeds update -a"
+    run_command "./scripts/feeds install -a"
+    log_debug "1" "updated & installed feeds"
+else
+    log_debug "1" "DO_UPDATE_FEEDS: '$DO_UPDATE_FEEDS'"
+fi
+
+# Only compile tools/toolchain on a make-clean
+if [[ "$DO_CLEAN" == "true" ]]; then
+    echo " >>> Ensuring host tools and toolchain are ready..."
+    if ! run_command "make tools/install $MAKE_CMD_ADD"; then
+        exit_with_error "Failed to build host tools"
+    fi
+    if ! run_command "make toolchain/install $MAKE_CMD_ADD"; then
+        exit_with_error "Failed to build toolchain"
+    fi
+    log_summary " >>> ✅ Toolchain built"
+    log_debug "1" "tools/toolchain compiled"
+else
+    log_debug "1" "Not compiling tools/toolchain - DO_CLEAN: '$DO_CLEAN'"
+fi
+
+# Handle Inject DTS (BEFORE prepare)
+if [[ "$OWRT_SUPPORTED" == "false" && "$DO_DTS_CPY" == "true" && "$DO_CLEAN" == "true" ]]; then
+    echo " >>> Injecting custom DTS file..."
+    copy_file "$WORK_DTS_DIR/$DTS_FNAME" "$DTS_DEST_DIR/$DTS_FNAME"
+    # Prepare Kernel Sources
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        build_kernel_sources
+        log_summary " >>> ✅ Kernel source built"
+        log_debug "1" "Kernel sources built - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_DTS_CPY: '$DO_DTS_CPY' , DO_CLEAN: '$DO_CLEAN' (interactive)"
+    else
+        build_kernel_sources
+        log_debug "1" "Kernel sources built - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_DTS_CPY: '$DO_DTS_CPY' , DO_CLEAN: '$DO_CLEAN' (non-interactive)"
+    fi
+else
+    log_debug "1" "Not building kernel sources - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_DTS_CPY: '$DO_DTS_CPY' , DO_CLEAN: '$DO_CLEAN'"
+fi
+
+# Handle prepare linux-firmware
+if [[ "$OWRT_SUPPORTED" == "false" && "$DO_CALDATA_CPY" == "true" && "$DO_CLEAN" == "true" ]]; then
+    echo " >>> Running 'make target/linux-firmware/prepare'..."
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        if ! run_command "make package/linux-firmware/prepare \"$MAKE_CMD_ADD\""; then
+            exit_with_error "Make Prepare 'linux-firmware'"
+        fi
+        log_summary " >>> ✅ Sources prepared (linux-firmware)"
+        log_debug "1" "linux-firmware built - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_CALDATA_CPY: '$DO_CALDATA_CPY' , DO_CLEAN: '$DO_CLEAN' (interactive)"
+    else
+        make package/linux-firmware/prepare ${MAKE_CMD_ADD} > /dev/null 2>&1 || exit_with_error "Make Prepare 'linux-firmware'"
+        log_debug "1" "linux-firmware built - OWRT_SUPPORTED: '$OWRT_SUPPORTED' , DO_CALDATA_CPY: '$DO_CALDATA_CPY' , DO_CLEAN: '$DO_CLEAN' (non-interactive)"
+    fi
+    # Handle Copy caldata
+    echo " >>> Injecting board-2.bin into build_dir..."
+    copy_caldata
+fi
+
+
+
+
+# ==============================================
+# 2. COMPILATION & POST-BUILD
+# ==============================================
+
+# PAUSE SO HUMAN USER CAN SEE PROGRESS BEFORE COMPILE
+if [[ "$OWRTDS_INTERACTIVE" == true ]]; then sleep 5; fi
+
+# Now the main build can proceed without host tool interruptions
+MAKE_CMD="make ${MAKE_CMD_ADD}"
+echo " >>> Starting compilation: ${MAKE_CMD}"
+
+# Temporarily disable 'errexit' to capture make's exit code manually.
+# NOTE: The SIGINT/SIGTERM trap remains ACTIVE here for CTRL+C safety.
+set +e
+
+run_command "$MAKE_CMD"
+BUILD_STATUS=$?
+
+# Re-enable strict error checking
+set -e
+
+
+# Synchronize final .config state back to work directory (runs unconditionally)
+sync_config_from_dev_dir
+
+# Handle Build Result
+if [ "$BUILD_STATUS" -eq 0 ]; then
+    log_summary " >>> ✅ Build successful. Copying images..."
+
+    # Run post-build steps (Trap is ACTIVE: failures here will cleanup)
+    if [ "$DO_IMGDIR_CPY" = "true" ]; then
+        copy_to_imgdir
+        log_debug "1" "Copying image to workdir - DO_IMGDIR_CPY: '$DO_IMGDIR_CPY'"
+    else
+        log_debug "1" "Not copying image to workdir - DO_IMGDIR_CPY: '$DO_IMGDIR_CPY'"
+    fi
+
+    if [ "$DO_WEBSERVER_CPY" = "true" ]; then
+        copy_to_webserver
+        log_debug "1" "Copying image to webserver shareddir - DO_WEBSERVER_CPY: '$DO_WEBSERVER_CPY'"
+    else
+        log_debug "1" "Not copying image to webserver shareddir - DO_WEBSERVER_CPY: '$DO_WEBSERVER_CPY'"
+    fi
+
+    # Gated final manual cleanup on success
+    if [ "$CLEANED" == false ]; then
+        cleanup_build_environment
+        log_debug "1" "Performing cleanup"
+    else
+        log_debug "1" "Already cleaned, skipping cleanup."
+    fi
+
+    # Calculate time elapsed
+    BUILD_STOP_DATE=$(date "+%a %d %b %Y")
+    BUILD_STOP_TIME=$(date +%H:%M:%S)
+    result=$(get_time_diff "$BUILD_START_TIME" "$BUILD_STOP_TIME")
+
+    # separate the reply into human readable and machine readable elapsed times
+    BUILD_ELAPSED=$(echo "$result" | awk '{print $1, $2, $3}') # "0h 10m 28s"
+    BUILD_ELAPSED_SECONDS=$(echo "$result" | awk '{print $4}') # "628"
+
+    # 4. Success: Disable trap manually to prevent "Cleanup called" message on exit
+    trap - INT TERM HUP
+    exit_with_success "BUILD COMPLETE"
+else
+    # 5. Failure: Trigger error handler (Trap will also fire if set -e catches a downstream error)
+    exit_with_error "BUILD FAILED (Status: $BUILD_STATUS)"
+fi

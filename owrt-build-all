@@ -1,0 +1,163 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
+
+
+# ============================================
+# NOTE: DO NOT CONFIGURE ANYTHING IN THIS FILE
+# Edit `./etc/*/*.build` to configure
+# ============================================
+
+
+# NOTICE: THIS IS REQUIRED FOR SCRIPT! DO NOT REMOVE!
+#
+# REASONS:
+# - Script is heavy in file operations
+# - One unbound variable within a derived path can mangle an undesired location
+# - I need to see and know when something is unbound and fix it
+set -Eemuo pipefail
+
+# Obtain STARTUP_PWD & ensure STARTUP_PWD does not have a trailing slash for consistent matching
+STARTUP_PWD=$(pwd)
+STARTUP_PWD="${STARTUP_PWD%/}"
+
+# REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
+REAL_PATH=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
+
+# Fallback for macOS (BSD readlink doesn't support -f)
+if [ -z "$REAL_PATH" ]; then
+    REAL_PATH="${BASH_SOURCE[0]}"
+    while [ -h "$REAL_PATH" ]; do
+        DIR="$(dirname "$REAL_PATH")"
+        # Check if directory exists before cd-ing
+        if [ ! -d "$DIR" ]; then
+            echo " >>> ❌ CRITICAL: Directory does not exist: $DIR" >&2
+            exit 1
+        fi
+        DIR=$(cd -P "$DIR" && pwd)
+
+        REAL_PATH=$(readlink "$REAL_PATH")
+        [[ $REAL_PATH != /* ]] && REAL_PATH="$DIR/$REAL_PATH"
+    done
+
+    # Final resolve of the last step if it wasn't a symlink loop
+    if [ -e "$REAL_PATH" ]; then
+        DIR="$(dirname "$REAL_PATH")"
+        # Check if directory exists before cd-ing
+        if [ ! -d "$DIR" ]; then
+            echo " >>> ❌ CRITICAL: Directory does not exist: $DIR" >&2
+            exit 1
+        fi
+        REAL_PATH=$(cd -P "$DIR" && pwd)/$(basename "$REAL_PATH")
+    fi
+fi
+
+# REQUIRED FOR SOURCE LINES (DO NOT MODIFY)
+SCRIPT_DIR=$(dirname "$REAL_PATH")
+SCRIPT_NAME=$(basename "$REAL_PATH")
+
+# Import lib/common.sh (bootstrap)
+if ! source "$SCRIPT_DIR/lib/common.sh"; then
+    echo " >>> ❌ CRITICAL: Unable to source lib/common.sh - Aborting." >&2
+    exit 1
+fi
+
+
+# ==============================================================================
+# 1. Execution Logic
+# ==============================================================================
+
+shopt -s nullglob
+all_configs=("$SCRIPT_DIR"/etc/*/*.build)
+shopt -u nullglob
+
+BUILD_TOTAL=0
+BUILD_SUCCESS=0
+BUILD_FAILED=0
+BUILD_SKIPPED=0
+
+# total configs to build
+TOTAL_TO_BUILD=${#all_configs[@]}
+
+for config_file in "${all_configs[@]}"; do
+    log_debug "1" "Attempting source of config file: $config_file."
+    # Config file gate - either it exists or we continue to next iteration of loop
+    [[ -f "$config_file" ]] || continue
+
+    # Reset variables, source config, verify...
+    reset_config_variables
+
+    # Attempt to source the config
+    if source "$config_file"; then
+        log_summary " >>> ✅ Loaded config: $(basename "$config_file")"
+        log_debug "1" "Sourced config file: $config_file."
+    else
+        log_summary " >>> ❌ FAILED to load config: $(basename "$config_file"). Skipping."
+        log_debug "1" "Failed to source config file: $config_file. Skipping."
+        ((BUILD_SKIPPED++)) || true
+        continue
+    fi
+
+    # CHECK FLAG FIRST: Skip if not marked for batch build
+    if [[ "$OWRTDS_ENABLE_BATCH_BUILD" != "true" ]]; then
+        log_summary " >>> ⏭️  Skipping $(basename "$config_file"): Not enabled for batch build."
+        log_debug "1" "Skipped config: '$config_file' - OWRTDS_ENABLE_BATCH_BUILD: '$OWRTDS_ENABLE_BATCH_BUILD'"
+        ((BUILD_SKIPPED++)) || true
+        ((BUILD_TOTAL++)) || true
+        continue
+    fi
+
+    # Just verify the config, it is meant to be built. The function handles failure via exit_with_error
+    verify_configuration
+
+    log_summary "🚀 Starting build: $(basename "$config_file")"
+    log_debug "1" "executing '$SCRIPT_DIR/owrt-build --config $config_file $@ -mc -uf -ni'"
+
+    # Run the main script (pass in parameters from user, force non-interactive, ignoring --config/-c)
+    set +e
+    "$SCRIPT_DIR"/owrt-build --config "$config_file" "$@" -mc -uf -ni &
+    BUILD_PID=$!
+    wait $BUILD_PID
+    BUILD_EXIT_CODE=$?
+    set -e
+
+    ((BUILD_TOTAL++)) || true
+
+    if [[ $BUILD_EXIT_CODE -eq 0 ]]; then
+        ((BUILD_SUCCESS++)) || true
+        log_summary " >>> ✅ Build #$BUILD_TOTAL of $TOTAL_TO_BUILD succeeded: $(basename "$config_file")"
+        log_debug "1" "$BUILD_TOTAL of $TOTAL_TO_BUILD succeeded: '$config_file'"
+    else
+        ((BUILD_FAILED++)) || true
+        log_summary " >>> ❌ Build #$BUILD_TOTAL of $TOTAL_TO_BUILD failed: $(basename "$config_file") (Exit Code: $BUILD_EXIT_CODE)"
+        log_debug "1" "$BUILD_TOTAL of $TOTAL_TO_BUILD failed: '$config_file'"
+    fi
+
+    # 4. The "Escape Hatch" (Interactive Only)
+    if [[ "$OWRTDS_INTERACTIVE" == "true" ]]; then
+        echo ""
+        echo "⏸️  Build step finished."
+        echo "    Press Ctrl+C now to EXIT the entire batch script."
+        echo "    (Wait 2 seconds to continue to the next config...)"
+
+        # If user hits Ctrl+C here, this script dies immediately.
+        # If they wait, the loop continues.
+        sleep 2
+    fi
+done
+
+echo ""
+echo " =================================================================="
+echo "  🏁  BATCH PROCESS REPORT"
+echo " =================================================================="
+echo "  Total Configs Processed:  $BUILD_TOTAL of $TOTAL_TO_BUILD"
+echo "  ✅ Successful Builds:     $BUILD_SUCCESS"
+echo "  🔄 Skipped Builds:        $BUILD_SKIPPED"
+echo "  ❌ Failed Builds:         $BUILD_FAILED"
+echo " =================================================================="
+
+if [[ $BUILD_FAILED -gt 0 ]]; then
+    exit_with_error "Batch processing completed with error(s)"
+else
+    exit_with_success "Batch processing completed without error"
+fi

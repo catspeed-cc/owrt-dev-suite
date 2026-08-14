@@ -1,0 +1,167 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
+
+# =============================================================================
+# build_kernel_sources
+# Description: Downloads OpenWRT sources, applies custom patches or raw driver mods, and compiles the target kernel.
+# Parameters: None
+# Returns/Exit Codes: Exits with code 1 on failure; returns 0 on success
+# Usage Example:
+#   build_kernel_sources
+# =============================================================================
+build_kernel_sources() {
+
+    # TODO: UPDATE SELECTION LOGIC (patchmod/rawmod)
+
+    # Download sources (Prerequisite)
+    echo " >>> Running 'make download'..."
+    
+    if ! run_command "make download $MAKE_CMD_ADD"; then
+        exit_with_error "Make Download"
+    fi
+
+    log_summary " >>> ✅ Sources downloaded"
+
+    if [ "$DO_DRIVERMOD_CPY" = true ]; then
+
+        if [ "$DRIVERMOD_MODE" == "patchmod" ]; then
+
+            if [ -z "${PATCHMOD_DEST_DIR}" ]; then
+                exit_with_error "PATCHMOD_DEST_DIR is not set (check script config)"
+            fi
+
+            # Copy custom patches into the target directory
+            # These will be picked up automatically by the 'prepare' step
+            copy_patches_dir "$WORK_PATCHMODS_DIR" "$OWRT_DEV_DIR/$PATCHMOD_DEST_DIR"
+
+            log_summary " >>> ✅ DRIVER PATCHES copied to source tree: $OWRT_DEV_DIR/$PATCHMOD_DEST_DIR"
+
+        else
+
+            # Loop over each key in the associative array
+            for RAWMOD_ENTRYNAME in "${!RAWMOD_LIST[@]}"; do
+                # Get the combined "Source|Dest" value using the key
+                raw_line="${RAWMOD_LIST[$RAWMOD_ENTRYNAME]}"
+
+                # Split the value by pipe '|'
+                IFS='|' read -r RAWMOD_SRC RAWMOD_DEST <<< "$raw_line"
+
+                # Perform the copy
+                copy_file "$RAWMOD_SRC" "$RAWMOD_DEST" || exit_with_error "Copying Driver Mod ($RAWMOD_ENTRYNAME)"
+
+                # Summary message
+                log_summary " >>> ✅ IPQESS RAW DRIVER MOD ($RAWMOD_ENTRYNAME) copied to source tree: $(cleanup_path "$(dirname "$RAWMOD_SRC")")"
+            done
+
+        fi
+
+    fi
+
+    # Prepare (Extract + Apply Patches)
+    echo " >>> Running 'make target/linux/prepare'..."
+    if ! run_command "make target/linux/prepare $MAKE_CMD_ADD"; then
+        exit_with_error "Make Prepare 'linux'"
+    fi
+
+    log_summary " >>> ✅ Sources prepared (linux)"
+
+    # Compile
+    echo " >>> Running 'make target/linux/compile'..."
+    if ! run_command "make target/linux/compile $MAKE_CMD_ADD"; then
+        exit_with_error "Make Compile 'linux'"
+    fi
+
+    log_summary " >>> ✅ Sources compiled (linux) with custom patches applied"
+
+}
+
+
+# =============================================================================
+# cleanup_build_environment
+# Description: Restores the OpenWRT source tree to its original state, removes temporary patches, and resets directory changes.
+# Parameters: None
+# Returns/Exit Codes: Always returns 0; sets CLEANED=true and CLEAN_SUCCESS flags
+# Usage Example:
+#   cleanup_build_environment
+# =============================================================================
+cleanup_build_environment() {
+    # NOTICE: DO NOT 'echo "$msg"' inside the cleanup function!
+    #         ONLY output SUMMARY_OUT
+    #
+    # NOTICE: WE ARE CALLED BY EXIT_WITH_ERROR AND EXIT_WITH_SUCCESS
+    #         THEREFORE WE CANNOT CALL IT INSIDE THIS FUNCTION
+    #
+
+    # Guard: exit immediately if already cleaned
+    [[ "${CLEANED}" == "true" ]] && return 0
+
+    # SET CLEANED=TRUE IMMEDIATELY TO PREVENT DUPLICATE CALLS
+    CLEANED=true
+    CLEAN_SUCCESS=true
+
+    # Disable errexit inside cleanup to prevent silent exits (incase exit function does not)
+    set +e
+
+    # Return to the original directory where the script was launched
+    # Silently ignore failure to avoid masking the original error
+    if [[ -n "$OWRT_DEV_DIR" && -d "$OWRT_DEV_DIR" ]]; then
+        cd "$OWRT_DEV_DIR" || true
+    fi
+
+    local msg=" >>> 🧹 Cleaning up temporary build modifications..."
+    SUMMARY_OUT+="${msg}"${NL}
+
+    # 1. Remove temporary patches from target directory
+    if [ -n "${PATCHMOD_DEST_DIR}" ] && [ -d "${PATCHMOD_DEST_DIR}" ]; then
+        for patch_file in "${PATCHMOD_DEST_DIR}"/*.patch; do
+            [ -e "$patch_file" ] || continue
+            local filename
+            filename=$(basename "$patch_file")
+
+            if [ -f "$WORK_PATCHMODS_DIR/${filename}" ]; then
+                rm -f "$patch_file"
+                local msg=" >>> 🗑️  Removed temp patch: I"$(cleanup_path "$patch_file")
+                echo "$msg"
+                SUMMARY_OUT+="${msg}"${NL}
+            fi
+        done
+    fi
+
+    # 2. Restore modified source files (e.g., drivers) to original Git state
+    local msg=" >>> ♻ Restoring modified files in target/ to original state..."
+    SUMMARY_OUT+="${msg}"${NL}
+
+    if git diff --quiet -- 'target/'; then
+        local msg=" >>> ✅ No patches, caldata, or modified files found in target/"
+        SUMMARY_OUT+="${msg}"${NL}
+    else
+        echo "    🔄 Resetting modified files:"
+        git diff --name-only -- 'target/' | while read -r file; do
+            echo "        - ${file}"
+        done
+
+        git checkout HEAD -- 'target/' || {
+            local msg=" >>> ⚠️  WARNING: Failed to restore target files (non-fatal during cleanup)"
+            echo "$msg" >&2
+            SUMMARY_OUT+="${msg}"${NL}
+            CLEAN_SUCCESS=false
+        }
+
+    fi
+
+    # Signal success to the user
+    if [ "$CLEAN_SUCCESS" == true ]; then
+        log_summary " >>> ✅ Cleanup complete. Environment is pristine." --silent
+    fi
+
+    # Return to the original directory where the script was launched
+    # Silently ignore failure to avoid masking the original error
+    if [[ -n "$STARTUP_PWD" && -d "$STARTUP_PWD" ]]; then
+        cd "$STARTUP_PWD" || true
+    fi
+
+    # Return silently to allow the original exit code to pass through
+    return 0
+
+}

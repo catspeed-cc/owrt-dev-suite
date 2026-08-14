@@ -1,0 +1,138 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright (C) 2026 mooleshacat <mooleshacat@catspeed.cc>
+
+
+# =============================================================================
+# parse_arguments
+# Description: Parses command-line flags and arguments, populating global variables for script configuration.
+# Parameters: $@ (command-line arguments)
+# Returns/Exit Codes: 0 on success; exits with code 1 on unknown option or missing argument
+# Usage Example:
+#   parse_arguments "$@"
+# =============================================================================
+parse_arguments() {
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -c|--config)
+                # IGNORE if running as wrapper
+                if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+                    # Check if the NEXT argument ($2) exists.
+                    # We need at least 2 args total: the flag ($1) and the path ($2).
+                    if [[ $# -lt 2 ]]; then
+                        exit_with_error "Option $1 requires a path argument." --nocleanup
+                    fi
+                    CUSTOM_CONFIG_PATH="$2"
+                else
+                    log_summary " >>> ⚠  WARNING: ignoring --config/-c parameter. owrt-build-all does not support this flag." --silent
+                    CUSTOM_CONFIG_PATH=""
+                fi
+                shift 2
+                ;;
+            -mc|--make-clean)
+                DO_CLEAN=true
+                shift
+                ;;
+            -uf|--update-feeds)
+                DO_CLEAN=true
+                DO_UPDATE_FEEDS=true
+                shift
+                ;;
+            -v|--verbose)
+                DO_VERBOSE=true
+                shift
+                ;;
+            -vv|--extra-verbose)
+                DO_XVERBOSE=true
+                shift
+                ;;
+            -s|--slow)
+                DO_SLOW=true
+                shift
+                ;;
+            -ni|--non-interactive)
+                OWRTDS_INTERACTIVE=false
+                DO_VERBOSE=false
+                DO_XVERBOSE=false
+                shift
+                ;;
+            -d|--dry-run)
+                # IGNORE if running as wrapper - heavy lifting done by owrt-build - owrt-build-all does not need the dry-run flag.
+                if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+                    DO_DRYRUN=true
+                    log_debug "4" "[parse_arguments()]: DRY-RUN is ENABLED - SCRIPT_NAME: '$SCRIPT_NAME'"
+                else
+                    log_summary " >>> ⚠  WARNING: ignoring --dry-run/-d parameter. owrt-build-all only passes this flag to the owrt-build script." --silent
+                    log_debug "1" "[parse_arguments()]: DRY-RUN is DISABLED - SCRIPT_NAME: '$SCRIPT_NAME'"
+                    DO_DRYRUN=false
+                fi
+                shift
+                ;;
+            --debug)
+                # Check if the NEXT argument ($2) exists.
+                # We need at least 2 args total: the flag ($1) and the path ($2).
+                if [[ $# -lt 2 ]]; then
+                    exit_with_error "Option $1 requires an integer (number) argument." --nocleanup
+                fi
+                OWRTDS_DEBUG="$2"
+                shift 2
+                ;;
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            *)
+                echo ""
+                echo "Unknown option: $1"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+
+}
+
+resolve_configuration_file() {
+    log_debug "4" "resolve_configuration_file() is running ..."
+    # Check if user provided a custom config via CLI
+    if [[ -n "${CUSTOM_CONFIG_PATH:-}" ]]; then
+        # 1. Resolve relative paths against repository root ($SCRIPT_DIR)
+        if [[ "$CUSTOM_CONFIG_PATH" != /* ]]; then
+            CUSTOM_CONFIG_PATH="$SCRIPT_DIR/$CUSTOM_CONFIG_PATH"
+            log_debug "1" "Resolved to absolute: '$CUSTOM_CONFIG_PATH'"
+        else
+            log_debug "4" "Path is already absolute: '$CUSTOM_CONFIG_PATH'"
+        fi
+
+        # 2. Validate file exists
+        if [[ ! -f "$CUSTOM_CONFIG_PATH" ]]; then
+            echo "❌ CRITICAL: Custom config file not found: $CUSTOM_CONFIG_PATH" >&2
+            exit 1
+        else
+            log_debug "4" "Config file exists: '$CUSTOM_CONFIG_PATH'"
+        fi
+
+        # 3. Interactive mode: Update symlink
+        if [[ "${OWRTDS_INTERACTIVE:-false}" == "true" ]]; then
+
+            default_config="$SCRIPT_DIR/etc/config.sh"
+
+            log_debug "1" "Attempting symlink: $CUSTOM_CONFIG_PATH -> $default_config"
+
+            if ln -sfn "$CUSTOM_CONFIG_PATH" "$default_config"; then
+                log_debug "1" "Symlink created successfully."
+                log_summary " >>> ✅ Config override applied. Default config now points to $(cleanup_path "$CUSTOM_CONFIG_PATH")" --silent
+            else
+                exit_with_error "Failed to create config symlink" --nocleanup
+            fi
+
+        fi
+
+        # 4. Set the final config file to source
+        CONFIG_FILE="$CUSTOM_CONFIG_PATH"
+
+    else
+        log_debug "1" "CUSTOM_CONFIG_PATH is unset/blank"
+    fi
+}
