@@ -332,8 +332,8 @@ function sync_config_to_dev_dir() {
         if cp "$owrt_config_src" "$OWRT_DEV_DIR/.config"; then
             printf '%s\n' "$owrt_config_src" > "$CONFIG_STATE_FILE"
             set +e
-            if ! run_command "make -s defconfig" > /dev/null 2>&1; then
-                exit_with_error "make defconfig failed. Check your .config file." --nocleanup
+            if ! run_command "make -s olddefconfig" > /dev/null 2>&1; then
+                exit_with_error "make olddefconfig failed. Check your .config file." --nocleanup
             fi
             set -e
             # we log the .config sync elsewhere :)
