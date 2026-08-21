@@ -175,7 +175,10 @@ set -e
 
 
 # Synchronize final .config state back to work directory (runs unconditionally)
-sync_config_from_dev_dir
+if [[ "$SCRIPT_NAME" == "owrt-build" ]]; then
+    log_debug "4" "syncing config back to repository dir"
+    sync_config_from_dev_dir
+fi
 
 # Handle Build Result
 if [ "$BUILD_STATUS" -eq 0 ]; then
